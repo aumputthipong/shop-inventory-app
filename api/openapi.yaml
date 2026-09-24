@@ -1,0 +1,129 @@
+openapi: 3.1.0
+
+info:
+  title: shop-inventory-app API
+  version: 0.1.0
+  description: |
+    Multi-channel inventory back-office. A single stock pool is sold through
+    several channels (store, Shopee, LINE OA).
+
+    Stock is tracked as on_hand and reserved, where available = on_hand -
+    reserved. Reservations are what prevent two channels from selling the same
+    unit under concurrent orders.
+
+    This document is the contract and is written before the handlers. It
+    currently covers the health endpoint only; product, stock and channel
+    endpoints are added as those features land.
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: system
+    description: Operational endpoints used by orchestrators and load balancers.
+
+paths:
+  /healthz:
+    get:
+      tags: [system]
+      summary: Liveness and dependency health
+      description: |
+        Reports whether the process is serving and whether its database is
+        reachable. Returns 503 when the database cannot be pinged, so that a
+        load balancer removes the instance from rotation rather than sending it
+        traffic it cannot serve.
+      operationId: getHealthz
+      security: []
+      responses:
+        "200":
+          description: The api and its database are healthy.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              examples:
+                healthy:
+                  value:
+                    status: ok
+                    db: ok
+        "503":
+          description: The api is serving but its database is unreachable.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestId"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              examples:
+                degraded:
+                  value:
+                    status: degraded
+                    db: error
+
+components:
+  headers:
+    RequestId:
+      description: |
+        Echoes the inbound X-Request-ID, or a server-generated UUID when the
+        client did not supply one.
+      schema:
+        type: string
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, db]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+          description: Overall health of this instance.
+        db:
+          type: string
+          enum: [ok, error]
+          description: Result of the database ping.
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      description: The envelope every failing endpoint returns.
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              description: Stable machine-readable code. Clients branch on this, not on message.
+              enum:
+                - bad_request
+                - validation_failed
+                - not_found
+                - internal_error
+                - service_unavailable
+                - unauthorized
+            message:
+              type: string
+              description: Human-readable explanation. Not intended for programmatic use.
+            request_id:
+              type: string
+              description: Correlates this response with the server logs.
+            fields:
+              type: array
+              description: Present only for validation_failed.
+              items:
+                $ref: "#/components/schemas/FieldError"
+
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+        message:
+          type: string

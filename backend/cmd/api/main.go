@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/health"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/logger"
@@ -67,6 +68,9 @@ func run() error {
 		Handler: httpx.NewRouter(httpx.RouterConfig{
 			Logger:  log,
 			GinMode: cfg.GinMode,
+			Routes: []httpx.Route{
+				health.NewHandler(pool),
+			},
 		}),
 		ReadHeaderTimeout: readHeaderTimeout,
 	}
