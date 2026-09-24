@@ -1,0 +1,103 @@
+// Command api runs the shop-inventory-app http server.
+//
+// This file is wiring only: load config, build the logger, open the database
+// pool, build the router, serve, and shut down gracefully. Business logic lives
+// in feature packages under internal/.
+package main
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
+	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/logger"
+)
+
+const (
+	startupTimeout    = 15 * time.Second
+	shutdownTimeout   = 15 * time.Second
+	readHeaderTimeout = 10 * time.Second
+)
+
+func main() {
+	if err := run(); err != nil {
+		slog.Error("api exited with error", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+}
+
+// run owns the whole lifecycle and returns an error instead of exiting, which
+// keeps os.Exit confined to main and lets every defer below actually run.
+func run() error {
+	cfg, err := config.Load()
+	if err != nil {
+		return fmt.Errorf("load config: %w", err)
+	}
+
+	log := logger.New(cfg.AppEnv)
+	slog.SetDefault(log)
+
+	// The signal context is cancelled on the first SIGINT or SIGTERM, which is
+	// what triggers the graceful shutdown below.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	startupCtx, cancelStartup := context.WithTimeout(ctx, startupTimeout)
+	defer cancelStartup()
+
+	pool, err := database.NewPool(startupCtx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("connect database: %w", err)
+	}
+	defer pool.Close()
+
+	log.Info("database pool ready")
+
+	server := &http.Server{
+		Addr: cfg.Addr(),
+		Handler: httpx.NewRouter(httpx.RouterConfig{
+			Logger:  log,
+			GinMode: cfg.GinMode,
+		}),
+		ReadHeaderTimeout: readHeaderTimeout,
+	}
+
+	serverErr := make(chan error, 1)
+	go func() {
+		log.Info("http server listening", slog.String("addr", server.Addr))
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			serverErr <- fmt.Errorf("http server: %w", err)
+			return
+		}
+		serverErr <- nil
+	}()
+
+	select {
+	case err := <-serverErr:
+		return err
+	case <-ctx.Done():
+		log.Info("shutdown signal received")
+	}
+
+	// A fresh context: the signal context is already cancelled, and shutdown
+	// needs its own budget to drain in-flight requests.
+	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancelShutdown()
+
+	if err := server.Shutdown(shutdownCtx); err != nil {
+		return fmt.Errorf("graceful shutdown: %w", err)
+	}
+
+	log.Info("shutdown complete")
+
+	return nil
+}
