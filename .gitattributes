@@ -1,0 +1,12 @@
+# Normalize to LF in the repository and in the working tree. Without this,
+# core.autocrlf=true on Windows checks files out with CRLF, which makes gofmt
+# and prettier report every file as unformatted.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+
+backend/db/sqlc/** linguist-generated=true
+frontend/src/routeTree.gen.ts linguist-generated=true

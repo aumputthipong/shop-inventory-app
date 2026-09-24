@@ -1,0 +1,29 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Go
+/backend/bin/
+/backend/tmp/
+*.exe
+*.test
+*.out
+coverage.txt
+
+# Node
+node_modules/
+/frontend/dist/
+/frontend/coverage/
+.vite/
+*.tsbuildinfo
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
