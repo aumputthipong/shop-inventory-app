@@ -1,0 +1,52 @@
+import { describe, expect, it, vi } from 'vitest'
+
+import { ApiError, api, apiFetch } from '@/lib/api'
+
+function jsonResponse(status: number, body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  })
+}
+
+describe('apiFetch', () => {
+  it('returns the parsed body for a 2xx response', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(jsonResponse(200, { status: 'ok', db: 'ok' }))
+
+    await expect(api.getHealth()).resolves.toEqual({ status: 'ok', db: 'ok' })
+  })
+
+  it('treats a 503 from /healthz as data, not as a failure', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse(503, { status: 'degraded', db: 'error' }),
+    )
+
+    await expect(api.getHealth()).resolves.toEqual({ status: 'degraded', db: 'error' })
+  })
+
+  it('throws an ApiError carrying the shared error envelope', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      jsonResponse(404, {
+        error: { code: 'not_found', message: 'route not found', request_id: 'req-1' },
+      }),
+    )
+
+    const error: unknown = await apiFetch('/nope').catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({
+      status: 404,
+      code: 'not_found',
+      message: 'route not found',
+      requestId: 'req-1',
+    })
+  })
+
+  it('falls back to a generic ApiError when the body is not the envelope', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('Bad Gateway', { status: 502 }))
+
+    const error: unknown = await apiFetch('/healthz').catch((e: unknown) => e)
+
+    expect(error).toMatchObject({ status: 502, code: 'http_error' })
+  })
+})

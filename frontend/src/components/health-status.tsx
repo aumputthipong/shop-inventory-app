@@ -51,12 +51,7 @@ export function HealthStatus() {
         <CardTitle>Backend health</CardTitle>
         <CardDescription>Live result of GET /healthz, refreshed every 15 seconds.</CardDescription>
         <CardAction>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-          >
+          <Button variant="outline" size="sm" onClick={() => void refetch()} disabled={isFetching}>
             <RefreshCw className={isFetching ? 'animate-spin' : undefined} aria-hidden="true" />
             Refresh
           </Button>

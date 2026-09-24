@@ -50,10 +50,14 @@ interface RequestOptions extends RequestInit {
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { acceptStatuses = [], headers, ...init } = options
 
-  const response = await fetch(path, {
-    ...init,
-    headers: { Accept: 'application/json', ...headers },
-  })
+  // HeadersInit may be a Headers instance or an array of pairs, which an object
+  // spread would silently drop, so normalise through Headers.
+  const requestHeaders = new Headers(headers)
+  if (!requestHeaders.has('Accept')) {
+    requestHeaders.set('Accept', 'application/json')
+  }
+
+  const response = await fetch(path, { ...init, headers: requestHeaders })
 
   if (response.ok || acceptStatuses.includes(response.status)) {
     return (await response.json()) as T
