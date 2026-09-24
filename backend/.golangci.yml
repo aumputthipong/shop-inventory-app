@@ -1,0 +1,70 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  default: standard
+  enable:
+    - bodyclose
+    - depguard
+    - errorlint
+    - misspell
+    - noctx
+    - revive
+    - unconvert
+
+  settings:
+    depguard:
+      rules:
+        # Gin rule 1 and 7: *gin.Context must never leave internal/http or a
+        # feature's handler.go. Everything else takes context.Context.
+        gin-confined-to-http:
+          files:
+            - "$all"
+            - "!**/internal/http/**"
+            - "!**/handler.go"
+            - "!**/handler_test.go"
+          deny:
+            - pkg: github.com/gin-gonic/gin
+              desc: gin may only be imported by internal/http and handler.go files; pass context.Context instead (CLAUDE.md, Gin rules)
+        # Belt and braces: services and repositories never see gin, wherever
+        # they live, including inside internal/http.
+        no-gin-in-service-or-repository:
+          files:
+            - "**/service.go"
+            - "**/service_test.go"
+            - "**/repository.go"
+            - "**/repository_test.go"
+          deny:
+            - pkg: github.com/gin-gonic/gin
+              desc: services and repositories take context.Context, never *gin.Context (CLAUDE.md, Gin rules)
+
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+
+    misspell:
+      locale: US
+
+  exclusions:
+    generated: strict
+    paths:
+      - db/sqlc
+    presets:
+      - comments
+      - std-error-handling
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/aumputthipong/shop-inventory-app/backend
+  exclusions:
+    generated: strict
+    paths:
+      - db/sqlc

@@ -27,7 +27,7 @@ func (s *stubPinger) Ping(ctx context.Context) error {
 	s.called = true
 
 	// The handler must hand down a live context with a deadline, never a
-	// cancelled one and never *gin.Context.
+	// canceled one and never *gin.Context.
 	if _, ok := ctx.Deadline(); !ok {
 		return errors.New("expected the handler to apply a ping deadline")
 	}
@@ -70,7 +70,7 @@ func TestHealthz(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			pinger := &stubPinger{err: tt.pingErr}
 			recorder := httptest.NewRecorder()
-			request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+			request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)
 
 			newTestServer(t, pinger).ServeHTTP(recorder, request)
 
@@ -88,7 +88,7 @@ func TestHealthz(t *testing.T) {
 // router is what gets mounted in production.
 func TestHealthzEchoesRequestID(t *testing.T) {
 	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)
 	request.Header.Set(httpx.RequestIDHeader, "test-request-id")
 
 	newTestServer(t, &stubPinger{}).ServeHTTP(recorder, request)
@@ -99,7 +99,7 @@ func TestHealthzEchoesRequestID(t *testing.T) {
 
 func TestUnknownRouteReturnsSharedErrorEnvelope(t *testing.T) {
 	recorder := httptest.NewRecorder()
-	request := httptest.NewRequest(http.MethodGet, "/does-not-exist", nil)
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/does-not-exist", nil)
 
 	newTestServer(t, &stubPinger{}).ServeHTTP(recorder, request)
 

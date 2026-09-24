@@ -47,7 +47,7 @@ func run() error {
 	log := logger.New(cfg.AppEnv)
 	slog.SetDefault(log)
 
-	// The signal context is cancelled on the first SIGINT or SIGTERM, which is
+	// The signal context is canceled on the first SIGINT or SIGTERM, which is
 	// what triggers the graceful shutdown below.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -92,7 +92,7 @@ func run() error {
 		log.Info("shutdown signal received")
 	}
 
-	// A fresh context: the signal context is already cancelled, and shutdown
+	// A fresh context: the signal context is already canceled, and shutdown
 	// needs its own budget to drain in-flight requests.
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancelShutdown()
