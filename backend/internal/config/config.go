@@ -1,8 +1,3 @@
-// Package config loads process configuration from environment variables.
-//
-// Configuration comes from the environment only. There is no config file and
-// no secret is ever read from disk, which keeps the twelve-factor contract the
-// docker-compose and CI setups rely on.
 package config
 
 import (
@@ -11,7 +6,6 @@ import (
 	"strconv"
 )
 
-// Valid values for APP_ENV and GIN_MODE.
 const (
 	EnvDevelopment = "development"
 	EnvProduction  = "production"
@@ -28,7 +22,6 @@ const (
 	maxPort         = 65535
 )
 
-// Config holds every setting the api process needs.
 type Config struct {
 	DatabaseURL string
 	HTTPPort    int
@@ -36,8 +29,6 @@ type Config struct {
 	GinMode     string
 }
 
-// Load reads and validates configuration from the environment. DATABASE_URL is
-// required; the remaining settings fall back to development defaults.
 func Load() (Config, error) {
 	cfg := Config{
 		DatabaseURL: os.Getenv("DATABASE_URL"),
@@ -71,12 +62,10 @@ func Load() (Config, error) {
 	return cfg, nil
 }
 
-// Addr returns the listen address for the http server.
 func (c Config) Addr() string {
 	return fmt.Sprintf(":%d", c.HTTPPort)
 }
 
-// IsDevelopment reports whether the process runs in the development environment.
 func (c Config) IsDevelopment() bool {
 	return c.AppEnv == EnvDevelopment
 }

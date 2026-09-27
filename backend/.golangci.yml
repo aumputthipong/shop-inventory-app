@@ -17,8 +17,6 @@ linters:
   settings:
     depguard:
       rules:
-        # Gin rule 1 and 7: *gin.Context must never leave internal/http or a
-        # feature's handler.go. Everything else takes context.Context.
         gin-confined-to-http:
           files:
             - "$all"
@@ -28,8 +26,6 @@ linters:
           deny:
             - pkg: github.com/gin-gonic/gin
               desc: gin may only be imported by internal/http and handler.go files; pass context.Context instead (CLAUDE.md, Gin rules)
-        # Belt and braces: services and repositories never see gin, wherever
-        # they live, including inside internal/http.
         no-gin-in-service-or-repository:
           files:
             - "**/service.go"
