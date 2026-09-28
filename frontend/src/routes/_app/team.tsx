@@ -4,7 +4,7 @@ import { cn } from 'cn'
 import { KeyRoundIcon, UserCheckIcon, UserPlusIcon, UserXIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
-import { PasswordDialog } from '@/components/account/password-dialog'
+import { ResetPasswordDialog } from '@/components/account/reset-password-dialog'
 import { Chip } from '@/components/chip'
 import { Button } from '@/components/ui/button'
 import {
@@ -168,16 +168,11 @@ function TeamPage() {
         </DialogContent>
       </Dialog>
 
-      <PasswordDialog
-        open={resetting !== null}
-        onOpenChange={(open) => {
-          if (!open) setResetting(null)
+      <ResetPasswordDialog
+        member={resetting}
+        onClose={() => {
+          setResetting(null)
         }}
-        title={`ตั้งรหัสผ่านใหม่ให้ ${resetting?.name ?? ''}`}
-        description="บอกรหัสใหม่ให้เจ้าตัว เครื่องที่ล็อกอินอยู่จะถูกออกจากระบบ"
-        askCurrent={false}
-        submit={(_, next) => api.resetUserPassword(resetting?.id ?? 0, next)}
-        doneMessage={`ตั้งรหัสผ่านใหม่ให้ ${resetting?.name ?? ''} แล้ว`}
       />
 
       <Dialog
