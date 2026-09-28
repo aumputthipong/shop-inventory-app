@@ -62,9 +62,12 @@ function OrdersPage() {
         </Button>
       </div>
 
-      <section aria-label="รายการออเดอร์" className="rounded-[22px] bg-white p-3 shadow-soft">
-        <div className="flex items-center justify-between gap-4 px-2 pt-2 pb-4">
-          <div role="group" aria-label="สถานะออเดอร์" className="flex gap-2">
+      <section
+        aria-label="รายการออเดอร์"
+        className="overflow-x-auto rounded-[22px] bg-white p-3 shadow-soft"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-4 px-2 pt-2 pb-4">
+          <div role="group" aria-label="สถานะออเดอร์" className="flex flex-wrap gap-2">
             {[undefined, ...STATUSES].map((status) => {
               const active = search.status === status
               return (
@@ -105,7 +108,7 @@ function OrdersPage() {
           </label>
         </div>
 
-        <div className="grid h-9 grid-cols-[170px_120px_90px_130px_120px_minmax(0,1fr)_120px] items-center gap-4 px-4 text-[13px] font-medium text-sand-800">
+        <div className="grid h-9 min-w-[920px] grid-cols-[170px_120px_90px_130px_120px_minmax(0,1fr)_120px] items-center gap-4 px-4 text-[13px] font-medium text-sand-800">
           <span>เลขออเดอร์</span>
           <span>ช่องทาง</span>
           <span className="text-right">จำนวน</span>
@@ -134,7 +137,7 @@ function OrdersPage() {
                 <Link
                   to="/orders/$orderId"
                   params={{ orderId: o.id }}
-                  className="grid min-h-14 grid-cols-[170px_120px_90px_130px_120px_minmax(0,1fr)_120px] items-center gap-4 rounded-2xl px-4 py-2.5 hover:bg-sand-50"
+                  className="grid min-h-14 min-w-[920px] grid-cols-[170px_120px_90px_130px_120px_minmax(0,1fr)_120px] items-center gap-4 rounded-2xl px-4 py-2.5 hover:bg-sand-50"
                 >
                   <span className="flex flex-col">
                     <span className="font-semibold">{o.order_no}</span>

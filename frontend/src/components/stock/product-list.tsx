@@ -52,8 +52,8 @@ export function ProductList({
       aria-label="รายการสินค้า"
       className="min-w-0 flex-1 rounded-[22px] bg-white p-3 shadow-soft"
     >
-      <div className="flex items-center justify-between gap-4 px-2 pt-2 pb-4">
-        <div role="group" aria-label="แสดงสินค้า" className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-4 px-2 pt-2 pb-4">
+        <div role="group" aria-label="แสดงสินค้า" className="flex flex-wrap gap-2">
           {TABS.map((tab) => (
             <button
               key={tab.id}

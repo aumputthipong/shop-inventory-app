@@ -54,7 +54,7 @@ function LedgerPage() {
 
       <section
         aria-label="ความเคลื่อนไหวของสต็อก"
-        className="rounded-[22px] bg-white p-3 shadow-soft"
+        className="overflow-x-auto rounded-[22px] bg-white p-3 shadow-soft"
       >
         <div className="flex flex-wrap items-center gap-2 px-2 pt-2 pb-4">
           {[undefined, ...TYPES].map((type) => {
@@ -95,7 +95,7 @@ function LedgerPage() {
           )}
         </div>
 
-        <div className="grid h-9 grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 px-4 text-[13px] font-medium text-sand-800">
+        <div className="grid h-9 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 px-4 text-[13px] font-medium text-sand-800">
           <span>เวลา</span>
           <span>สินค้า</span>
           <span>ประเภท</span>
@@ -121,7 +121,7 @@ function LedgerPage() {
             return (
               <li
                 key={m.id}
-                className="grid min-h-14 grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 border-b border-sand-200 px-4 py-2.5 last:border-b-0"
+                className="grid min-h-14 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 border-b border-sand-200 px-4 py-2.5 last:border-b-0"
               >
                 <span className="text-[13px] text-sand-800">{formatDateTime(m.created_at)}</span>
                 <span className="flex min-w-0 flex-col">

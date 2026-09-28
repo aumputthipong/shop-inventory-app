@@ -72,8 +72,11 @@ function AuditPage() {
         </p>
       </div>
 
-      <section aria-label="บันทึกการใช้งาน" className="rounded-[22px] bg-white p-3 shadow-soft">
-        <div className="grid h-9 grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 px-4 text-[13px] font-medium text-sand-800">
+      <section
+        aria-label="บันทึกการใช้งาน"
+        className="overflow-x-auto rounded-[22px] bg-white p-3 shadow-soft"
+      >
+        <div className="grid h-9 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 px-4 text-[13px] font-medium text-sand-800">
           <span>เวลา</span>
           <span>ผู้ใช้</span>
           <span>การกระทำ</span>
@@ -85,7 +88,7 @@ function AuditPage() {
           {data?.items.map((log) => (
             <li
               key={log.id}
-              className="grid min-h-14 grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 border-b border-sand-200 px-4 py-2.5 last:border-b-0"
+              className="grid min-h-14 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 border-b border-sand-200 px-4 py-2.5 last:border-b-0"
             >
               <span className="text-[13px] text-sand-800">{formatDateTime(log.created_at)}</span>
               <span className="truncate">{log.actor_name ?? 'ระบบ'}</span>

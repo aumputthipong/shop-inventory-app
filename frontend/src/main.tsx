@@ -3,6 +3,7 @@ import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
+import { RouteError, RouteNotFound } from '@/components/route-states'
 import { ApiError } from '@/lib/api'
 
 import { routeTree } from './routeTree.gen'
@@ -36,6 +37,8 @@ const router = createRouter({
   // Loaders read through the query cache, so the router need not cache too.
   defaultPreloadStaleTime: 0,
   scrollRestoration: true,
+  defaultErrorComponent: RouteError,
+  defaultNotFoundComponent: RouteNotFound,
 })
 
 declare module '@tanstack/react-router' {

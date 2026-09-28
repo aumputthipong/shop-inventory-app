@@ -132,7 +132,7 @@ function NewOrderPage() {
         </p>
       </div>
 
-      <div className="flex items-start gap-6">
+      <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
         <section
           aria-label="เลือกสินค้า"
           className="min-w-0 flex-1 rounded-[22px] bg-white p-3 shadow-soft"
@@ -205,7 +205,7 @@ function NewOrderPage() {
         <form
           onSubmit={onSubmit}
           aria-label="ตะกร้า"
-          className="flex w-[520px] shrink-0 flex-col gap-5 rounded-[22px] bg-white p-6 shadow-soft"
+          className="flex w-full shrink-0 flex-col gap-5 rounded-[22px] bg-white p-6 shadow-soft xl:sticky xl:top-[92px] xl:w-[520px]"
         >
           <h2 className="text-[21px] font-bold">ตะกร้า</h2>
 

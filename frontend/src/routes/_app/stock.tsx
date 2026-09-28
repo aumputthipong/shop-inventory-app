@@ -36,6 +36,9 @@ function StockPage() {
 
   const select = (id: number) => {
     void navigate({ search: { product: id }, replace: true })
+    if (window.matchMedia('(max-width: 1279px)').matches) {
+      document.getElementById('product-panel')?.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   return (
@@ -64,7 +67,7 @@ function StockPage() {
         )}
       </div>
 
-      <div className="flex items-start gap-6">
+      <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
         <ProductList
           products={products}
           selectedId={selectedId}

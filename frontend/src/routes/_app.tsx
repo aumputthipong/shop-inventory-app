@@ -12,8 +12,8 @@ import {
 import { DropdownMenu } from 'radix-ui'
 
 import { BrandMark } from '@/components/brand-mark'
+import { ApiError, api } from '@/lib/api'
 import { productInitial } from '@/lib/avatar'
-import { api } from '@/lib/api'
 import { roleLabel } from '@/lib/labels'
 import { meQueryOptions } from '@/lib/queries'
 import { useCurrentUser } from '@/lib/session'
@@ -22,7 +22,10 @@ export const Route = createFileRoute('/_app')({
   beforeLoad: async ({ context, location }) => {
     const me = await context.queryClient
       .query({ ...meQueryOptions, staleTime: 'static' })
-      .catch(() => null)
+      .catch((error: unknown) => {
+        if (error instanceof ApiError && error.status === 401) return null
+        throw error
+      })
     if (!me) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- router control flow
       throw redirect({ to: '/login', search: { redirect: location.href } })
@@ -53,12 +56,12 @@ function AppLayout() {
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-40 border-b border-sand-300 bg-white">
-        <div className="mx-auto flex h-[68px] max-w-[1440px] items-center gap-9 px-10">
+        <div className="mx-auto flex h-[68px] max-w-[1440px] items-center gap-4 px-4 md:px-6 xl:gap-9 xl:px-10">
           <Link to="/stock" className="flex items-center gap-2.5">
             <BrandMark />
-            <span className="text-base font-bold">Shop Inventory</span>
+            <span className="hidden text-base font-bold xl:inline">Shop Inventory</span>
           </Link>
-          <nav aria-label="เมนูหลัก" className="flex items-center gap-1">
+          <nav aria-label="เมนูหลัก" className="flex min-w-0 items-center gap-1 overflow-x-auto">
             {NAV.filter((item) => !item.ownerOnly || me.isOwner).map((item) => (
               <Link
                 key={item.to}
@@ -78,7 +81,7 @@ function AppLayout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-10 py-8">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 md:px-6 xl:px-10 xl:py-8">
         <Outlet />
       </main>
     </div>

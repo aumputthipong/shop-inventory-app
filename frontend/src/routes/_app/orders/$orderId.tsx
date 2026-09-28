@@ -149,7 +149,7 @@ function OrderPage() {
         </p>
       )}
 
-      <div className="flex items-start gap-6">
+      <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start">
         <section
           aria-label="รายการสินค้า"
           className="min-w-0 flex-1 rounded-[22px] bg-white p-6 shadow-soft"
@@ -193,7 +193,7 @@ function OrderPage() {
 
         <aside
           aria-label="สถานะ"
-          className="w-[400px] shrink-0 rounded-[22px] bg-white p-6 shadow-soft"
+          className="w-full shrink-0 rounded-[22px] bg-white p-6 shadow-soft lg:w-[400px]"
         >
           <h2 className="mb-4 text-lg font-bold">ความคืบหน้า</h2>
           <Timeline order={order} />
