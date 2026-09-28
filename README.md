@@ -14,9 +14,19 @@ available = on_hand - reserved
 An order reserves stock before it ships, and the database itself rejects any
 balance where `on_hand - reserved` would go negative.
 
-> Status: scaffold. The API serves a health check, the schema and sqlc pipeline
-> are in place, and the frontend shows live backend health. Products, stock
-> movements and channel integrations come next.
+> Status: the core loop works end to end. Owners and staff sign in, manage
+> products, receive and adjust stock, and take orders from the store, Shopee or
+> LINE (entered by hand). Every order reserves all its lines or none, every
+> stock change is in a ledger, and every action is in an audit log. Channel
+> webhooks, reservation expiry and returns come next.
+
+## Proving it does not oversell
+
+`backend/internal/orders/oversell_integration_test.go` fires 40 concurrent
+orders at 5 units of one product against a real postgres and asserts that
+exactly 5 succeed, the balance is 5 reserved with 0 available, and the ledger
+rebuilds the balance. A second test races multi-item orders and checks that no
+order was ever half reserved. Run them with `make test-integration`.
 
 ## Stack
 
@@ -45,6 +55,7 @@ cp .env.example .env
 cd backend
 make up            # postgres on localhost:5433, waits until healthy
 make migrate-up
+make seed          # dev accounts and sample stock, empty database only
 make run           # api on http://localhost:8080
 ```
 
@@ -56,6 +67,9 @@ curl -i http://localhost:8080/healthz
 
 `/healthz` answers `503 {"status":"degraded","db":"error"}` when the database is
 unreachable.
+
+`make seed` creates `owner@shop.local` and `staff@shop.local`; their passwords
+are `SEED_OWNER_PASSWORD` and `SEED_STAFF_PASSWORD` in `.env`.
 
 In a second terminal:
 
@@ -70,6 +84,7 @@ npm run dev        # http://localhost:5173, proxies /api and /healthz to :8080
 ```sh
 # backend/
 make test
+make test-integration   # needs postgres from make up
 make lint
 
 # frontend/

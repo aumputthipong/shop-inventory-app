@@ -19,7 +19,10 @@ An order first **reserves** stock (reserved goes up), then either **ships** it
 `available` is always derived, never stored. The database refuses any row where
 `on_hand - reserved < 0`, so no code path can persist an oversold balance.
 
-Channel integrations are not built yet. The repo is currently a scaffold.
+Built so far: sign-in with owner and staff roles, products, stock in and adjust,
+the movement ledger, orders with all-or-nothing reservation and the
+pack/ship/cancel flow, and the audit log. Channel integrations (Shopee, LINE
+webhooks) are not built yet; channel orders are entered by hand.
 
 ## Stack
 
@@ -51,6 +54,12 @@ backend/
     platform/logger/       slog JSON handler
     http/                  package httpx: router, middleware, JSON error helpers
     health/                GET /healthz
+    auth/, users/          Cookie sessions, password hashing, team accounts
+    products/, stock/      Catalog, balances, stock in/adjust, the movement ledger
+    orders/                All-or-nothing reservation and the pack/ship/cancel flow
+    audit/                 Who did what, written in the same transaction as the change
+    platform/actor/        The signed-in user on context.Context
+  cmd/seed/                Dev accounts and sample stock (make seed)
   db/migrations/           golang-migrate SQL, the single source of schema truth
   db/queries/              sqlc input
   db/sqlc/                 sqlc output (generated, committed, never hand-edited)
@@ -75,7 +84,9 @@ Backend, from `backend/` (needs GNU make; the root `.env` is loaded automaticall
 | `make migrate-new name=add_orders` | Create a sequential migration pair |
 | `make sqlc` | Regenerate `db/sqlc` |
 | `make run` | Run the api on `HTTP_PORT` |
+| `make seed` | Create dev accounts and sample stock (empty database only) |
 | `make test` | Unit tests (no database needed) |
+| `make test-integration` | Create and migrate the test database, then run `-tags integration` tests |
 | `make lint` | golangci-lint, including the depguard gin rules |
 | `make fmt` | gofmt + goimports |
 
@@ -117,6 +128,16 @@ it via `httpx.RequestIDFrom(ctx)` without seeing gin.
 - Handlers never serialise sqlc models directly. Map them to response types;
   `sqlc.User` carries `password_hash` with a JSON tag.
 
+## Roles
+
+- `owner` can do everything. `staff` can receive stock, create orders and
+  pack, ship or cancel them, but cannot adjust stock, create or edit products,
+  manage users or read the audit log.
+- Enforce a role with `httpx.RequireRole` on the route. Services read the
+  signed-in user with `actor.From(ctx)`; they never see the cookie.
+- Stock and order writes lock `stock_balances` rows in product id order
+  (`stock.Lock`) before deciding anything, then write through `stock.Apply`.
+
 ## Code rules
 
 - Wrap errors with context: `fmt.Errorf("create product: %w", err)`.
@@ -136,8 +157,9 @@ it via `httpx.RequestIDFrom(ctx)` without seeing gin.
 - Frontend: Vitest + Testing Library. Test behaviour through roles and text,
   not implementation details. Stub the api at `api.*`, not at `fetch`, in
   component tests.
-- Integration tests against a real database will get their own build tag and
-  CI job when the first repository lands.
+- Integration tests carry the `integration` build tag and run against
+  `TEST_DATABASE_URL` (`make test-integration`, CI job `backend integration`).
+  They create their own rows; never point them at the dev database.
 
 ## Git
 
