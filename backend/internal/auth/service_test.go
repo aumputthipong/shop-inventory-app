@@ -147,3 +147,33 @@ func TestChangePasswordKeepsOnlyTheCurrentSession(t *testing.T) {
 	_, err = svc.Login(t.Context(), "owner@shop.local", "brand-new-pass")
 	require.NoError(t, err)
 }
+
+func TestRepeatedWrongPasswordsLockTheEmailForAWhile(t *testing.T) {
+	repo := newRepo(t)
+	svc := auth.NewService(repo)
+
+	for range 5 {
+		_, err := svc.Login(t.Context(), "owner@shop.local", "wrong")
+		require.ErrorIs(t, err, auth.ErrInvalidCredentials)
+	}
+
+	_, err := svc.Login(t.Context(), "OWNER@shop.local", "owner-pass-123")
+	require.ErrorIs(t, err, auth.ErrTooManyAttempts, "even the right password waits out the lock")
+}
+
+func TestSuccessfulSignInClearsFailures(t *testing.T) {
+	repo := newRepo(t)
+	svc := auth.NewService(repo)
+
+	for range 4 {
+		_, _ = svc.Login(t.Context(), "owner@shop.local", "wrong")
+	}
+	_, err := svc.Login(t.Context(), "owner@shop.local", "owner-pass-123")
+	require.NoError(t, err)
+
+	for range 4 {
+		_, _ = svc.Login(t.Context(), "owner@shop.local", "wrong")
+	}
+	_, err = svc.Login(t.Context(), "owner@shop.local", "owner-pass-123")
+	require.NoError(t, err)
+}

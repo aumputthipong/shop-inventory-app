@@ -4,7 +4,7 @@
 # friends do not need to be exported by hand. Copy ../.env.example to start.
 -include ../.env
 export DATABASE_URL HTTP_PORT APP_ENV GIN_MODE POSTGRES_PORT
-export SEED_OWNER_EMAIL SEED_OWNER_PASSWORD SEED_STAFF_EMAIL SEED_STAFF_PASSWORD TEST_DATABASE_URL POSTGRES_USER
+export SEED_OWNER_EMAIL SEED_OWNER_PASSWORD SEED_STAFF_EMAIL SEED_STAFF_PASSWORD SEED_SAMPLE_DATA TEST_DATABASE_URL POSTGRES_USER
 
 # golangci-lint 2.13.2 is built with go1.26 and panics ("file requires newer
 # Go version go1.27") when it type-checks a go1.27 standard library. Forcing

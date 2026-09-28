@@ -36,6 +36,13 @@ in the same PR as the behaviour it describes.
   sessions, and logout is a row delete, which a JWT cannot offer.
 - `auth.Login` runs bcrypt against a dummy hash when the email is unknown, so
   response time does not reveal which emails have accounts.
+- Failed sign-ins are counted per email in memory: 5 within 15 minutes locks
+  that email until the window passes, even for the right password. It resets
+  on restart and is not shared between api instances, and someone who knows an
+  email can lock it out for 15 minutes. Good enough for one shop on one
+  instance; move it to postgres or redis before running more than one.
+- Disabling a member or resetting their password deletes their sessions in the
+  same transaction, so the change takes effect on their next request.
 - Services read the user from `actor.From(ctx)`. The middleware in `httpx` sets
   it, which keeps gin out of services.
 

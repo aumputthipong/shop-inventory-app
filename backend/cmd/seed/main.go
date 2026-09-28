@@ -1,4 +1,4 @@
-// Command seed creates the first owner and staff accounts plus sample stock for local development.
+// Command seed creates the first owner (and optionally a staff account and sample stock) on an empty database.
 package main
 
 import (
@@ -49,8 +49,8 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
-	if cfg.AppEnv == config.EnvProduction {
-		return errors.New("refusing to seed a production database")
+	if cfg.AppEnv == config.EnvProduction && os.Getenv("SEED_SAMPLE_DATA") != "false" {
+		return errors.New("refusing to add sample data to production; set SEED_SAMPLE_DATA=false")
 	}
 
 	owner := account{os.Getenv("SEED_OWNER_EMAIL"), os.Getenv("SEED_OWNER_PASSWORD"), "พลอย", actor.RoleOwner}
@@ -89,6 +89,10 @@ func run() error {
 		}
 	}
 
+	if os.Getenv("SEED_SAMPLE_DATA") == "false" {
+		slog.Info("seed complete without sample data", slog.String("owner", owner.email))
+		return nil
+	}
 	if err := seedStock(ctx, pool); err != nil {
 		return err
 	}
