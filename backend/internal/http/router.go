@@ -32,6 +32,7 @@ type RouterConfig struct {
 	Routes    []Route
 	Protected []Route
 	Sessions  SessionResolver
+	StaticDir string
 }
 
 // NewRouter builds the application http handler.
@@ -48,9 +49,13 @@ func NewRouter(cfg RouterConfig) http.Handler {
 
 	engine.Use(RequestID(), RequestLogger(cfg.Logger), Recovery(cfg.Logger))
 
-	engine.NoRoute(func(c *gin.Context) {
-		RespondError(c, http.StatusNotFound, CodeNotFound, "route not found")
-	})
+	if cfg.StaticDir != "" {
+		engine.NoRoute(spaHandler(cfg.StaticDir))
+	} else {
+		engine.NoRoute(func(c *gin.Context) {
+			RespondError(c, http.StatusNotFound, CodeNotFound, "route not found")
+		})
+	}
 	engine.NoMethod(func(c *gin.Context) {
 		RespondError(c, http.StatusMethodNotAllowed, CodeNotFound, "method not allowed for this route")
 	})

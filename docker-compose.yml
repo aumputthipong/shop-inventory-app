@@ -24,5 +24,37 @@ services:
       retries: 10
       start_period: 10s
 
+  # The services below run with `docker compose --profile app up --build`.
+  migrate:
+    profiles: [app]
+    image: migrate/migrate:v4.19.1
+    volumes:
+      - ./backend/db/migrations:/migrations:ro
+    command:
+      - -path=/migrations
+      - -database=postgres://${POSTGRES_USER:-shopinv}:${POSTGRES_PASSWORD:-shopinv}@postgres:5432/${POSTGRES_DB:-shopinv}?sslmode=disable
+      - up
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  app:
+    profiles: [app]
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-shopinv}:${POSTGRES_PASSWORD:-shopinv}@postgres:5432/${POSTGRES_DB:-shopinv}?sslmode=disable
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      SEED_OWNER_EMAIL: ${SEED_OWNER_EMAIL:-}
+      SEED_OWNER_PASSWORD: ${SEED_OWNER_PASSWORD:-}
+      SEED_STAFF_EMAIL: ${SEED_STAFF_EMAIL:-}
+      SEED_STAFF_PASSWORD: ${SEED_STAFF_PASSWORD:-}
+      SEED_SAMPLE_DATA: ${SEED_SAMPLE_DATA:-false}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
 volumes:
   postgres-data:

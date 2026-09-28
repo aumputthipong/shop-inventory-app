@@ -79,6 +79,25 @@ npm install
 npm run dev        # http://localhost:5173, proxies /api and /healthz to :8080
 ```
 
+## Running the whole shop with Docker
+
+One image holds the api, the built frontend and the seed command. Only Docker
+is needed:
+
+```sh
+cp .env.example .env               # set POSTGRES_PASSWORD and the SEED_* accounts
+docker compose --profile app up -d --build
+docker compose --profile app run --rm -e SEED_SAMPLE_DATA=false --entrypoint /app/seed app
+```
+
+The shop is then on `http://localhost:8080` (`APP_PORT` changes it). Migrations
+run automatically on every `up`. The seed step creates the owner and staff
+accounts once; it refuses to add sample data outside development.
+
+Cookies are sent over plain http by default so the shop works on its own
+network. Put it behind HTTPS and set `COOKIE_SECURE=true` before exposing it to
+the internet.
+
 ## Checks
 
 ```sh
@@ -102,7 +121,8 @@ CI runs the same checks on every push to `main` and every pull request.
 api/openapi.yaml    API contract
 backend/            Go api, migrations, sqlc queries and generated code
 frontend/           React app
-docker-compose.yml  PostgreSQL for local development
+docker-compose.yml  PostgreSQL for development; the app profile runs everything
+Dockerfile          One image: api, seed command and built frontend
 ```
 
 See [CLAUDE.md](CLAUDE.md) for architecture rules, conventions and the reasoning

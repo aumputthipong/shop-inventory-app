@@ -35,13 +35,31 @@ func TestLoad(t *testing.T) {
 				"HTTP_PORT":    "9090",
 				"APP_ENV":      config.EnvProduction,
 				"GIN_MODE":     config.GinModeRelease,
+				"STATIC_DIR":   "/app/web",
 			},
 			want: config.Config{
-				DatabaseURL: testDSN,
-				HTTPPort:    9090,
-				AppEnv:      config.EnvProduction,
-				GinMode:     config.GinModeRelease,
+				DatabaseURL:  testDSN,
+				HTTPPort:     9090,
+				AppEnv:       config.EnvProduction,
+				GinMode:      config.GinModeRelease,
+				StaticDir:    "/app/web",
+				CookieSecure: true,
 			},
+		},
+		{
+			name: "secure cookies can be turned off for plain http",
+			env:  map[string]string{"DATABASE_URL": testDSN, "APP_ENV": config.EnvProduction, "COOKIE_SECURE": "false"},
+			want: config.Config{
+				DatabaseURL: testDSN,
+				HTTPPort:    8080,
+				AppEnv:      config.EnvProduction,
+				GinMode:     config.GinModeDebug,
+			},
+		},
+		{
+			name:    "cookie secure must be a boolean",
+			env:     map[string]string{"DATABASE_URL": testDSN, "COOKIE_SECURE": "yes"},
+			wantErr: `COOKIE_SECURE "yes"`,
 		},
 		{
 			name:    "database url is required",
@@ -73,7 +91,7 @@ func TestLoad(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// t.Setenv also clears the variable again once the subtest ends.
-			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE"} {
+			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE", "STATIC_DIR", "COOKIE_SECURE"} {
 				t.Setenv(key, "")
 			}
 			for key, value := range tt.env {

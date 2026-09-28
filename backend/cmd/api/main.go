@@ -70,7 +70,7 @@ func run() error {
 	log.Info("database pool ready")
 
 	authService := auth.NewService(auth.NewRepository(pool))
-	authHandler := auth.NewHandler(authService, cfg.AppEnv == config.EnvProduction)
+	authHandler := auth.NewHandler(authService, cfg.CookieSecure)
 
 	server := &http.Server{
 		Addr: cfg.Addr(),
@@ -89,7 +89,8 @@ func run() error {
 				orders.NewHandler(orders.NewService(orders.NewRepository(pool))),
 				audit.NewHandler(audit.NewService(audit.NewRepository(pool))),
 			},
-			Sessions: authService,
+			Sessions:  authService,
+			StaticDir: cfg.StaticDir,
 		}),
 		ReadHeaderTimeout: readHeaderTimeout,
 	}

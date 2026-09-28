@@ -30,10 +30,12 @@ const (
 
 // Config holds every setting the api process needs.
 type Config struct {
-	DatabaseURL string
-	HTTPPort    int
-	AppEnv      string
-	GinMode     string
+	DatabaseURL  string
+	HTTPPort     int
+	AppEnv       string
+	GinMode      string
+	StaticDir    string
+	CookieSecure bool
 }
 
 // Load reads and validates configuration from the environment. DATABASE_URL is
@@ -43,6 +45,7 @@ func Load() (Config, error) {
 		DatabaseURL: os.Getenv("DATABASE_URL"),
 		AppEnv:      envOrDefault("APP_ENV", EnvDevelopment),
 		GinMode:     envOrDefault("GIN_MODE", GinModeDebug),
+		StaticDir:   os.Getenv("STATIC_DIR"),
 	}
 
 	if cfg.DatabaseURL == "" {
@@ -66,6 +69,15 @@ func Load() (Config, error) {
 	case GinModeDebug, GinModeRelease, GinModeTest:
 	default:
 		return Config{}, fmt.Errorf("config: GIN_MODE %q must be one of debug, release, test", cfg.GinMode)
+	}
+
+	switch raw := os.Getenv("COOKIE_SECURE"); raw {
+	case "":
+		cfg.CookieSecure = cfg.AppEnv == EnvProduction
+	case "true", "false":
+		cfg.CookieSecure = raw == "true"
+	default:
+		return Config{}, fmt.Errorf("config: COOKIE_SECURE %q must be true or false", raw)
 	}
 
 	return cfg, nil

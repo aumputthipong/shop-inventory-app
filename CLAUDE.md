@@ -49,7 +49,7 @@ api/openapi.yaml           Contract, written before handlers. Keep it in step wi
 backend/
   cmd/api/main.go          Wiring only. Does not import gin.
   internal/
-    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE)
+    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE)
     platform/database/     pgxpool setup + startup ping
     platform/logger/       slog JSON handler
     http/                  package httpx: router, middleware, JSON error helpers

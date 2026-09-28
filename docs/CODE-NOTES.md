@@ -51,6 +51,21 @@ in the same PR as the behaviour it describes.
 - Integration tests use `TEST_DATABASE_URL`, not `DATABASE_URL`, because they
   leave rows behind and would clutter the dev database the UI reads.
 
+## Deployment
+
+- The api serves the built frontend when `STATIC_DIR` is set, so the shop is
+  one process and one origin: no CORS, and the session cookie needs no
+  cross-site settings. Unknown paths fall back to `index.html` for client
+  routes, but `/api/*` and non-GET requests still get the JSON 404.
+- Hashed files under `/assets/` are cached for a year; `index.html` is
+  `no-cache` so a new deploy is picked up on the next load.
+- The compose `app` profile defaults `COOKIE_SECURE` to false because a shop
+  often reaches the app over plain http on its own network, where a Secure
+  cookie would never be sent back and sign-in would silently fail.
+- Migrations run from the `migrate/migrate` image before the app starts,
+  instead of inside the api, so a failed migration stops the deploy rather
+  than leaving the api half up.
+
 ## Frontend
 
 - Product tiles show the first letter of the name on a colour picked from the

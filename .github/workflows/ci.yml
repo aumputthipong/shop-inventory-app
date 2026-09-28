@@ -109,3 +109,12 @@ jobs:
 
       - name: build
         run: npm run build
+
+  image:
+    name: docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: build
+        run: docker build -t shop-inventory-app:ci .
