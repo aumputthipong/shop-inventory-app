@@ -9,6 +9,158 @@ export interface HealthResponse {
   db: DependencyStatus
 }
 
+export type Role = 'owner' | 'staff'
+
+export interface User {
+  id: number
+  email: string
+  name: string
+  role: Role
+}
+
+export interface TeamMember extends User {
+  created_at: string
+}
+
+export type StockStatus = 'in_stock' | 'low' | 'out_of_stock'
+
+export interface Product {
+  id: number
+  sku: string
+  name: string
+  price: string
+  low_stock_threshold: number
+  is_active: boolean
+  on_hand: number
+  reserved: number
+  available: number
+  stock_status: StockStatus
+  created_at: string
+  updated_at: string
+}
+
+export type Channel = 'store' | 'shopee' | 'line'
+export type OrderStatus = 'reserved' | 'packed' | 'shipped' | 'canceled'
+export type OrderAction = 'pack' | 'ship' | 'cancel'
+
+export interface Hold {
+  order_id: number
+  order_no: string
+  channel: Channel
+  status: OrderStatus
+  qty: number
+  created_at: string
+}
+
+export interface ProductDetail extends Product {
+  holds: Hold[]
+}
+
+export interface ProductInput {
+  sku: string
+  name: string
+  price: string
+  low_stock_threshold: number
+  is_active?: boolean
+}
+
+export type MovementType = 'STOCK_IN' | 'ADJUST' | 'RESERVE' | 'RELEASE' | 'SHIP' | 'RETURN'
+export type AdjustReason = 'count_correction' | 'damaged' | 'lost' | 'other'
+
+export interface Movement {
+  id: number
+  product_id: number
+  sku: string
+  product_name: string
+  type: MovementType
+  qty_change: number
+  reserved_change: number
+  on_hand_after: number
+  reserved_after: number
+  available_after: number
+  order_id: number | null
+  order_no: string | null
+  order_channel: Channel | null
+  reason: string | null
+  note: string | null
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface Balance {
+  product_id: number
+  on_hand: number
+  reserved: number
+  available: number
+}
+
+export interface OrderItem {
+  product_id: number
+  sku: string
+  name: string
+  qty: number
+  unit_price: string
+}
+
+export interface OrderSummary {
+  id: number
+  order_no: string
+  channel: Channel
+  external_ref: string | null
+  status: OrderStatus
+  total: string
+  item_count: number
+  created_by_name: string | null
+  created_at: string
+}
+
+export interface Order {
+  id: number
+  order_no: string
+  channel: Channel
+  external_ref: string | null
+  status: OrderStatus
+  total: string
+  note: string | null
+  created_by_name: string | null
+  created_at: string
+  updated_at: string
+  packed_at: string | null
+  shipped_at: string | null
+  canceled_at: string | null
+  items: OrderItem[]
+}
+
+export interface NewOrder {
+  channel: Channel
+  external_ref?: string
+  note?: string
+  items: { product_id: number; qty: number }[]
+}
+
+export interface Shortage {
+  product_id: number
+  sku: string
+  name: string
+  requested: number
+  available: number
+}
+
+export interface AuditLog {
+  id: number
+  action: string
+  entity_type: string
+  entity_id: number | null
+  detail: Record<string, unknown>
+  actor_name: string | null
+  created_at: string
+}
+
+export interface Page<T> {
+  items: T[]
+  total: number
+}
+
 export interface FieldError {
   field: string
   message: string
@@ -20,6 +172,7 @@ export interface ApiErrorBody {
     message: string
     request_id?: string
     fields?: FieldError[]
+    details?: unknown
   }
 }
 
@@ -30,6 +183,7 @@ export class ApiError extends Error {
   readonly code: string
   readonly requestId: string | undefined
   readonly fields: FieldError[]
+  readonly details: unknown
 
   constructor(status: number, body: Partial<ApiErrorBody> | undefined) {
     super(body?.error?.message ?? `request failed with status ${status}`)
@@ -38,7 +192,16 @@ export class ApiError extends Error {
     this.code = body?.error?.code ?? 'http_error'
     this.requestId = body?.error?.request_id
     this.fields = body?.error?.fields ?? []
+    this.details = body?.error?.details
   }
+}
+
+export function shortagesOf(error: unknown): Shortage[] {
+  if (!(error instanceof ApiError) || error.code !== 'insufficient_stock') {
+    return []
+  }
+  const details = error.details as { items?: Shortage[] } | undefined
+  return details?.items ?? []
 }
 
 interface RequestOptions extends RequestInit {
@@ -59,6 +222,9 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}): P
 
   const response = await fetch(path, { ...init, headers: requestHeaders })
 
+  if (response.status === 204) {
+    return undefined as T
+  }
   if (response.ok || acceptStatuses.includes(response.status)) {
     return (await response.json()) as T
   }
@@ -75,7 +241,75 @@ async function readErrorBody(response: Response): Promise<Partial<ApiErrorBody> 
   }
 }
 
+function send<T>(method: string, path: string, body?: unknown): Promise<T> {
+  return apiFetch<T>(path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  })
+}
+
+function withQuery(path: string, params: Record<string, string | number | undefined>): string {
+  const search = new URLSearchParams()
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '') {
+      search.set(key, String(value))
+    }
+  }
+  const query = search.toString()
+  return query ? `${path}?${query}` : path
+}
+
+export interface MovementQuery {
+  product_id?: number
+  type?: MovementType
+  limit?: number
+  offset?: number
+}
+
+export interface OrderQuery {
+  status?: OrderStatus
+  q?: string
+  limit?: number
+  offset?: number
+}
+
 export const api = {
   getHealth: (signal?: AbortSignal) =>
     apiFetch<HealthResponse>('/healthz', { signal, acceptStatuses: [503] }),
+
+  login: (email: string, password: string) =>
+    send<User>('POST', '/api/auth/login', { email, password }),
+  logout: () => send<undefined>('POST', '/api/auth/logout'),
+  me: (signal?: AbortSignal) => apiFetch<User>('/api/auth/me', { signal }),
+
+  listProducts: (signal?: AbortSignal) =>
+    apiFetch<{ items: Product[] }>('/api/products', { signal }).then((r) => r.items),
+  getProduct: (id: number, signal?: AbortSignal) =>
+    apiFetch<ProductDetail>(`/api/products/${id}`, { signal }),
+  createProduct: (input: ProductInput) => send<ProductDetail>('POST', '/api/products', input),
+  updateProduct: (id: number, patch: Partial<ProductInput>) =>
+    send<ProductDetail>('PATCH', `/api/products/${id}`, patch),
+
+  stockIn: (id: number, input: { qty: number; note?: string }) =>
+    send<Balance>('POST', `/api/products/${id}/stock-in`, input),
+  adjustStock: (id: number, input: { qty_change: number; reason: AdjustReason; note?: string }) =>
+    send<Balance>('POST', `/api/products/${id}/adjustments`, input),
+  listMovements: (query: MovementQuery, signal?: AbortSignal) =>
+    apiFetch<Page<Movement>>(withQuery('/api/movements', { ...query }), { signal }),
+
+  listOrders: (query: OrderQuery, signal?: AbortSignal) =>
+    apiFetch<Page<OrderSummary>>(withQuery('/api/orders', { ...query }), { signal }),
+  getOrder: (id: number, signal?: AbortSignal) => apiFetch<Order>(`/api/orders/${id}`, { signal }),
+  createOrder: (input: NewOrder) => send<Order>('POST', '/api/orders', input),
+  orderAction: (id: number, action: OrderAction) =>
+    send<Order>('POST', `/api/orders/${id}/${action}`),
+
+  listAuditLogs: (query: { limit?: number; offset?: number }, signal?: AbortSignal) =>
+    apiFetch<Page<AuditLog>>(withQuery('/api/audit-logs', { ...query }), { signal }),
+
+  listUsers: (signal?: AbortSignal) =>
+    apiFetch<{ items: TeamMember[] }>('/api/users', { signal }).then((r) => r.items),
+  createUser: (input: { name: string; email: string; role: Role; password: string }) =>
+    send<TeamMember>('POST', '/api/users', input),
 }

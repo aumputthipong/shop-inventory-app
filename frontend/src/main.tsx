@@ -1,16 +1,30 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+
+import { ApiError } from '@/lib/api'
 
 import { routeTree } from './routeTree.gen'
 import './index.css'
 
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      if (
+        error instanceof ApiError &&
+        error.status === 401 &&
+        router.state.location.pathname !== '/login'
+      ) {
+        queryClient.clear()
+        void router.navigate({ to: '/login', search: { redirect: router.state.location.href } })
+      }
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      retry: 1,
+      retry: (count, error) => !(error instanceof ApiError && error.status < 500) && count < 1,
     },
   },
 })
