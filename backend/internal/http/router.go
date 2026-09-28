@@ -10,8 +10,13 @@ package httpx
 import (
 	"log/slog"
 	"net/http"
+	"reflect"
+	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
 )
 
 // Route registers one feature's endpoints on the engine. Feature packages
@@ -22,9 +27,11 @@ type Route interface {
 
 // RouterConfig carries everything NewRouter needs to build the handler.
 type RouterConfig struct {
-	Logger  *slog.Logger
-	GinMode string
-	Routes  []Route
+	Logger    *slog.Logger
+	GinMode   string
+	Routes    []Route
+	Protected []Route
+	Sessions  SessionResolver
 }
 
 // NewRouter builds the application http handler.
@@ -48,9 +55,34 @@ func NewRouter(cfg RouterConfig) http.Handler {
 		RespondError(c, http.StatusMethodNotAllowed, CodeNotFound, "method not allowed for this route")
 	})
 
+	useJSONFieldNames.Do(registerJSONFieldNames)
+
 	for _, route := range cfg.Routes {
 		route.Register(engine)
 	}
 
+	if len(cfg.Protected) > 0 {
+		protected := engine.Group("", RequireAuth(cfg.Sessions))
+		for _, route := range cfg.Protected {
+			route.Register(protected)
+		}
+	}
+
 	return engine
+}
+
+var useJSONFieldNames sync.Once
+
+func registerJSONFieldNames() {
+	v, ok := binding.Validator.Engine().(*validator.Validate)
+	if !ok {
+		return
+	}
+	v.RegisterTagNameFunc(func(field reflect.StructField) string {
+		name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+		if name == "" || name == "-" {
+			return field.Name
+		}
+		return name
+	})
 }

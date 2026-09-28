@@ -1,0 +1,136 @@
+package orders_test
+
+import (
+	"context"
+	"encoding/json"
+	"log/slog"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
+	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
+)
+
+type staticSessions struct{}
+
+func (staticSessions) ResolveSession(_ context.Context, token string) (actor.Actor, error) {
+	if token != "valid" {
+		return actor.Actor{}, actor.ErrNoSession
+	}
+	return actor.Actor{UserID: 1, Name: "staff", Role: actor.RoleStaff}, nil
+}
+
+type fakeManager struct {
+	orders.Manager
+	createErr error
+	applyErr  error
+}
+
+func (f fakeManager) Create(context.Context, orders.NewOrder) (orders.Order, error) {
+	return orders.Order{ID: 1, Status: orders.StatusReserved}, f.createErr
+}
+
+func (f fakeManager) Apply(_ context.Context, id int64, _ orders.Action) (orders.Order, error) {
+	return orders.Order{ID: id}, f.applyErr
+}
+
+func serve(t *testing.T, m orders.Manager, method, path, body string, signedIn bool) *httptest.ResponseRecorder {
+	t.Helper()
+	router := httpx.NewRouter(httpx.RouterConfig{
+		Logger:    slog.New(slog.DiscardHandler),
+		GinMode:   config.GinModeTest,
+		Protected: []httpx.Route{orders.NewHandler(m)},
+		Sessions:  staticSessions{},
+	})
+	req := httptest.NewRequestWithContext(t.Context(), method, path, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	if signedIn {
+		req.AddCookie(&http.Cookie{Name: httpx.SessionCookie, Value: "valid"})
+	}
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	return rec
+}
+
+func decodeError(t *testing.T, rec *httptest.ResponseRecorder) httpx.ErrorBody {
+	t.Helper()
+	var body struct {
+		Error httpx.ErrorBody `json:"error"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	return body.Error
+}
+
+func TestCreateOrderRequiresSession(t *testing.T) {
+	rec := serve(t, fakeManager{}, http.MethodPost, "/api/orders", `{"items":[{"product_id":1,"qty":1}]}`, false)
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Equal(t, httpx.CodeUnauthorized, decodeError(t, rec).Code)
+}
+
+func TestCreateOrderResponses(t *testing.T) {
+	shortage := &orders.InsufficientStockError{Items: []orders.Shortage{
+		{ProductID: 2, SKU: "SKU-0002", Name: "jeans", Requested: 4, Available: 3},
+	}}
+
+	tests := []struct {
+		name       string
+		body       string
+		err        error
+		wantStatus int
+		wantCode   string
+	}{
+		{"created", `{"items":[{"product_id":2,"qty":1}]}`, nil, http.StatusCreated, ""},
+		{"empty items", `{"items":[]}`, nil, http.StatusUnprocessableEntity, httpx.CodeValidation},
+		{"unknown channel", `{"channel":"tiktok","items":[{"product_id":2,"qty":1}]}`, nil, http.StatusUnprocessableEntity, httpx.CodeValidation},
+		{"not enough stock", `{"items":[{"product_id":2,"qty":4}]}`, shortage, http.StatusConflict, httpx.CodeInsufficientStock},
+		{"duplicate external ref", `{"items":[{"product_id":2,"qty":1}]}`, orders.ErrExternalRefTaken, http.StatusConflict, httpx.CodeConflict},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rec := serve(t, fakeManager{createErr: tt.err}, http.MethodPost, "/api/orders", tt.body, true)
+			require.Equal(t, tt.wantStatus, rec.Code, rec.Body.String())
+			if tt.wantCode != "" {
+				assert.Equal(t, tt.wantCode, decodeError(t, rec).Code)
+			}
+		})
+	}
+}
+
+func TestInsufficientStockCarriesEveryShortLine(t *testing.T) {
+	shortage := &orders.InsufficientStockError{Items: []orders.Shortage{
+		{ProductID: 2, SKU: "SKU-0002", Name: "jeans", Requested: 4, Available: 3},
+		{ProductID: 4, SKU: "SKU-0003", Name: "cap", Requested: 1, Available: 0},
+	}}
+	rec := serve(t, fakeManager{createErr: shortage}, http.MethodPost, "/api/orders",
+		`{"items":[{"product_id":2,"qty":4},{"product_id":4,"qty":1}]}`, true)
+
+	var body struct {
+		Error struct {
+			Details struct {
+				Items []struct {
+					ProductID int64 `json:"product_id"`
+					Available int32 `json:"available"`
+				} `json:"items"`
+			} `json:"details"`
+		} `json:"error"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	require.Len(t, body.Error.Details.Items, 2)
+	assert.Equal(t, int32(0), body.Error.Details.Items[1].Available)
+}
+
+func TestTransitionConflict(t *testing.T) {
+	err := &orders.TransitionError{From: orders.StatusShipped, Action: orders.ActionCancel}
+	rec := serve(t, fakeManager{applyErr: err}, http.MethodPost, "/api/orders/5/cancel", "", true)
+
+	assert.Equal(t, http.StatusConflict, rec.Code)
+	assert.Equal(t, httpx.CodeInvalidState, decodeError(t, rec).Code)
+}

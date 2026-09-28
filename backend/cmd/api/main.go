@@ -16,11 +16,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/audit"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/auth"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/health"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/logger"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/products"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/users"
 )
 
 const (
@@ -63,6 +69,9 @@ func run() error {
 
 	log.Info("database pool ready")
 
+	authService := auth.NewService(auth.NewRepository(pool))
+	authHandler := auth.NewHandler(authService, cfg.AppEnv == config.EnvProduction)
+
 	server := &http.Server{
 		Addr: cfg.Addr(),
 		Handler: httpx.NewRouter(httpx.RouterConfig{
@@ -70,7 +79,17 @@ func run() error {
 			GinMode: cfg.GinMode,
 			Routes: []httpx.Route{
 				health.NewHandler(pool),
+				authHandler,
 			},
+			Protected: []httpx.Route{
+				authHandler.Me(),
+				users.NewHandler(users.NewService(users.NewRepository(pool))),
+				products.NewHandler(products.NewService(products.NewRepository(pool))),
+				stock.NewHandler(stock.NewService(stock.NewRepository(pool))),
+				orders.NewHandler(orders.NewService(orders.NewRepository(pool))),
+				audit.NewHandler(audit.NewService(audit.NewRepository(pool))),
+			},
+			Sessions: authService,
 		}),
 		ReadHeaderTimeout: readHeaderTimeout,
 	}

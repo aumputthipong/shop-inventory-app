@@ -7,31 +7,69 @@ package sqlc
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
 const createProduct = `-- name: CreateProduct :one
-INSERT INTO products (sku, name, price, low_stock_threshold)
-VALUES ($1, $2, $3, $4)
-RETURNING id, sku, name, price, low_stock_threshold, is_active, created_at, updated_at
+INSERT INTO products (sku, name, price, low_stock_threshold, is_active)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id
 `
 
 type CreateProductParams struct {
-	Sku               string         `json:"sku"`
-	Name              string         `json:"name"`
-	Price             pgtype.Numeric `json:"price"`
-	LowStockThreshold int32          `json:"low_stock_threshold"`
+	Sku               string `json:"sku"`
+	Name              string `json:"name"`
+	Price             string `json:"price"`
+	LowStockThreshold int32  `json:"low_stock_threshold"`
+	IsActive          bool   `json:"is_active"`
 }
 
-func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
+func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (int64, error) {
 	row := q.db.QueryRow(ctx, createProduct,
 		arg.Sku,
 		arg.Name,
 		arg.Price,
 		arg.LowStockThreshold,
+		arg.IsActive,
 	)
-	var i Product
+	var id int64
+	err := row.Scan(&id)
+	return id, err
+}
+
+const createStockBalance = `-- name: CreateStockBalance :exec
+INSERT INTO stock_balances (product_id) VALUES ($1)
+`
+
+func (q *Queries) CreateStockBalance(ctx context.Context, productID int64) error {
+	_, err := q.db.Exec(ctx, createStockBalance, productID)
+	return err
+}
+
+const getProductWithStock = `-- name: GetProductWithStock :one
+SELECT p.id, p.sku, p.name, p.price, p.low_stock_threshold, p.is_active,
+       p.created_at, p.updated_at, b.on_hand, b.reserved
+FROM products p
+JOIN stock_balances b ON b.product_id = p.id
+WHERE p.id = $1
+`
+
+type GetProductWithStockRow struct {
+	ID                int64     `json:"id"`
+	Sku               string    `json:"sku"`
+	Name              string    `json:"name"`
+	Price             string    `json:"price"`
+	LowStockThreshold int32     `json:"low_stock_threshold"`
+	IsActive          bool      `json:"is_active"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	OnHand            int32     `json:"on_hand"`
+	Reserved          int32     `json:"reserved"`
+}
+
+func (q *Queries) GetProductWithStock(ctx context.Context, id int64) (GetProductWithStockRow, error) {
+	row := q.db.QueryRow(ctx, getProductWithStock, id)
+	var i GetProductWithStockRow
 	err := row.Scan(
 		&i.ID,
 		&i.Sku,
@@ -41,62 +79,45 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		&i.IsActive,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.OnHand,
+		&i.Reserved,
 	)
 	return i, err
 }
 
-const getProduct = `-- name: GetProduct :one
-SELECT id, sku, name, price, low_stock_threshold, is_active, created_at, updated_at
-FROM products
-WHERE id = $1
+const listProductHolds = `-- name: ListProductHolds :many
+SELECT o.id AS order_id, o.order_no, o.channel, o.status, oi.qty, o.created_at
+FROM order_items oi
+JOIN orders o ON o.id = oi.order_id
+WHERE oi.product_id = $1 AND o.status IN ('reserved', 'packed')
+ORDER BY o.created_at, o.id
 `
 
-func (q *Queries) GetProduct(ctx context.Context, id int64) (Product, error) {
-	row := q.db.QueryRow(ctx, getProduct, id)
-	var i Product
-	err := row.Scan(
-		&i.ID,
-		&i.Sku,
-		&i.Name,
-		&i.Price,
-		&i.LowStockThreshold,
-		&i.IsActive,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+type ListProductHoldsRow struct {
+	OrderID   int64     `json:"order_id"`
+	OrderNo   string    `json:"order_no"`
+	Channel   string    `json:"channel"`
+	Status    string    `json:"status"`
+	Qty       int32     `json:"qty"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-const listProducts = `-- name: ListProducts :many
-SELECT id, sku, name, price, low_stock_threshold, is_active, created_at, updated_at
-FROM products
-ORDER BY id
-LIMIT $2 OFFSET $1
-`
-
-type ListProductsParams struct {
-	PageOffset int32 `json:"page_offset"`
-	PageLimit  int32 `json:"page_limit"`
-}
-
-func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]Product, error) {
-	rows, err := q.db.Query(ctx, listProducts, arg.PageOffset, arg.PageLimit)
+func (q *Queries) ListProductHolds(ctx context.Context, productID int64) ([]ListProductHoldsRow, error) {
+	rows, err := q.db.Query(ctx, listProductHolds, productID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Product{}
+	items := []ListProductHoldsRow{}
 	for rows.Next() {
-		var i Product
+		var i ListProductHoldsRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.Sku,
-			&i.Name,
-			&i.Price,
-			&i.LowStockThreshold,
-			&i.IsActive,
+			&i.OrderID,
+			&i.OrderNo,
+			&i.Channel,
+			&i.Status,
+			&i.Qty,
 			&i.CreatedAt,
-			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -106,4 +127,95 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]P
 		return nil, err
 	}
 	return items, nil
+}
+
+const listProductsWithStock = `-- name: ListProductsWithStock :many
+SELECT p.id, p.sku, p.name, p.price, p.low_stock_threshold, p.is_active,
+       p.created_at, p.updated_at, b.on_hand, b.reserved
+FROM products p
+JOIN stock_balances b ON b.product_id = p.id
+WHERE $1::text IS NULL
+   OR p.name ILIKE '%' || $1::text || '%'
+   OR p.sku ILIKE '%' || $1::text || '%'
+ORDER BY p.sku
+LIMIT 1000
+`
+
+type ListProductsWithStockRow struct {
+	ID                int64     `json:"id"`
+	Sku               string    `json:"sku"`
+	Name              string    `json:"name"`
+	Price             string    `json:"price"`
+	LowStockThreshold int32     `json:"low_stock_threshold"`
+	IsActive          bool      `json:"is_active"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+	OnHand            int32     `json:"on_hand"`
+	Reserved          int32     `json:"reserved"`
+}
+
+func (q *Queries) ListProductsWithStock(ctx context.Context, search *string) ([]ListProductsWithStockRow, error) {
+	rows, err := q.db.Query(ctx, listProductsWithStock, search)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListProductsWithStockRow{}
+	for rows.Next() {
+		var i ListProductsWithStockRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Sku,
+			&i.Name,
+			&i.Price,
+			&i.LowStockThreshold,
+			&i.IsActive,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.OnHand,
+			&i.Reserved,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateProduct = `-- name: UpdateProduct :one
+UPDATE products
+SET sku = $2,
+    name = $3,
+    price = $4,
+    low_stock_threshold = $5,
+    is_active = $6,
+    updated_at = now()
+WHERE id = $1
+RETURNING id
+`
+
+type UpdateProductParams struct {
+	ID                int64  `json:"id"`
+	Sku               string `json:"sku"`
+	Name              string `json:"name"`
+	Price             string `json:"price"`
+	LowStockThreshold int32  `json:"low_stock_threshold"`
+	IsActive          bool   `json:"is_active"`
+}
+
+func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (int64, error) {
+	row := q.db.QueryRow(ctx, updateProduct,
+		arg.ID,
+		arg.Sku,
+		arg.Name,
+		arg.Price,
+		arg.LowStockThreshold,
+		arg.IsActive,
+	)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }

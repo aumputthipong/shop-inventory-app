@@ -5,47 +5,91 @@
 package sqlc
 
 import (
-	"github.com/jackc/pgx/v5/pgtype"
+	"time"
 )
 
+type AuditLog struct {
+	ID         int64     `json:"id"`
+	ActorID    *int64    `json:"actor_id"`
+	Action     string    `json:"action"`
+	EntityType string    `json:"entity_type"`
+	EntityID   *int64    `json:"entity_id"`
+	Detail     []byte    `json:"detail"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+type Order struct {
+	ID          int64      `json:"id"`
+	OrderNo     string     `json:"order_no"`
+	Channel     string     `json:"channel"`
+	ExternalRef *string    `json:"external_ref"`
+	Status      string     `json:"status"`
+	Total       string     `json:"total"`
+	Note        *string    `json:"note"`
+	CreatedBy   *int64     `json:"created_by"`
+	CreatedAt   time.Time  `json:"created_at"`
+	UpdatedAt   time.Time  `json:"updated_at"`
+	PackedAt    *time.Time `json:"packed_at"`
+	ShippedAt   *time.Time `json:"shipped_at"`
+	CanceledAt  *time.Time `json:"canceled_at"`
+}
+
+type OrderItem struct {
+	ID        int64  `json:"id"`
+	OrderID   int64  `json:"order_id"`
+	ProductID int64  `json:"product_id"`
+	Qty       int32  `json:"qty"`
+	UnitPrice string `json:"unit_price"`
+}
+
 type Product struct {
-	ID                int64              `json:"id"`
-	Sku               string             `json:"sku"`
-	Name              string             `json:"name"`
-	Price             pgtype.Numeric     `json:"price"`
-	LowStockThreshold int32              `json:"low_stock_threshold"`
-	IsActive          bool               `json:"is_active"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	ID                int64     `json:"id"`
+	Sku               string    `json:"sku"`
+	Name              string    `json:"name"`
+	Price             string    `json:"price"`
+	LowStockThreshold int32     `json:"low_stock_threshold"`
+	IsActive          bool      `json:"is_active"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+type Session struct {
+	TokenHash []byte    `json:"token_hash"`
+	UserID    int64     `json:"user_id"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type StockBalance struct {
-	ProductID int64              `json:"product_id"`
-	OnHand    int32              `json:"on_hand"`
-	Reserved  int32              `json:"reserved"`
-	Version   int32              `json:"version"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	ProductID int64     `json:"product_id"`
+	OnHand    int32     `json:"on_hand"`
+	Reserved  int32     `json:"reserved"`
+	Version   int32     `json:"version"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type StockMovement struct {
-	ID             int64              `json:"id"`
-	ProductID      int64              `json:"product_id"`
-	Type           string             `json:"type"`
-	QtyChange      int32              `json:"qty_change"`
-	ReservedChange int32              `json:"reserved_change"`
-	RefType        *string            `json:"ref_type"`
-	RefID          *int64             `json:"ref_id"`
-	Reason         *string            `json:"reason"`
-	CreatedBy      *int64             `json:"created_by"`
-	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	ID             int64     `json:"id"`
+	ProductID      int64     `json:"product_id"`
+	Type           string    `json:"type"`
+	QtyChange      int32     `json:"qty_change"`
+	ReservedChange int32     `json:"reserved_change"`
+	RefType        *string   `json:"ref_type"`
+	RefID          *int64    `json:"ref_id"`
+	Reason         *string   `json:"reason"`
+	CreatedBy      *int64    `json:"created_by"`
+	CreatedAt      time.Time `json:"created_at"`
+	Note           *string   `json:"note"`
+	OnHandAfter    int32     `json:"on_hand_after"`
+	ReservedAfter  int32     `json:"reserved_after"`
 }
 
 type User struct {
-	ID           int64              `json:"id"`
-	Email        string             `json:"email"`
-	PasswordHash string             `json:"password_hash"`
-	Name         string             `json:"name"`
-	Role         string             `json:"role"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	ID           int64     `json:"id"`
+	Email        string    `json:"email"`
+	PasswordHash string    `json:"password_hash"`
+	Name         string    `json:"name"`
+	Role         string    `json:"role"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }

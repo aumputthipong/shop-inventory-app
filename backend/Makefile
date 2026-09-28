@@ -4,6 +4,7 @@
 # friends do not need to be exported by hand. Copy ../.env.example to start.
 -include ../.env
 export DATABASE_URL HTTP_PORT APP_ENV GIN_MODE POSTGRES_PORT
+export SEED_OWNER_EMAIL SEED_OWNER_PASSWORD SEED_STAFF_EMAIL SEED_STAFF_PASSWORD TEST_DATABASE_URL POSTGRES_USER
 
 # golangci-lint 2.13.2 is built with go1.26 and panics ("file requires newer
 # Go version go1.27") when it type-checks a go1.27 standard library. Forcing
@@ -16,7 +17,7 @@ MIGRATIONS_DIR := db/migrations
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down migrate-up migrate-down migrate-new sqlc run test lint fmt require-db-url
+.PHONY: help up down migrate-up migrate-down migrate-new sqlc run seed test test-integration lint fmt require-db-url
 
 # Recipes run under cmd.exe on Windows: no POSIX shell syntax.
 help:
@@ -27,7 +28,9 @@ help:
 	$(info migrate-new    Create a migration pair: make migrate-new name=add_orders)
 	$(info sqlc           Regenerate db/sqlc from migrations and queries)
 	$(info run            Run the api)
+	$(info seed           Create dev accounts and sample stock (empty database only))
 	$(info test           Run unit tests (no database required))
+	$(info test-integration Run database tests, including the oversell race test)
 	$(info lint           Run golangci-lint, including the depguard gin rules)
 	$(info fmt            Format code with gofmt and goimports)
 	@exit 0
@@ -51,11 +54,20 @@ migrate-new:
 sqlc:
 	sqlc generate
 
+seed: require-db-url
+	go run ./cmd/seed
+
 run: require-db-url
 	go run ./cmd/api
 
 test:
 	go test ./...
+
+test-integration:
+	$(if $(TEST_DATABASE_URL),,$(error TEST_DATABASE_URL is not set: see .env.example))
+	-$(COMPOSE) exec -T postgres createdb -U $(or $(POSTGRES_USER),shopinv) shopinv_test
+	migrate -path $(MIGRATIONS_DIR) -database "$(TEST_DATABASE_URL)" up
+	go test -tags integration -count=1 ./...
 
 lint:
 	golangci-lint run ./...
