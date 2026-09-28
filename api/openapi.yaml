@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: shop-inventory-app API
-  version: 0.2.0
+  version: 0.3.0
   description: |
     Multi-channel inventory back-office. A single stock pool is sold through
     several channels (store, Shopee, LINE OA).
@@ -105,6 +105,11 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "403":
+          description: Correct password but the account is disabled (code account_disabled).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
         "422": { $ref: "#/components/responses/Validation" }
 
   /api/auth/logout:
@@ -129,6 +134,32 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/User" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/auth/password:
+    post:
+      tags: [auth]
+      summary: Change the signed-in user's password
+      description: Signs out every other session of this user; the current one stays.
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties:
+                current_password: { type: string }
+                new_password: { type: string, minLength: 8 }
+      responses:
+        "204":
+          description: Changed.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422":
+          description: Wrong current password (field current_password) or a new password that is too short (field new_password).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 
   /api/products:
     get:
@@ -540,6 +571,68 @@ paths:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
         "422": { $ref: "#/components/responses/Validation" }
 
+  /api/users/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    patch:
+      tags: [users]
+      summary: Disable or re-enable a member (owner)
+      description: Disabling deletes the member's sessions at once. Owners cannot disable themselves or the last active owner.
+      operationId: setUserActive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_active]
+              properties:
+                is_active: { type: boolean }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TeamMember" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: invalid_state with details.reason self or last_owner.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/users/{id}/password:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [users]
+      summary: Set a new password for a member who forgot theirs (owner)
+      description: Signs the member out everywhere.
+      operationId: resetUserPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 8 }
+      responses:
+        "204":
+          description: Changed.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: invalid_state with details.reason self; use /api/auth/password instead.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422": { $ref: "#/components/responses/Validation" }
+
 components:
   securitySchemes:
     session:
@@ -633,8 +726,9 @@ components:
       allOf:
         - $ref: "#/components/schemas/User"
         - type: object
-          required: [created_at]
+          required: [is_active, created_at]
           properties:
+            is_active: { type: boolean }
             created_at: { type: string, format: date-time }
 
     Money:
@@ -828,6 +922,8 @@ components:
                 - invalid_credentials
                 - insufficient_stock
                 - invalid_state
+                - account_disabled
+                - too_many_attempts
             message:
               type: string
               description: Human-readable explanation. Not intended for programmatic use.

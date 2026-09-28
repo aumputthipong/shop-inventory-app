@@ -17,6 +17,20 @@ type memoryRepo struct {
 	sessions map[string]int64
 }
 
+func (m *memoryRepo) PasswordHash(context.Context, int64) (string, error) {
+	return m.creds.PasswordHash, nil
+}
+
+func (m *memoryRepo) ChangePassword(_ context.Context, userID int64, hash string, keep []byte) error {
+	m.creds.PasswordHash = hash
+	for k, id := range m.sessions {
+		if id == userID && k != string(keep) {
+			delete(m.sessions, k)
+		}
+	}
+	return nil
+}
+
 func (m *memoryRepo) FindByEmail(_ context.Context, email string) (auth.Credentials, error) {
 	if email != m.creds.User.Email {
 		return auth.Credentials{}, auth.ErrUserNotFound
@@ -49,6 +63,7 @@ func newRepo(t *testing.T) *memoryRepo {
 		creds: auth.Credentials{
 			User:         auth.User{ID: 1, Email: "owner@shop.local", Name: "owner", Role: actor.RoleOwner},
 			PasswordHash: hash,
+			Active:       true,
 		},
 		sessions: map[string]int64{},
 	}
@@ -99,4 +114,36 @@ func TestSessionLifecycle(t *testing.T) {
 	require.NoError(t, svc.Logout(t.Context(), session.Token))
 	_, err = svc.ResolveSession(t.Context(), session.Token)
 	require.ErrorIs(t, err, actor.ErrNoSession)
+}
+
+func TestDisabledAccountCannotSignIn(t *testing.T) {
+	repo := newRepo(t)
+	repo.creds.Active = false
+
+	_, err := auth.NewService(repo).Login(t.Context(), "owner@shop.local", "owner-pass-123")
+
+	require.ErrorIs(t, err, auth.ErrAccountDisabled)
+	assert.Empty(t, repo.sessions)
+}
+
+func TestChangePasswordKeepsOnlyTheCurrentSession(t *testing.T) {
+	repo := newRepo(t)
+	svc := auth.NewService(repo)
+	laptop, err := svc.Login(t.Context(), "owner@shop.local", "owner-pass-123")
+	require.NoError(t, err)
+	phone, err := svc.Login(t.Context(), "owner@shop.local", "owner-pass-123")
+	require.NoError(t, err)
+	ctx := actor.With(t.Context(), actor.Actor{UserID: 1, Role: actor.RoleOwner})
+
+	require.ErrorIs(t, svc.ChangePassword(ctx, laptop.Token, "nope", "brand-new-pass"), auth.ErrWrongPassword)
+	require.ErrorIs(t, svc.ChangePassword(ctx, laptop.Token, "owner-pass-123", "short"), auth.ErrWeakPassword)
+	require.NoError(t, svc.ChangePassword(ctx, laptop.Token, "owner-pass-123", "brand-new-pass"))
+
+	_, err = svc.ResolveSession(t.Context(), laptop.Token)
+	require.NoError(t, err)
+	_, err = svc.ResolveSession(t.Context(), phone.Token)
+	require.ErrorIs(t, err, actor.ErrNoSession)
+
+	_, err = svc.Login(t.Context(), "owner@shop.local", "brand-new-pass")
+	require.NoError(t, err)
 }

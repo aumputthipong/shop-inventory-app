@@ -82,7 +82,7 @@ func run() error {
 				authHandler,
 			},
 			Protected: []httpx.Route{
-				authHandler.Me(),
+				authHandler.Protected(),
 				users.NewHandler(users.NewService(users.NewRepository(pool))),
 				products.NewHandler(products.NewService(products.NewRepository(pool))),
 				stock.NewHandler(stock.NewService(stock.NewRepository(pool))),

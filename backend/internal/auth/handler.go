@@ -15,6 +15,7 @@ import (
 type Authenticator interface {
 	Login(ctx context.Context, email, password string) (Session, error)
 	Logout(ctx context.Context, token string) error
+	ChangePassword(ctx context.Context, token, current, next string) error
 }
 
 type Handler struct {
@@ -31,18 +32,47 @@ func (h *Handler) Register(r gin.IRouter) {
 	r.POST("/api/auth/logout", h.logout)
 }
 
-// Me is registered behind RequireAuth.
-func (h *Handler) Me() httpx.Route {
-	return meRoute{}
+// Protected is registered behind RequireAuth.
+func (h *Handler) Protected() httpx.Route {
+	return protectedRoutes{h}
 }
 
-type meRoute struct{}
+type protectedRoutes struct {
+	h *Handler
+}
 
-func (meRoute) Register(r gin.IRouter) {
+func (p protectedRoutes) Register(r gin.IRouter) {
 	r.GET("/api/auth/me", func(c *gin.Context) {
 		a, _ := actor.From(c.Request.Context())
 		c.JSON(http.StatusOK, userResponse{ID: a.UserID, Email: a.Email, Name: a.Name, Role: string(a.Role)})
 	})
+	r.POST("/api/auth/password", p.h.changePassword)
+}
+
+type changePasswordRequest struct {
+	CurrentPassword string `json:"current_password" binding:"required,max=200"`
+	NewPassword     string `json:"new_password" binding:"required,max=200"`
+}
+
+func (h *Handler) changePassword(c *gin.Context) {
+	var req changePasswordRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		httpx.RespondBindError(c, err)
+		return
+	}
+	token, _ := c.Cookie(httpx.SessionCookie)
+
+	err := h.svc.ChangePassword(c.Request.Context(), token, req.CurrentPassword, req.NewPassword)
+	switch {
+	case errors.Is(err, ErrWrongPassword):
+		httpx.RespondFieldError(c, "current_password", "is not your current password")
+	case errors.Is(err, ErrWeakPassword):
+		httpx.RespondFieldError(c, "new_password", "must be at least 8 characters")
+	case err != nil:
+		httpx.RespondInternal(c, err)
+	default:
+		c.Status(http.StatusNoContent)
+	}
 }
 
 type loginRequest struct {
@@ -67,6 +97,10 @@ func (h *Handler) login(c *gin.Context) {
 	session, err := h.svc.Login(c.Request.Context(), req.Email, req.Password)
 	if errors.Is(err, ErrInvalidCredentials) {
 		httpx.RespondError(c, http.StatusUnauthorized, httpx.CodeInvalidCredentials, "email or password is incorrect")
+		return
+	}
+	if errors.Is(err, ErrAccountDisabled) {
+		httpx.RespondError(c, http.StatusForbidden, httpx.CodeAccountDisabled, "this account has been disabled")
 		return
 	}
 	if err != nil {

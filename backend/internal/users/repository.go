@@ -28,10 +28,25 @@ func (r *PgRepository) List(ctx context.Context) ([]User, error) {
 	users := make([]User, 0, len(rows))
 	for _, row := range rows {
 		users = append(users, User{
-			ID: row.ID, Email: row.Email, Name: row.Name, Role: actor.Role(row.Role), CreatedAt: row.CreatedAt,
+			ID: row.ID, Email: row.Email, Name: row.Name, Role: actor.Role(row.Role),
+			Active: row.IsActive, CreatedAt: row.CreatedAt,
 		})
 	}
 	return users, nil
+}
+
+func (r *PgRepository) Get(ctx context.Context, id int64) (User, error) {
+	row, err := sqlc.New(r.pool).GetUser(ctx, id)
+	if database.IsNotFound(err) {
+		return User{}, ErrNotFound
+	}
+	if err != nil {
+		return User{}, fmt.Errorf("query user: %w", err)
+	}
+	return User{
+		ID: row.ID, Email: row.Email, Name: row.Name, Role: actor.Role(row.Role),
+		Active: row.IsActive, CreatedAt: row.CreatedAt,
+	}, nil
 }
 
 func (r *PgRepository) Create(ctx context.Context, in NewUser, passwordHash string) (User, error) {
@@ -46,7 +61,10 @@ func (r *PgRepository) Create(ctx context.Context, in NewUser, passwordHash stri
 		if err != nil {
 			return fmt.Errorf("insert user: %w", err)
 		}
-		created = User{ID: row.ID, Email: row.Email, Name: row.Name, Role: actor.Role(row.Role), CreatedAt: row.CreatedAt}
+		created = User{
+			ID: row.ID, Email: row.Email, Name: row.Name, Role: actor.Role(row.Role),
+			Active: row.IsActive, CreatedAt: row.CreatedAt,
+		}
 
 		return audit.Write(ctx, q, audit.Entry{
 			Action:     audit.ActionUserCreate,
@@ -56,4 +74,42 @@ func (r *PgRepository) Create(ctx context.Context, in NewUser, passwordHash stri
 		})
 	})
 	return created, err
+}
+
+func (r *PgRepository) CountOtherActiveOwners(ctx context.Context, id int64) (int64, error) {
+	n, err := sqlc.New(r.pool).CountOtherActiveOwners(ctx, id)
+	if err != nil {
+		return 0, fmt.Errorf("count owners: %w", err)
+	}
+	return n, nil
+}
+
+func (r *PgRepository) SetActive(ctx context.Context, id int64, active bool) error {
+	return database.InTx(ctx, r.pool, func(q *sqlc.Queries) error {
+		if err := q.SetUserActive(ctx, sqlc.SetUserActiveParams{ID: id, IsActive: active}); err != nil {
+			return fmt.Errorf("update user: %w", err)
+		}
+		action := audit.ActionUserEnable
+		if !active {
+			action = audit.ActionUserDisable
+			if err := q.DeleteUserSessions(ctx, id); err != nil {
+				return fmt.Errorf("delete sessions: %w", err)
+			}
+		}
+		return audit.Write(ctx, q, audit.Entry{Action: action, EntityType: audit.EntityUser, EntityID: &id})
+	})
+}
+
+func (r *PgRepository) SetPassword(ctx context.Context, id int64, passwordHash string) error {
+	return database.InTx(ctx, r.pool, func(q *sqlc.Queries) error {
+		if err := q.SetUserPassword(ctx, sqlc.SetUserPasswordParams{ID: id, PasswordHash: passwordHash}); err != nil {
+			return fmt.Errorf("update password: %w", err)
+		}
+		if err := q.DeleteUserSessions(ctx, id); err != nil {
+			return fmt.Errorf("delete sessions: %w", err)
+		}
+		return audit.Write(ctx, q, audit.Entry{
+			Action: audit.ActionPasswordReset, EntityType: audit.EntityUser, EntityID: &id,
+		})
+	})
 }

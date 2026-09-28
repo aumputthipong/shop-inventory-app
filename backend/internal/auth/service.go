@@ -10,17 +10,24 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
 )
 
-const SessionTTL = 7 * 24 * time.Hour
+const (
+	SessionTTL        = 7 * 24 * time.Hour
+	MinPasswordLength = 8
+)
 
 var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrUserNotFound       = errors.New("user not found")
+	ErrAccountDisabled    = errors.New("account is disabled")
+	ErrWrongPassword      = errors.New("current password is wrong")
+	ErrWeakPassword       = errors.New("password too short")
 )
 
 type User struct {
@@ -33,6 +40,7 @@ type User struct {
 type Credentials struct {
 	User         User
 	PasswordHash string
+	Active       bool
 }
 
 type Session struct {
@@ -46,6 +54,8 @@ type Repository interface {
 	CreateSession(ctx context.Context, tokenHash []byte, userID int64, expiresAt time.Time) error
 	SessionUser(ctx context.Context, tokenHash []byte) (User, error)
 	DeleteSession(ctx context.Context, tokenHash []byte) error
+	PasswordHash(ctx context.Context, userID int64) (string, error)
+	ChangePassword(ctx context.Context, userID int64, passwordHash string, keepTokenHash []byte) error
 }
 
 type Service struct {
@@ -72,6 +82,9 @@ func (s *Service) Login(ctx context.Context, email, password string) (Session, e
 
 	if bcrypt.CompareHashAndPassword([]byte(creds.PasswordHash), []byte(password)) != nil {
 		return Session{}, ErrInvalidCredentials
+	}
+	if !creds.Active {
+		return Session{}, ErrAccountDisabled
 	}
 
 	token, err := newToken()
@@ -100,6 +113,41 @@ func (s *Service) ResolveSession(ctx context.Context, token string) (actor.Actor
 func (s *Service) Logout(ctx context.Context, token string) error {
 	if err := s.repo.DeleteSession(ctx, hashToken(token)); err != nil {
 		return fmt.Errorf("delete session: %w", err)
+	}
+	return nil
+}
+
+// ChangePassword signs out the user's other sessions but keeps the one in use.
+func (s *Service) ChangePassword(ctx context.Context, token, current, next string) error {
+	a, ok := actor.From(ctx)
+	if !ok {
+		return actor.ErrNoSession
+	}
+	if err := ValidatePassword(next); err != nil {
+		return err
+	}
+
+	hash, err := s.repo.PasswordHash(ctx, a.UserID)
+	if err != nil {
+		return fmt.Errorf("read password: %w", err)
+	}
+	if bcrypt.CompareHashAndPassword([]byte(hash), []byte(current)) != nil {
+		return ErrWrongPassword
+	}
+
+	nextHash, err := HashPassword(next)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.ChangePassword(ctx, a.UserID, nextHash, hashToken(token)); err != nil {
+		return fmt.Errorf("change password: %w", err)
+	}
+	return nil
+}
+
+func ValidatePassword(password string) error {
+	if utf8.RuneCountInString(password) < MinPasswordLength {
+		return ErrWeakPassword
 	}
 	return nil
 }

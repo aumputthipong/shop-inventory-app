@@ -12,20 +12,23 @@ import (
 )
 
 const (
-	ActionProductCreate = "product.create"
-	ActionProductUpdate = "product.update"
-	ActionStockIn       = "stock.in"
-	ActionStockAdjust   = "stock.adjust"
-	ActionOrderCreate   = "order.create"
-	ActionOrderRejected = "order.rejected"
-	ActionOrderPack     = "order.pack"
-	ActionOrderShip     = "order.ship"
-	ActionOrderCancel   = "order.cancel"
-	ActionUserCreate    = "user.create"
-	ActionUserLogin     = "user.login"
-	EntityProduct       = "product"
-	EntityOrder         = "order"
-	EntityUser          = "user"
+	ActionProductCreate  = "product.create"
+	ActionProductUpdate  = "product.update"
+	ActionStockIn        = "stock.in"
+	ActionStockAdjust    = "stock.adjust"
+	ActionOrderCreate    = "order.create"
+	ActionOrderRejected  = "order.rejected"
+	ActionOrderPack      = "order.pack"
+	ActionOrderShip      = "order.ship"
+	ActionOrderCancel    = "order.cancel"
+	ActionUserCreate     = "user.create"
+	ActionUserDisable    = "user.disable"
+	ActionUserEnable     = "user.enable"
+	ActionPasswordReset  = "user.password_reset"
+	ActionPasswordChange = "user.password_change"
+	EntityProduct        = "product"
+	EntityOrder          = "order"
+	EntityUser           = "user"
 )
 
 type Entry struct {

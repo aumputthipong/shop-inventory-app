@@ -3,6 +3,7 @@ import { Link, Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/
 import {
   ClipboardListIcon,
   HistoryIcon,
+  KeyRoundIcon,
   LogOutIcon,
   PackageIcon,
   ReceiptTextIcon,
@@ -10,7 +11,9 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
+import { useState } from 'react'
 
+import { PasswordDialog } from '@/components/account/password-dialog'
 import { BrandMark } from '@/components/brand-mark'
 import { ApiError, api } from '@/lib/api'
 import { productInitial } from '@/lib/avatar'
@@ -91,6 +94,7 @@ function AppLayout() {
 function AccountMenu({ name, roleText }: { name: string; roleText: string }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
+  const [changing, setChanging] = useState(false)
   const logout = useMutation({
     mutationFn: api.logout,
     onSettled: async () => {
@@ -100,36 +104,58 @@ function AccountMenu({ name, roleText }: { name: string; roleText: string }) {
   })
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger className="flex h-12 items-center gap-2.5 rounded-2xl py-1 pr-3 pl-1.5 text-left hover:bg-sand-100">
-        <span
-          aria-hidden="true"
-          className="flex size-9 items-center justify-center rounded-full bg-hold-light text-[15px] font-bold text-[#7a4b00]"
-        >
-          {productInitial(name)}
-        </span>
-        <span className="flex flex-col leading-[18px]">
-          <span className="text-sm font-semibold">{name}</span>
-          <span className="text-xs text-sand-800">{roleText}</span>
-        </span>
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          align="end"
-          sideOffset={8}
-          className="z-50 min-w-48 rounded-2xl bg-white p-1.5 shadow-lift"
-        >
-          <DropdownMenu.Item
-            onSelect={() => {
-              logout.mutate()
-            }}
-            className="flex h-11 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-[15px] outline-none data-highlighted:bg-sand-100"
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger className="flex h-12 items-center gap-2.5 rounded-2xl py-1 pr-3 pl-1.5 text-left hover:bg-sand-100">
+          <span
+            aria-hidden="true"
+            className="flex size-9 items-center justify-center rounded-full bg-hold-light text-[15px] font-bold text-[#7a4b00]"
           >
-            <LogOutIcon className="size-[18px] text-sand-800" aria-hidden="true" />
-            ออกจากระบบ
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+            {productInitial(name)}
+          </span>
+          <span className="flex flex-col leading-[18px]">
+            <span className="text-sm font-semibold">{name}</span>
+            <span className="text-xs text-sand-800">{roleText}</span>
+          </span>
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            align="end"
+            sideOffset={8}
+            className="z-50 min-w-48 rounded-2xl bg-white p-1.5 shadow-lift"
+          >
+            <DropdownMenu.Item
+              onSelect={() => {
+                setChanging(true)
+              }}
+              className="flex h-11 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-[15px] outline-none data-highlighted:bg-sand-100"
+            >
+              <KeyRoundIcon className="size-[18px] text-sand-800" aria-hidden="true" />
+              เปลี่ยนรหัสผ่าน
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={() => {
+                logout.mutate()
+              }}
+              className="flex h-11 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-[15px] outline-none data-highlighted:bg-sand-100"
+            >
+              <LogOutIcon className="size-[18px] text-sand-800" aria-hidden="true" />
+              ออกจากระบบ
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <PasswordDialog
+        open={changing}
+        onOpenChange={setChanging}
+        title="เปลี่ยนรหัสผ่าน"
+        description="เครื่องอื่นที่ล็อกอินบัญชีนี้อยู่จะถูกออกจากระบบ"
+        askCurrent
+        submit={(current, next) =>
+          api.changePassword({ current_password: current, new_password: next })
+        }
+        doneMessage="เปลี่ยนรหัสผ่านแล้ว"
+      />
+    </>
   )
 }

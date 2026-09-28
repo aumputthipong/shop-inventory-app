@@ -10,6 +10,17 @@ import (
 	"time"
 )
 
+const countOtherActiveOwners = `-- name: CountOtherActiveOwners :one
+SELECT count(*) FROM users WHERE role = 'owner' AND is_active AND id <> $1
+`
+
+func (q *Queries) CountOtherActiveOwners(ctx context.Context, id int64) (int64, error) {
+	row := q.db.QueryRow(ctx, countOtherActiveOwners, id)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countUsers = `-- name: CountUsers :one
 SELECT count(*) FROM users
 `
@@ -24,7 +35,7 @@ func (q *Queries) CountUsers(ctx context.Context) (int64, error) {
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (email, password_hash, name, role)
 VALUES (lower($1), $2, $3, $4)
-RETURNING id, email, name, role, created_at
+RETURNING id, email, name, role, is_active, created_at
 `
 
 type CreateUserParams struct {
@@ -39,6 +50,7 @@ type CreateUserRow struct {
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
 	Role      string    `json:"role"`
+	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -55,36 +67,85 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateU
 		&i.Email,
 		&i.Name,
 		&i.Role,
+		&i.IsActive,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const getUser = `-- name: GetUser :one
+SELECT id, email, name, role, is_active, created_at
+FROM users
+WHERE id = $1
+`
+
+type GetUserRow struct {
+	ID        int64     `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Role      string    `json:"role"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+func (q *Queries) GetUser(ctx context.Context, id int64) (GetUserRow, error) {
+	row := q.db.QueryRow(ctx, getUser, id)
+	var i GetUserRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.Name,
+		&i.Role,
+		&i.IsActive,
 		&i.CreatedAt,
 	)
 	return i, err
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, email, password_hash, name, role, created_at, updated_at
+SELECT id, email, password_hash, name, role, is_active
 FROM users
 WHERE lower(email) = lower($1)
 `
 
-func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
+type GetUserByEmailRow struct {
+	ID           int64  `json:"id"`
+	Email        string `json:"email"`
+	PasswordHash string `json:"password_hash"`
+	Name         string `json:"name"`
+	Role         string `json:"role"`
+	IsActive     bool   `json:"is_active"`
+}
+
+func (q *Queries) GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error) {
 	row := q.db.QueryRow(ctx, getUserByEmail, email)
-	var i User
+	var i GetUserByEmailRow
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
 		&i.PasswordHash,
 		&i.Name,
 		&i.Role,
-		&i.CreatedAt,
-		&i.UpdatedAt,
+		&i.IsActive,
 	)
 	return i, err
 }
 
+const getUserPasswordHash = `-- name: GetUserPasswordHash :one
+SELECT password_hash FROM users WHERE id = $1
+`
+
+func (q *Queries) GetUserPasswordHash(ctx context.Context, id int64) (string, error) {
+	row := q.db.QueryRow(ctx, getUserPasswordHash, id)
+	var password_hash string
+	err := row.Scan(&password_hash)
+	return password_hash, err
+}
+
 const listUsers = `-- name: ListUsers :many
-SELECT id, email, name, role, created_at
+SELECT id, email, name, role, is_active, created_at
 FROM users
-ORDER BY role, name
+ORDER BY is_active DESC, role, name
 `
 
 type ListUsersRow struct {
@@ -92,6 +153,7 @@ type ListUsersRow struct {
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
 	Role      string    `json:"role"`
+	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -109,6 +171,7 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 			&i.Email,
 			&i.Name,
 			&i.Role,
+			&i.IsActive,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -119,4 +182,32 @@ func (q *Queries) ListUsers(ctx context.Context) ([]ListUsersRow, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const setUserActive = `-- name: SetUserActive :exec
+UPDATE users SET is_active = $2, updated_at = now() WHERE id = $1
+`
+
+type SetUserActiveParams struct {
+	ID       int64 `json:"id"`
+	IsActive bool  `json:"is_active"`
+}
+
+func (q *Queries) SetUserActive(ctx context.Context, arg SetUserActiveParams) error {
+	_, err := q.db.Exec(ctx, setUserActive, arg.ID, arg.IsActive)
+	return err
+}
+
+const setUserPassword = `-- name: SetUserPassword :exec
+UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1
+`
+
+type SetUserPasswordParams struct {
+	ID           int64  `json:"id"`
+	PasswordHash string `json:"password_hash"`
+}
+
+func (q *Queries) SetUserPassword(ctx context.Context, arg SetUserPasswordParams) error {
+	_, err := q.db.Exec(ctx, setUserPassword, arg.ID, arg.PasswordHash)
+	return err
 }

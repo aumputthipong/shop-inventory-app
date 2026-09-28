@@ -1,8 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
-import { UserPlusIcon } from 'lucide-react'
+import { cn } from 'cn'
+import { KeyRoundIcon, UserCheckIcon, UserPlusIcon, UserXIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
+import { PasswordDialog } from '@/components/account/password-dialog'
 import { Chip } from '@/components/chip'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,12 +15,13 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog'
 import { Input, NativeSelect } from '@/components/ui/input'
-import { ApiError, api, type Role } from '@/lib/api'
+import { ApiError, api, type Role, type TeamMember } from '@/lib/api'
 import { productInitial } from '@/lib/avatar'
 import { formatFullDateTime } from '@/lib/format'
 import { requireOwner } from '@/lib/guards'
 import { roleLabel } from '@/lib/labels'
 import { usersQueryOptions } from '@/lib/queries'
+import { useCurrentUser } from '@/lib/session'
 import { useToast } from '@/lib/toast'
 
 export const Route = createFileRoute('/_app/team')({
@@ -30,11 +33,32 @@ export const Route = createFileRoute('/_app/team')({
 
 function TeamPage() {
   const { data: users, isPending } = useQuery(usersQueryOptions)
+  const me = useCurrentUser()
+  const queryClient = useQueryClient()
+  const toast = useToast()
   const [adding, setAdding] = useState(false)
+  const [resetting, setResetting] = useState<TeamMember | null>(null)
+  const [disabling, setDisabling] = useState<TeamMember | null>(null)
+
+  const setActive = useMutation({
+    mutationFn: ({ id, active }: { id: number; active: boolean }) => api.setUserActive(id, active),
+    onSuccess: async (user) => {
+      toast(
+        user.is_active
+          ? `เปิดใช้งานบัญชี ${user.name} แล้ว`
+          : `ปิดใช้งานบัญชี ${user.name} แล้ว ออกจากระบบทุกเครื่องให้แล้ว`,
+      )
+      setDisabling(null)
+      await queryClient.invalidateQueries({ queryKey: usersQueryOptions.queryKey })
+    },
+  })
+  const lastOwner =
+    setActive.error instanceof ApiError &&
+    (setActive.error.details as { reason?: string } | undefined)?.reason === 'last_owner'
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-end justify-between gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <h1 className="text-[30px] leading-[42px] font-bold">ทีม</h1>
           <p className="text-base text-sand-800">
@@ -54,14 +78,17 @@ function TeamPage() {
 
       <section
         aria-label="สมาชิกในทีม"
-        className="max-w-[900px] rounded-[22px] bg-white p-3 shadow-soft"
+        className="max-w-[1000px] overflow-x-auto rounded-[22px] bg-white p-3 shadow-soft"
       >
         {isPending && <p className="px-4 py-8 text-sand-800">กำลังโหลด...</p>}
-        <ul className="flex flex-col">
+        <ul className="flex min-w-[760px] flex-col">
           {users?.map((u) => (
             <li
               key={u.id}
-              className="grid min-h-16 grid-cols-[44px_minmax(0,1fr)_140px_180px] items-center gap-4 border-b border-sand-200 px-4 py-3 last:border-b-0"
+              className={cn(
+                'grid min-h-16 grid-cols-[44px_minmax(0,1fr)_120px_auto] items-center gap-4 border-b border-sand-200 px-4 py-3 last:border-b-0',
+                !u.is_active && 'opacity-60',
+              )}
             >
               <span
                 aria-hidden="true"
@@ -70,14 +97,59 @@ function TeamPage() {
                 {productInitial(u.name)}
               </span>
               <span className="flex min-w-0 flex-col">
-                <span className="font-semibold">{u.name}</span>
-                <span className="truncate text-[13px] text-sand-800">{u.email}</span>
+                <span className="flex items-center gap-2 font-semibold">
+                  {u.name}
+                  {!u.is_active && <Chip tone="neutral">ปิดใช้งาน</Chip>}
+                </span>
+                <span className="truncate text-[13px] text-sand-800">
+                  {u.email} · เข้าร่วม {formatFullDateTime(u.created_at)}
+                </span>
               </span>
               <span>
                 <Chip tone={u.role === 'owner' ? 'info' : 'neutral'}>{roleLabel[u.role]}</Chip>
               </span>
-              <span className="text-right text-[13px] text-sand-800">
-                เข้าร่วม {formatFullDateTime(u.created_at)}
+              <span className="flex justify-end gap-2">
+                {u.id === me.id ? (
+                  <span className="text-sm text-sand-800">บัญชีของคุณ</span>
+                ) : (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setResetting(u)
+                      }}
+                    >
+                      <KeyRoundIcon aria-hidden="true" />
+                      ตั้งรหัสผ่านใหม่
+                    </Button>
+                    {u.is_active ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setActive.reset()
+                          setDisabling(u)
+                        }}
+                      >
+                        <UserXIcon aria-hidden="true" />
+                        ปิดใช้งาน
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={setActive.isPending}
+                        onClick={() => {
+                          setActive.mutate({ id: u.id, active: true })
+                        }}
+                      >
+                        <UserCheckIcon aria-hidden="true" />
+                        เปิดใช้งาน
+                      </Button>
+                    )}
+                  </>
+                )}
               </span>
             </li>
           ))}
@@ -93,6 +165,66 @@ function TeamPage() {
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <PasswordDialog
+        open={resetting !== null}
+        onOpenChange={(open) => {
+          if (!open) setResetting(null)
+        }}
+        title={`ตั้งรหัสผ่านใหม่ให้ ${resetting?.name ?? ''}`}
+        description="บอกรหัสใหม่ให้เจ้าตัว เครื่องที่ล็อกอินอยู่จะถูกออกจากระบบ"
+        askCurrent={false}
+        submit={(_, next) => api.resetUserPassword(resetting?.id ?? 0, next)}
+        doneMessage={`ตั้งรหัสผ่านใหม่ให้ ${resetting?.name ?? ''} แล้ว`}
+      />
+
+      <Dialog
+        open={disabling !== null}
+        onOpenChange={(open) => {
+          if (!open) setDisabling(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader
+            icon={<UserXIcon className="size-6" />}
+            title={`ปิดใช้งาน ${disabling?.name ?? ''}?`}
+            description="เจ้าตัวจะถูกออกจากระบบทันทีและล็อกอินไม่ได้ ประวัติที่เคยทำยังอยู่ครบ เปิดกลับได้ภายหลัง"
+          />
+          {lastOwner && (
+            <p
+              role="alert"
+              className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg"
+            >
+              ปิดไม่ได้ ร้านต้องมีเจ้าของร้านที่ใช้งานได้อย่างน้อย 1 คน
+            </p>
+          )}
+          {setActive.isError && !lastOwner && (
+            <p
+              role="alert"
+              className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg"
+            >
+              บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
+            </p>
+          )}
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" size="lg">
+                ไม่ปิด
+              </Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              size="lg"
+              disabled={setActive.isPending || lastOwner}
+              onClick={() => {
+                if (disabling) setActive.mutate({ id: disabling.id, active: false })
+              }}
+            >
+              ปิดใช้งานบัญชี
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

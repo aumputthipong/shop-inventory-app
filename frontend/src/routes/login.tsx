@@ -50,9 +50,11 @@ function LoginPage() {
   const errorMessage =
     login.error instanceof ApiError && login.error.code === 'invalid_credentials'
       ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้ง'
-      : login.error
-        ? 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง'
-        : null
+      : login.error instanceof ApiError && login.error.code === 'account_disabled'
+        ? 'บัญชีนี้ถูกปิดใช้งานแล้ว ติดต่อเจ้าของร้าน'
+        : login.error
+          ? 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง'
+          : null
 
   return (
     <main className="flex min-h-svh items-center justify-center p-6">

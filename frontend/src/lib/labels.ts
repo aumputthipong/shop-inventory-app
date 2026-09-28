@@ -59,6 +59,10 @@ export const auditActionLabel: Record<string, string> = {
   'order.ship': 'ส่งออเดอร์',
   'order.cancel': 'ยกเลิกออเดอร์',
   'user.create': 'เพิ่มสมาชิกทีม',
+  'user.disable': 'ปิดใช้งานบัญชี',
+  'user.enable': 'เปิดใช้งานบัญชี',
+  'user.password_reset': 'ตั้งรหัสผ่านใหม่ให้สมาชิก',
+  'user.password_change': 'เปลี่ยนรหัสผ่าน',
 }
 
 export function movementReason(reason: string | null): string | null {

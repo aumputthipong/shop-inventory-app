@@ -7,17 +7,16 @@ import (
 	"fmt"
 	"strings"
 	"time"
-	"unicode/utf8"
 
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/auth"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
 )
 
-const MinPasswordLength = 8
-
 var (
-	ErrEmailTaken   = errors.New("email already in use")
-	ErrWeakPassword = errors.New("password too short")
+	ErrEmailTaken = errors.New("email already in use")
+	ErrNotFound   = errors.New("user not found")
+	ErrSelf       = errors.New("use your own account menu for this")
+	ErrLastOwner  = errors.New("the shop needs at least one active owner")
 )
 
 type User struct {
@@ -25,6 +24,7 @@ type User struct {
 	Email     string
 	Name      string
 	Role      actor.Role
+	Active    bool
 	CreatedAt time.Time
 }
 
@@ -37,7 +37,11 @@ type NewUser struct {
 
 type Repository interface {
 	List(ctx context.Context) ([]User, error)
+	Get(ctx context.Context, id int64) (User, error)
 	Create(ctx context.Context, u NewUser, passwordHash string) (User, error)
+	CountOtherActiveOwners(ctx context.Context, id int64) (int64, error)
+	SetActive(ctx context.Context, id int64, active bool) error
+	SetPassword(ctx context.Context, id int64, passwordHash string) error
 }
 
 type Service struct {
@@ -59,8 +63,8 @@ func (s *Service) List(ctx context.Context) ([]User, error) {
 func (s *Service) Create(ctx context.Context, in NewUser) (User, error) {
 	in.Email = strings.ToLower(strings.TrimSpace(in.Email))
 	in.Name = strings.TrimSpace(in.Name)
-	if utf8.RuneCountInString(in.Password) < MinPasswordLength {
-		return User{}, ErrWeakPassword
+	if err := auth.ValidatePassword(in.Password); err != nil {
+		return User{}, err
 	}
 	if !in.Role.Valid() {
 		return User{}, fmt.Errorf("create user: invalid role %q", in.Role)
@@ -77,6 +81,61 @@ func (s *Service) Create(ctx context.Context, in NewUser) (User, error) {
 			return User{}, err
 		}
 		return User{}, fmt.Errorf("create user: %w", err)
+	}
+	return u, nil
+}
+
+// SetActive signs a disabled user out everywhere at once.
+func (s *Service) SetActive(ctx context.Context, id int64, active bool) (User, error) {
+	target, err := s.target(ctx, id)
+	if err != nil {
+		return User{}, err
+	}
+	if !active && target.Role == actor.RoleOwner && target.Active {
+		others, err := s.repo.CountOtherActiveOwners(ctx, id)
+		if err != nil {
+			return User{}, fmt.Errorf("count owners: %w", err)
+		}
+		if others == 0 {
+			return User{}, ErrLastOwner
+		}
+	}
+	if target.Active != active {
+		if err := s.repo.SetActive(ctx, id, active); err != nil {
+			return User{}, fmt.Errorf("set active: %w", err)
+		}
+	}
+	target.Active = active
+	return target, nil
+}
+
+func (s *Service) ResetPassword(ctx context.Context, id int64, password string) error {
+	if _, err := s.target(ctx, id); err != nil {
+		return err
+	}
+	if err := auth.ValidatePassword(password); err != nil {
+		return err
+	}
+	hash, err := auth.HashPassword(password)
+	if err != nil {
+		return err
+	}
+	if err := s.repo.SetPassword(ctx, id, hash); err != nil {
+		return fmt.Errorf("reset password: %w", err)
+	}
+	return nil
+}
+
+func (s *Service) target(ctx context.Context, id int64) (User, error) {
+	if a, ok := actor.From(ctx); ok && a.UserID == id {
+		return User{}, ErrSelf
+	}
+	u, err := s.repo.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return User{}, err
+		}
+		return User{}, fmt.Errorf("get user: %w", err)
 	}
 	return u, nil
 }

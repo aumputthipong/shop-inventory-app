@@ -19,6 +19,7 @@ export interface User {
 }
 
 export interface TeamMember extends User {
+  is_active: boolean
   created_at: string
 }
 
@@ -282,6 +283,8 @@ export const api = {
     send<User>('POST', '/api/auth/login', { email, password }),
   logout: () => send<undefined>('POST', '/api/auth/logout'),
   me: (signal?: AbortSignal) => apiFetch<User>('/api/auth/me', { signal }),
+  changePassword: (input: { current_password: string; new_password: string }) =>
+    send<undefined>('POST', '/api/auth/password', input),
 
   listProducts: (signal?: AbortSignal) =>
     apiFetch<{ items: Product[] }>('/api/products', { signal }).then((r) => r.items),
@@ -312,4 +315,8 @@ export const api = {
     apiFetch<{ items: TeamMember[] }>('/api/users', { signal }).then((r) => r.items),
   createUser: (input: { name: string; email: string; role: Role; password: string }) =>
     send<TeamMember>('POST', '/api/users', input),
+  setUserActive: (id: number, isActive: boolean) =>
+    send<TeamMember>('PATCH', `/api/users/${id}`, { is_active: isActive }),
+  resetUserPassword: (id: number, password: string) =>
+    send<undefined>('POST', `/api/users/${id}/password`, { password }),
 }
