@@ -81,6 +81,8 @@ type Movement struct {
 	Note           *string
 	CreatedByName  *string
 	CreatedAt      time.Time
+	ReversesID     *int64
+	Reversed       bool
 }
 
 type MovementFilter struct {
@@ -96,14 +98,16 @@ type Check func(current Balance) error
 type Repository interface {
 	Apply(ctx context.Context, c Change, check Check, entry audit.Entry) (Balance, error)
 	ListMovements(ctx context.Context, f MovementFilter) ([]Movement, int64, error)
+	Reverse(ctx context.Context, id int64, plan ReversalPlanner, entry audit.Entry) (Balance, error)
 }
 
 type Service struct {
 	repo Repository
+	now  func() time.Time
 }
 
 func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+	return &Service{repo: repo, now: time.Now}
 }
 
 func (s *Service) StockIn(ctx context.Context, in ReceiptInput) (Balance, error) {

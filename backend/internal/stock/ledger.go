@@ -38,11 +38,13 @@ const ReasonOpeningBalance = "opening_balance"
 var (
 	ErrInsufficientStock = errors.New("not enough available stock")
 	ErrProductNotFound   = errors.New("product not found")
+	ErrAlreadyReversed   = errors.New("movement was already reversed")
 )
 
 type Balance struct {
-	OnHand   int32
-	Reserved int32
+	ProductID int64
+	OnHand    int32
+	Reserved  int32
 }
 
 func (b Balance) Available() int32 {
@@ -58,6 +60,7 @@ type Change struct {
 	RefID          *int64
 	Reason         *string
 	Note           *string
+	ReversesID     *int64
 }
 
 // Apply must run inside a transaction that already holds the balance row lock.
@@ -88,12 +91,16 @@ func Apply(ctx context.Context, q *sqlc.Queries, c Change) (Balance, error) {
 		CreatedBy:      actor.IDFrom(ctx),
 		OnHandAfter:    row.OnHand,
 		ReservedAfter:  row.Reserved,
+		ReversesID:     c.ReversesID,
 	})
+	if database.IsUniqueViolation(err, "stock_movements_reverses_id_key") {
+		return Balance{}, ErrAlreadyReversed
+	}
 	if err != nil {
 		return Balance{}, fmt.Errorf("insert movement: %w", err)
 	}
 
-	return Balance{OnHand: row.OnHand, Reserved: row.Reserved}, nil
+	return Balance{ProductID: c.ProductID, OnHand: row.OnHand, Reserved: row.Reserved}, nil
 }
 
 type LockedRow struct {

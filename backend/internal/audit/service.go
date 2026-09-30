@@ -16,6 +16,7 @@ const (
 	ActionProductUpdate  = "product.update"
 	ActionStockIn        = "stock.in"
 	ActionStockAdjust    = "stock.adjust"
+	ActionStockReverse   = "stock.reverse"
 	ActionOrderCreate    = "order.create"
 	ActionOrderRejected  = "order.rejected"
 	ActionOrderPack      = "order.pack"

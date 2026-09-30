@@ -48,6 +48,46 @@ func (r *PgRepository) Apply(ctx context.Context, c Change, check Check, entry a
 	return after, err
 }
 
+func (r *PgRepository) Reverse(ctx context.Context, id int64, plan ReversalPlanner, entry audit.Entry) (Balance, error) {
+	var after Balance
+	err := database.InTx(ctx, r.pool, func(q *sqlc.Queries) error {
+		m, err := q.GetMovement(ctx, id)
+		if database.IsNotFound(err) {
+			return ErrMovementNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("get movement: %w", err)
+		}
+
+		change, err := plan(MovementInfo{
+			ID: m.ID, ProductID: m.ProductID, Type: MovementType(m.Type), QtyChange: m.QtyChange,
+			RefType: m.RefType, ReversesID: m.ReversesID, Reversed: m.Reversed, CreatedAt: m.CreatedAt,
+		})
+		if err != nil {
+			return err
+		}
+
+		locked, err := Lock(ctx, q, []int64{change.ProductID})
+		if err != nil {
+			return err
+		}
+		if err := checkRemovable(change.QtyChange)(locked[change.ProductID].Balance); err != nil {
+			return err
+		}
+
+		after, err = Apply(ctx, q, change)
+		if err != nil {
+			return err
+		}
+
+		entry.EntityID = &change.ProductID
+		entry.Detail["qty_change"] = change.QtyChange
+		entry.Detail["available_after"] = after.Available()
+		return audit.Write(ctx, q, entry)
+	})
+	return after, err
+}
+
 func (r *PgRepository) ListMovements(ctx context.Context, f MovementFilter) ([]Movement, int64, error) {
 	var typ *string
 	if f.Type != nil {
@@ -86,6 +126,8 @@ func (r *PgRepository) ListMovements(ctx context.Context, f MovementFilter) ([]M
 			Note:           m.Note,
 			CreatedByName:  m.CreatedByName,
 			CreatedAt:      m.CreatedAt,
+			ReversesID:     m.ReversesID,
+			Reversed:       m.Reversed,
 		})
 	}
 	return items, total, nil

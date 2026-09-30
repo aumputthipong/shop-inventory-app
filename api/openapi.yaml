@@ -358,6 +358,34 @@ paths:
                   total: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
+  /api/movements/{id}/reverse:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [stock]
+      summary: Undo a mistyped stock-in or adjustment (owner)
+      description: |
+        Writes an opposite ADJUST with reason reversal and reverses_id pointing at the original;
+        both rows stay in the ledger. Only STOCK_IN and ADJUST rows from the last 7 days that are
+        not tied to an order, not a reversal themselves and not already reversed qualify.
+      operationId: reverseMovement
+      responses:
+        "200":
+          description: New balance.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Balance" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: |
+            invalid_state with details.reason already_reversed, not_reversible or too_old, or
+            insufficient_stock when orders already hold the units the reversal would remove.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
   /api/orders:
     get:
       tags: [orders]
@@ -832,10 +860,12 @@ components:
             - type: "null"
         reason:
           type: [string, "null"]
-          description: count_correction, damaged, lost or other for ADJUST; opening_balance for a product's first STOCK_IN.
+          description: count_correction, damaged, lost, other or reversal for ADJUST; opening_balance for a product's first STOCK_IN.
         note: { type: [string, "null"] }
         created_by_name: { type: [string, "null"] }
         created_at: { type: string, format: date-time }
+        reverses_id: { type: [integer, "null"], format: int64, description: Set on a reversal; the movement it undoes. }
+        reversed: { type: boolean, description: True once another movement has reversed this one. }
 
     Channel:
       type: string

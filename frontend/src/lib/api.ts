@@ -87,6 +87,8 @@ export interface Movement {
   note: string | null
   created_by_name: string | null
   created_at: string
+  reverses_id: number | null
+  reversed: boolean
 }
 
 export interface Balance {
@@ -299,6 +301,7 @@ export const api = {
     send<Balance>('POST', `/api/products/${id}/stock-in`, input),
   adjustStock: (id: number, input: { qty_change: number; reason: AdjustReason; note?: string }) =>
     send<Balance>('POST', `/api/products/${id}/adjustments`, input),
+  reverseMovement: (id: number) => send<Balance>('POST', `/api/movements/${id}/reverse`),
   listMovements: (query: MovementQuery, signal?: AbortSignal) =>
     apiFetch<Page<Movement>>(withQuery('/api/movements', { ...query }), { signal }),
 

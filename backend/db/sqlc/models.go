@@ -82,6 +82,7 @@ type StockMovement struct {
 	Note           *string   `json:"note"`
 	OnHandAfter    int32     `json:"on_hand_after"`
 	ReservedAfter  int32     `json:"reserved_after"`
+	ReversesID     *int64    `json:"reverses_id"`
 }
 
 type User struct {

@@ -34,6 +34,10 @@ func (okOperator) Adjust(context.Context, stock.AdjustInput) (stock.Balance, err
 	return stock.Balance{OnHand: 1}, nil
 }
 
+func (okOperator) Reverse(context.Context, int64) (stock.Balance, error) {
+	return stock.Balance{ProductID: 1, OnHand: 1}, nil
+}
+
 func TestRolesOnStockEndpoints(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -46,6 +50,8 @@ func TestRolesOnStockEndpoints(t *testing.T) {
 		{"staff cannot adjust", actor.RoleStaff, "/api/products/1/adjustments", `{"qty_change":-1,"reason":"lost"}`, http.StatusForbidden},
 		{"owner can adjust", actor.RoleOwner, "/api/products/1/adjustments", `{"qty_change":-1,"reason":"lost"}`, http.StatusOK},
 		{"adjust needs a reason", actor.RoleOwner, "/api/products/1/adjustments", `{"qty_change":-1}`, http.StatusUnprocessableEntity},
+		{"staff cannot reverse a movement", actor.RoleStaff, "/api/movements/7/reverse", "", http.StatusForbidden},
+		{"owner can reverse a movement", actor.RoleOwner, "/api/movements/7/reverse", "", http.StatusOK},
 	}
 
 	for _, tt := range tests {

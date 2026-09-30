@@ -17,6 +17,7 @@ type Operator interface {
 	StockIn(ctx context.Context, in ReceiptInput) (Balance, error)
 	Adjust(ctx context.Context, in AdjustInput) (Balance, error)
 	ListMovements(ctx context.Context, f MovementFilter) ([]Movement, int64, error)
+	Reverse(ctx context.Context, movementID int64) (Balance, error)
 }
 
 type Handler struct {
@@ -31,6 +32,7 @@ func (h *Handler) Register(r gin.IRouter) {
 	r.POST("/api/products/:id/stock-in", h.stockIn)
 	r.POST("/api/products/:id/adjustments", httpx.RequireRole(actor.RoleOwner), h.adjust)
 	r.GET("/api/movements", h.listMovements)
+	r.POST("/api/movements/:id/reverse", httpx.RequireRole(actor.RoleOwner), h.reverse)
 }
 
 type stockInRequest struct {
@@ -75,6 +77,8 @@ type movementResponse struct {
 	Note           *string   `json:"note"`
 	CreatedByName  *string   `json:"created_by_name"`
 	CreatedAt      time.Time `json:"created_at"`
+	ReversesID     *int64    `json:"reverses_id"`
+	Reversed       bool      `json:"reversed"`
 }
 
 type movementListResponse struct {
@@ -112,6 +116,32 @@ func (h *Handler) adjust(c *gin.Context) {
 		ProductID: id, QtyChange: req.QtyChange, Reason: AdjustReason(req.Reason), Note: req.Note,
 	})
 	h.respondBalance(c, id, b, err)
+}
+
+type stateDetails struct {
+	Reason string `json:"reason"`
+}
+
+func (h *Handler) reverse(c *gin.Context) {
+	id, ok := httpx.PathID(c, "id")
+	if !ok {
+		return
+	}
+	b, err := h.svc.Reverse(c.Request.Context(), id)
+	state := map[error]string{
+		ErrAlreadyReversed: "already_reversed", ErrNotReversible: "not_reversible", ErrTooOld: "too_old",
+	}
+	for known, reason := range state {
+		if errors.Is(err, known) {
+			httpx.RespondErrorDetails(c, http.StatusConflict, httpx.CodeInvalidState, err.Error(), stateDetails{Reason: reason})
+			return
+		}
+	}
+	if errors.Is(err, ErrMovementNotFound) {
+		httpx.RespondError(c, http.StatusNotFound, httpx.CodeNotFound, "movement not found")
+		return
+	}
+	h.respondBalance(c, b.ProductID, b, err)
 }
 
 func (h *Handler) respondBalance(c *gin.Context, productID int64, b Balance, err error) {
@@ -183,6 +213,8 @@ func (h *Handler) listMovements(c *gin.Context) {
 			Note:           m.Note,
 			CreatedByName:  m.CreatedByName,
 			CreatedAt:      m.CreatedAt,
+			ReversesID:     m.ReversesID,
+			Reversed:       m.Reversed,
 		})
 	}
 	c.JSON(http.StatusOK, movementListResponse{Items: out, Total: total})

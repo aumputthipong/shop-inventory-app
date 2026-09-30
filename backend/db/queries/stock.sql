@@ -18,11 +18,11 @@ RETURNING on_hand, reserved;
 -- name: InsertMovement :one
 INSERT INTO stock_movements (
     product_id, type, qty_change, reserved_change, ref_type, ref_id,
-    reason, note, created_by, on_hand_after, reserved_after
+    reason, note, created_by, on_hand_after, reserved_after, reverses_id
 ) VALUES (
     sqlc.arg(product_id), sqlc.arg(type), sqlc.arg(qty_change), sqlc.arg(reserved_change),
     sqlc.narg(ref_type), sqlc.narg(ref_id), sqlc.narg(reason), sqlc.narg(note),
-    sqlc.narg(created_by), sqlc.arg(on_hand_after), sqlc.arg(reserved_after)
+    sqlc.narg(created_by), sqlc.arg(on_hand_after), sqlc.arg(reserved_after), sqlc.narg(reverses_id)
 )
 RETURNING id, created_at;
 
@@ -30,7 +30,8 @@ RETURNING id, created_at;
 SELECT m.id, m.product_id, p.sku, p.name AS product_name, m.type, m.qty_change,
        m.reserved_change, m.on_hand_after, m.reserved_after, m.ref_type, m.ref_id,
        o.order_no, o.channel AS order_channel, m.reason, m.note, u.name AS created_by_name,
-       m.created_at
+       m.created_at, m.reverses_id,
+       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed
 FROM stock_movements m
 JOIN products p ON p.id = m.product_id
 LEFT JOIN orders o ON m.ref_type = 'order' AND o.id = m.ref_id
@@ -45,3 +46,10 @@ SELECT count(*)
 FROM stock_movements m
 WHERE (sqlc.narg(product_id)::bigint IS NULL OR m.product_id = sqlc.narg(product_id)::bigint)
   AND (sqlc.narg(type)::text IS NULL OR m.type = sqlc.narg(type)::text);
+
+-- name: GetMovement :one
+SELECT m.id, m.product_id, m.type, m.qty_change, m.reserved_change, m.ref_type, m.reverses_id,
+       m.created_at,
+       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed
+FROM stock_movements m
+WHERE m.id = $1;

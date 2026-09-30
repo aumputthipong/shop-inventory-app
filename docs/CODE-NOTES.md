@@ -25,6 +25,11 @@ in the same PR as the behaviour it describes.
   history.
 - A rejected order is written to the audit log after its transaction rolls
   back, because the rollback would otherwise erase the record of the attempt.
+- A mistyped stock-in or adjustment is undone by an opposite ADJUST that
+  points at it (`reverses_id`), never by deleting or editing the row, so the
+  ledger still shows what happened. A unique index on `reverses_id` stops the
+  same row being undone twice under concurrency. Order movements are excluded:
+  cancelling the order is the undo for those.
 - Money is `numeric(12,2)` in postgres and a decimal string everywhere else
   (sqlc override to `string`, JSON `"600.00"`). Totals are summed in SQL, so no
   float ever touches a price.

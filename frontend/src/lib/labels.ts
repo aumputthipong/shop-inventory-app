@@ -53,6 +53,7 @@ export const auditActionLabel: Record<string, string> = {
   'product.update': 'แก้ไขสินค้า',
   'stock.in': 'รับของเข้า',
   'stock.adjust': 'ปรับยอดสต็อก',
+  'stock.reverse': 'ยกเลิกรายการที่กรอกผิด',
   'order.create': 'สร้างออเดอร์',
   'order.rejected': 'ปฏิเสธออเดอร์ (ของไม่พอ)',
   'order.pack': 'แพ็กออเดอร์',
