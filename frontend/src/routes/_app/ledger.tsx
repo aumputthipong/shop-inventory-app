@@ -6,6 +6,7 @@ import { XIcon } from 'lucide-react'
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
+import { HelpNote } from '@/components/help-note'
 import { Pager } from '@/components/pager'
 import { ReverseMovementButton } from '@/components/stock/reverse-movement'
 import type { MovementType } from '@/lib/api'
@@ -55,6 +56,20 @@ function LedgerPage() {
         <p className="text-sm text-ink-2">
           ทุกการเปลี่ยนแปลงของสต็อกถูกบันทึกที่นี่ ยอดคงเหลือทุกตัวอธิบายได้จากรายการเหล่านี้
         </p>
+        <HelpNote question="อ่านประวัตินี้ยังไง" className="mt-2 max-w-2xl">
+          <p>
+            แต่ละแถวคือหนึ่งครั้งที่สต็อกเปลี่ยน ช่อง “ในคลัง” และ “จอง” บอกว่าเปลี่ยนไปกี่ชิ้น ช่อง
+            “คงเหลือหลังจากนั้น” บอกยอดหลังรายการนั้น
+          </p>
+          <p>
+            รับเข้าและปรับยอดทำให้ของในคลังเปลี่ยน จองไม่ทำให้ของออกจากคลัง แค่กันไว้ไม่ให้ขายซ้ำ
+            ส่งออกคือของออกจากร้านจริง
+          </p>
+          <p>
+            ประวัติแก้หรือลบไม่ได้ ถ้ากรอกผิด เจ้าของร้านกด “ยกเลิก” ได้ภายใน 7 วัน
+            ระบบจะลงรายการกลับให้และเก็บของเดิมไว้ให้ดู
+          </p>
+        </HelpNote>
       </div>
 
       <section aria-label="ความเคลื่อนไหวของสต็อก" className="panel overflow-x-auto">

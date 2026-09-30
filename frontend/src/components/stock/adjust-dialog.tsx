@@ -159,6 +159,12 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
         ]}
       />
 
+      <p className="-mt-2 text-[13px] text-ink-2">
+        {setting
+          ? 'ใช้หลังนับของจริง ใส่จำนวนที่นับได้ ระบบคำนวณส่วนต่างให้'
+          : 'ใช้เมื่อรู้ว่าของเปลี่ยนไปกี่ชิ้น เช่น ของเสีย 2 ชิ้น ถ้ากรอกรับของผิด ให้กด “ยกเลิก” ที่รายการนั้นในประวัติแทน'}
+      </p>
+
       {setting ? (
         <div className="flex flex-col gap-2">
           <label htmlFor="adjust-counted" className="text-[13px] font-medium text-ink-2">

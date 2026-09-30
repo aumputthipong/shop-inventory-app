@@ -6,6 +6,7 @@ import { useState, type ReactNode } from 'react'
 
 import { ChannelChip, Chip } from '@/components/chip'
 import { FilterTabs } from '@/components/filter-tabs'
+import { HelpNote } from '@/components/help-note'
 import { ProductAvatar } from '@/components/product-avatar'
 import { AdjustDialog } from '@/components/stock/adjust-dialog'
 import { ProductFormDialog } from '@/components/stock/product-form-dialog'
@@ -232,6 +233,20 @@ function Availability({
       <span className="text-[13px] text-ink-2">{summary}</span>
       <UnitStrip size="lg" available={product.available} held={product.reserved} />
       <UnitLegend />
+      <HelpNote question="ขายได้ มีในคลัง จองแล้ว ต่างกันยังไง">
+        <p>
+          <span className="font-medium text-ink">มีในคลัง</span> คือของที่อยู่ในร้านจริง
+          รวมของที่แพ็กแล้วแต่ยังไม่ได้ส่ง
+        </p>
+        <p>
+          <span className="font-medium text-ink">จองแล้ว</span> คือของที่มีออเดอร์สั่งไว้
+          แต่ยังไม่ได้ส่ง ช่องทางอื่นจะขายชิ้นนี้ซ้ำไม่ได้
+        </p>
+        <p>
+          <span className="font-medium text-ink">ขายได้</span> = มีในคลัง − จองแล้ว
+          คือจำนวนที่ยังรับออเดอร์ใหม่ได้ เมื่อกดส่งของ ชิ้นนั้นจะออกจากคลัง
+        </p>
+      </HelpNote>
       <div
         className={cn(
           'flex items-center gap-2 text-[13px]',

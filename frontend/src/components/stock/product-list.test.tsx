@@ -88,4 +88,23 @@ describe('ProductList', () => {
 
     expect(onSelect).toHaveBeenCalledWith(3)
   })
+
+  it('walks a new owner through getting started', () => {
+    render(<ProductList products={[]} selectedId={undefined} onSelect={vi.fn()} onAdd={vi.fn()} />)
+
+    const steps = within(screen.getByRole('list', { name: 'เริ่มต้นใช้งาน' })).getAllByRole(
+      'listitem',
+    )
+    expect(steps).toHaveLength(3)
+    expect(screen.getByRole('button', { name: 'เพิ่มสินค้าชิ้นแรก' })).toBeInTheDocument()
+  })
+
+  it('tells staff to wait for the owner when the shop is empty', () => {
+    render(<ProductList products={[]} selectedId={undefined} onSelect={vi.fn()} />)
+
+    expect(
+      screen.getByText('ให้เจ้าของร้านเพิ่มสินค้าก่อน แล้วรายการจะขึ้นที่นี่'),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('list', { name: 'เริ่มต้นใช้งาน' })).not.toBeInTheDocument()
+  })
 })

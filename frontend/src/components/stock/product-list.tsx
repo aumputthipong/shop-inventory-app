@@ -166,6 +166,21 @@ function ProductRow({
   )
 }
 
+const GETTING_STARTED = [
+  {
+    title: 'เพิ่มสินค้า พร้อมจำนวนที่มีอยู่ตอนนี้',
+    body: 'นับของบนชั้นแล้วใส่ตัวเลขได้เลย ระบบจะจำเป็นยอดตั้งต้น',
+  },
+  {
+    title: 'รับของเข้าเมื่อของมาส่ง',
+    body: 'กด “รับของเข้า” ที่สินค้า ยอดในคลังจะเพิ่มทันที',
+  },
+  {
+    title: 'บันทึกทุกออเดอร์ ทั้งหน้าร้าน Shopee และ LINE',
+    body: 'ระบบจองของให้ทันที ช่องทางอื่นจะขายชิ้นเดียวกันซ้ำไม่ได้',
+  },
+]
+
 function ListEmptyState({
   hasProducts,
   query,
@@ -181,11 +196,42 @@ function ListEmptyState({
 }) {
   if (!hasProducts) {
     return (
-      <EmptyState
-        title="ยังไม่มีสินค้าในร้าน"
-        body="เพิ่มสินค้าชิ้นแรก แล้วรับของเข้าเพื่อเริ่มขาย"
-        action={onAdd && <Button onClick={onAdd}>เพิ่มสินค้าชิ้นแรก</Button>}
-      />
+      <div className="flex flex-col items-center pb-8">
+        <EmptyState
+          title="ยังไม่มีสินค้าในร้าน"
+          body={
+            onAdd
+              ? 'เริ่มใช้งานได้ใน 3 ขั้น ไม่ต้องตั้งค่าอะไรเพิ่ม'
+              : 'ให้เจ้าของร้านเพิ่มสินค้าก่อน แล้วรายการจะขึ้นที่นี่'
+          }
+        />
+        {onAdd && (
+          <>
+            <ol aria-label="เริ่มต้นใช้งาน" className="flex w-full max-w-md flex-col gap-2 px-4">
+              {GETTING_STARTED.map((step, i) => (
+                <li
+                  key={step.title}
+                  className="flex gap-3 rounded-md border border-line bg-surface px-4 py-3"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full bg-kraft-100 text-xs font-semibold text-kraft-700"
+                  >
+                    {i + 1}
+                  </span>
+                  <span className="flex flex-col">
+                    <span className="text-sm font-medium">{step.title}</span>
+                    <span className="text-[13px] text-ink-2">{step.body}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+            <Button className="mt-5" onClick={onAdd}>
+              เพิ่มสินค้าชิ้นแรก
+            </Button>
+          </>
+        )}
+      </div>
     )
   }
   if (query !== '') {
