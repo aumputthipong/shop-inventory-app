@@ -19,6 +19,7 @@ import (
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/audit"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/auth"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/counts"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/health"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
@@ -87,6 +88,7 @@ func run() error {
 				products.NewHandler(products.NewService(products.NewRepository(pool))),
 				stock.NewHandler(stock.NewService(stock.NewRepository(pool))),
 				orders.NewHandler(orders.NewService(orders.NewRepository(pool))),
+				counts.NewHandler(counts.NewService(counts.NewRepository(pool))),
 				audit.NewHandler(audit.NewService(audit.NewRepository(pool))),
 			},
 			Sessions:  authService,

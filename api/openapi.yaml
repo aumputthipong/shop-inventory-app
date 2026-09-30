@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: shop-inventory-app API
-  version: 0.3.0
+  version: 0.4.0
   description: |
     Multi-channel inventory back-office. A single stock pool is sold through
     several channels (store, Shopee, LINE OA).
@@ -27,6 +27,8 @@ tags:
   - name: products
   - name: stock
   - name: orders
+  - name: counts
+    description: Physical stock counts. Staff submit, an owner approves and the differences become ADJUST movements.
   - name: audit
   - name: users
 
@@ -525,6 +527,134 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/InvalidState" }
 
+  /api/counts:
+    get:
+      tags: [counts]
+      summary: Stock counts, newest first
+      operationId: listCounts
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of stock counts.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/CountSummary" }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [counts]
+      summary: Submit a stock count, and optionally approve it at once (owner)
+      description: |
+        Each line records what was counted and, as expected, the product's
+        on_hand when the count is saved. Only the products listed are counted.
+        With approve true (owners only) the count is saved and approved in one
+        transaction, so a shortage leaves nothing behind.
+      operationId: createCount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lines]
+              properties:
+                note: { type: string, maxLength: 500 }
+                approve: { type: boolean, default: false }
+                lines:
+                  type: array
+                  minItems: 1
+                  maxItems: 500
+                  items:
+                    type: object
+                    required: [product_id, counted]
+                    properties:
+                      product_id: { type: integer, format: int64 }
+                      counted: { type: integer, minimum: 0, maximum: 100000 }
+      responses:
+        "201":
+          description: Created, with status submitted or approved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/CountShortage" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/counts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [counts]
+      summary: One stock count with its lines
+      operationId: getCount
+      responses:
+        "200":
+          description: Stock count.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/counts/{id}/approve:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [counts]
+      summary: Approve a submitted count and adjust stock by each line's variance (owner)
+      description: |
+        Writes one ADJUST per line whose counted differs from expected, with
+        reason count_correction and the count as its reference. The variance is
+        measured against on_hand when the count was saved, so movements since
+        then are kept. Refused as a whole if any removal would take units that
+        orders hold.
+      operationId: approveCount
+      responses:
+        "200":
+          description: The count, now approved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: insufficient_stock with details.items, or invalid_state with details.status when the count was already decided.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/counts/{id}/reject:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [counts]
+      summary: Reject a submitted count; stock is unchanged (owner)
+      operationId: rejectCount
+      responses:
+        "200":
+          description: The count, now rejected.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: invalid_state with details.status when the count was already decided.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
   /api/audit-logs:
     get:
       tags: [audit]
@@ -717,6 +847,11 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorResponse" }
+    CountShortage:
+      description: insufficient_stock; details.items lists every product whose missing units orders already hold.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
     OrderOk:
       description: The order after the transition.
       content:
@@ -858,6 +993,7 @@ components:
           oneOf:
             - $ref: "#/components/schemas/Channel"
             - type: "null"
+        count_id: { type: [integer, "null"], format: int64, description: Set on an ADJUST written by an approved stock count. }
         reason:
           type: [string, "null"]
           description: count_correction, damaged, lost, other or reversal for ADJUST; opening_balance for a product's first STOCK_IN.
@@ -921,6 +1057,50 @@ components:
           type: array
           items: { $ref: "#/components/schemas/OrderItem" }
 
+    CountStatus:
+      type: string
+      enum: [submitted, approved, rejected]
+
+    CountLine:
+      type: object
+      required: [product_id, sku, name, expected, counted, variance, on_hand_now]
+      properties:
+        product_id: { type: integer, format: int64 }
+        sku: { type: string }
+        name: { type: string }
+        expected: { type: integer, description: on_hand when the count was saved. }
+        counted: { type: integer }
+        variance: { type: integer, description: counted - expected. }
+        on_hand_now: { type: integer }
+
+    StockCount:
+      type: object
+      required: [id, status, lines, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/CountStatus" }
+        note: { type: [string, "null"] }
+        created_by_name: { type: [string, "null"] }
+        decided_by_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        decided_at: { type: [string, "null"], format: date-time }
+        lines:
+          type: array
+          items: { $ref: "#/components/schemas/CountLine" }
+
+    CountSummary:
+      type: object
+      required: [id, status, line_count, diff_count, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/CountStatus" }
+        note: { type: [string, "null"] }
+        created_by_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        decided_at: { type: [string, "null"], format: date-time }
+        line_count: { type: integer }
+        diff_count: { type: integer, description: Lines whose counted differs from expected. }
+
     AuditLog:
       type: object
       required: [id, action, entity_type, detail, created_at]
@@ -929,8 +1109,8 @@ components:
         action:
           type: string
           examples: [order.rejected]
-          description: product.create, product.update, stock.in, stock.adjust, order.create, order.rejected, order.pack, order.ship, order.cancel, user.create
-        entity_type: { type: string, enum: [product, order, user] }
+          description: product.create, product.update, stock.in, stock.adjust, stock.reverse, count.submit, count.approve, count.reject, order.create, order.rejected, order.pack, order.ship, order.cancel, user.create, user.disable, user.enable, user.password_reset, user.password_change
+        entity_type: { type: string, enum: [product, order, user, stock_count] }
         entity_id: { type: [integer, "null"], format: int64 }
         detail: { type: object, additionalProperties: true }
         actor_name: { type: [string, "null"] }

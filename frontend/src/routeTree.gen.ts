@@ -17,6 +17,9 @@ import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
 import { Route as AppStockRouteImport } from './routes/_app/stock'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
+import { Route as AppCountsIndexRouteImport } from './routes/_app/counts/index'
+import { Route as AppCountsCountIdRouteImport } from './routes/_app/counts/$countId'
+import { Route as AppCountsNewRouteImport } from './routes/_app/counts/new'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders/index'
 import { Route as AppOrdersOrderIdRouteImport } from './routes/_app/orders/$orderId'
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
@@ -60,6 +63,21 @@ const AppTeamRoute = AppTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCountsIndexRoute = AppCountsIndexRouteImport.update({
+  id: '/counts/',
+  path: '/counts/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCountsCountIdRoute = AppCountsCountIdRouteImport.update({
+  id: '/counts/$countId',
+  path: '/counts/$countId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCountsNewRoute = AppCountsNewRouteImport.update({
+  id: '/counts/new',
+  path: '/counts/new',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
   id: '/orders/',
   path: '/orders/',
@@ -84,8 +102,11 @@ export interface FileRoutesByFullPath {
   '/ledger': typeof AppLedgerRoute
   '/stock': typeof AppStockRoute
   '/team': typeof AppTeamRoute
+  '/counts/$countId': typeof AppCountsCountIdRoute
+  '/counts/new': typeof AppCountsNewRoute
   '/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/orders/new': typeof AppOrdersNewRoute
+  '/counts/': typeof AppCountsIndexRoute
   '/orders/': typeof AppOrdersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -96,8 +117,11 @@ export interface FileRoutesByTo {
   '/stock': typeof AppStockRoute
   '/team': typeof AppTeamRoute
   '/': typeof AppIndexRoute
+  '/counts/$countId': typeof AppCountsCountIdRoute
+  '/counts/new': typeof AppCountsNewRoute
   '/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/orders/new': typeof AppOrdersNewRoute
+  '/counts': typeof AppCountsIndexRoute
   '/orders': typeof AppOrdersIndexRoute
 }
 export interface FileRoutesById {
@@ -110,8 +134,11 @@ export interface FileRoutesById {
   '/_app/stock': typeof AppStockRoute
   '/_app/team': typeof AppTeamRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/counts/$countId': typeof AppCountsCountIdRoute
+  '/_app/counts/new': typeof AppCountsNewRoute
   '/_app/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/_app/orders/new': typeof AppOrdersNewRoute
+  '/_app/counts/': typeof AppCountsIndexRoute
   '/_app/orders/': typeof AppOrdersIndexRoute
 }
 export interface FileRouteTypes {
@@ -124,8 +151,11 @@ export interface FileRouteTypes {
     | '/ledger'
     | '/stock'
     | '/team'
+    | '/counts/$countId'
+    | '/counts/new'
     | '/orders/$orderId'
     | '/orders/new'
+    | '/counts/'
     | '/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -136,8 +166,11 @@ export interface FileRouteTypes {
     | '/stock'
     | '/team'
     | '/'
+    | '/counts/$countId'
+    | '/counts/new'
     | '/orders/$orderId'
     | '/orders/new'
+    | '/counts'
     | '/orders'
   id:
     | '__root__'
@@ -149,8 +182,11 @@ export interface FileRouteTypes {
     | '/_app/stock'
     | '/_app/team'
     | '/_app/'
+    | '/_app/counts/$countId'
+    | '/_app/counts/new'
     | '/_app/orders/$orderId'
     | '/_app/orders/new'
+    | '/_app/counts/'
     | '/_app/orders/'
   fileRoutesById: FileRoutesById
 }
@@ -217,6 +253,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTeamRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/counts/': {
+      id: '/_app/counts/'
+      path: '/counts'
+      fullPath: '/counts/'
+      preLoaderRoute: typeof AppCountsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/counts/$countId': {
+      id: '/_app/counts/$countId'
+      path: '/counts/$countId'
+      fullPath: '/counts/$countId'
+      preLoaderRoute: typeof AppCountsCountIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/counts/new': {
+      id: '/_app/counts/new'
+      path: '/counts/new'
+      fullPath: '/counts/new'
+      preLoaderRoute: typeof AppCountsNewRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/orders/': {
       id: '/_app/orders/'
       path: '/orders'
@@ -248,8 +305,11 @@ interface AppRouteChildren {
   AppStockRoute: typeof AppStockRoute
   AppTeamRoute: typeof AppTeamRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppCountsCountIdRoute: typeof AppCountsCountIdRoute
+  AppCountsNewRoute: typeof AppCountsNewRoute
   AppOrdersOrderIdRoute: typeof AppOrdersOrderIdRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
+  AppCountsIndexRoute: typeof AppCountsIndexRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
 }
 
@@ -260,8 +320,11 @@ const AppRouteChildren: AppRouteChildren = {
   AppStockRoute: AppStockRoute,
   AppTeamRoute: AppTeamRoute,
   AppIndexRoute: AppIndexRoute,
+  AppCountsCountIdRoute: AppCountsCountIdRoute,
+  AppCountsNewRoute: AppCountsNewRoute,
   AppOrdersOrderIdRoute: AppOrdersOrderIdRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
+  AppCountsIndexRoute: AppCountsIndexRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
 }
 

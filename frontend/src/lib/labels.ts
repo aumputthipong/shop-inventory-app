@@ -1,4 +1,12 @@
-import type { AdjustReason, Channel, MovementType, OrderStatus, Role, StockStatus } from '@/lib/api'
+import type {
+  AdjustReason,
+  Channel,
+  CountStatus,
+  MovementType,
+  OrderStatus,
+  Role,
+  StockStatus,
+} from '@/lib/api'
 
 export type ChipTone = 'ok' | 'warn' | 'bad' | 'info' | 'indigo' | 'violet' | 'teal' | 'neutral'
 
@@ -13,6 +21,12 @@ export const orderStatusChip: Record<OrderStatus, { label: string; tone: ChipTon
   packed: { label: 'แพ็กแล้ว', tone: 'info' },
   shipped: { label: 'ส่งแล้ว', tone: 'ok' },
   canceled: { label: 'ยกเลิก', tone: 'neutral' },
+}
+
+export const countStatusChip: Record<CountStatus, { label: string; tone: ChipTone }> = {
+  submitted: { label: 'รอเจ้าของยืนยัน', tone: 'warn' },
+  approved: { label: 'ปรับสต็อกแล้ว', tone: 'ok' },
+  rejected: { label: 'ไม่ใช้ผลนับนี้', tone: 'neutral' },
 }
 
 export const movementChip: Record<MovementType, { label: string; tone: ChipTone }> = {
@@ -54,6 +68,9 @@ export const auditActionLabel: Record<string, string> = {
   'stock.in': 'รับของเข้า',
   'stock.adjust': 'ปรับยอดสต็อก',
   'stock.reverse': 'ยกเลิกรายการที่กรอกผิด',
+  'count.submit': 'บันทึกผลตรวจนับ',
+  'count.approve': 'ยืนยันผลตรวจนับ',
+  'count.reject': 'ไม่ใช้ผลตรวจนับ',
   'order.create': 'สร้างออเดอร์',
   'order.rejected': 'ปฏิเสธออเดอร์ (ของไม่พอ)',
   'order.pack': 'แพ็กออเดอร์',

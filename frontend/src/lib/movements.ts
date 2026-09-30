@@ -6,6 +6,7 @@ export function canReverse(m: Movement, now = Date.now()): boolean {
   return (
     (m.type === 'STOCK_IN' || m.type === 'ADJUST') &&
     m.order_id === null &&
+    m.count_id === null &&
     m.reverses_id === null &&
     !m.reversed &&
     m.qty_change !== 0 &&

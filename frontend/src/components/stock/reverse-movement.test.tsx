@@ -23,6 +23,7 @@ const stockIn: Movement = {
   order_id: null,
   order_no: null,
   order_channel: null,
+  count_id: null,
   reason: null,
   note: null,
   created_by_name: 'พลอย',
@@ -38,6 +39,7 @@ describe('canReverse', () => {
     ['already reversed', { reversed: true }, false],
     ['a reversal itself', { type: 'ADJUST', reverses_id: 12 }, false],
     ['an order movement', { type: 'SHIP', order_id: 7 }, false],
+    ['a stock count correction', { type: 'ADJUST', count_id: 3 }, false],
     ['older than 7 days', { created_at: '2026-09-23T09:00:00Z' }, false],
   ])('%s', (_, change, want) => {
     expect(canReverse({ ...stockIn, ...change }, now)).toBe(want)

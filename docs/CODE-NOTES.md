@@ -30,6 +30,16 @@ in the same PR as the behaviour it describes.
   ledger still shows what happened. A unique index on `reverses_id` stops the
   same row being undone twice under concurrency. Order movements are excluded:
   cancelling the order is the undo for those.
+- A stock count stores, per line, what was counted and the `on_hand` at the
+  moment it was saved (`expected`). Approval applies `counted - expected`, not
+  `counted - on_hand now`: sales shipped between counting and approval already
+  left the shelf and the ledger, so using today's number would count them
+  twice. Staff can count but only an owner approves, because approval rewrites
+  balances. Count adjustments carry `ref_type = stock_count` and are not
+  undoable one by one; a wrong count is fixed by counting again.
+- Approval is all or nothing, like an order: if one line would take units that
+  orders hold, nothing is adjusted and every such line is reported. The usual
+  cause is packed parcels that were not counted.
 - Money is `numeric(12,2)` in postgres and a decimal string everywhere else
   (sqlc override to `string`, JSON `"600.00"`). Totals are summed in SQL, so no
   float ever touches a price.

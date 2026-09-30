@@ -19,9 +19,10 @@ An order first **reserves** stock (reserved goes up), then either **ships** it
 `available` is always derived, never stored. The database refuses any row where
 `on_hand - reserved < 0`, so no code path can persist an oversold balance.
 
-Built so far: sign-in with owner and staff roles, products, stock in and adjust,
-the movement ledger, orders with all-or-nothing reservation and the
-pack/ship/cancel flow, and the audit log. Channel integrations (Shopee, LINE
+Built so far: sign-in with owner and staff roles, products with opening stock,
+stock in and adjust, undoing a mistyped entry, stock counts, the movement
+ledger, orders with all-or-nothing reservation and the pack/ship/cancel flow,
+and the audit log. Channel integrations (Shopee, LINE
 webhooks) are not built yet; channel orders are entered by hand.
 
 ## Stack
@@ -57,6 +58,7 @@ backend/
     auth/, users/          Cookie sessions, password hashing, team accounts
     products/, stock/      Catalog, balances, stock in/adjust, the movement ledger
     orders/                All-or-nothing reservation and the pack/ship/cancel flow
+    counts/                Stock counts: staff submit, owner approves into ADJUST movements
     audit/                 Who did what, written in the same transaction as the change
     platform/actor/        The signed-in user on context.Context
   cmd/seed/                Dev accounts and sample stock (make seed)
@@ -131,9 +133,10 @@ it via `httpx.RequestIDFrom(ctx)` without seeing gin.
 
 ## Roles
 
-- `owner` can do everything. `staff` can receive stock, create orders and
-  pack, ship or cancel them, but cannot adjust stock, create or edit products,
-  manage users or read the audit log.
+- `owner` can do everything. `staff` can receive stock, submit stock counts,
+  create orders and pack, ship or cancel them, but cannot adjust stock, approve
+  counts, undo movements, create or edit products, manage users or read the
+  audit log.
 - Enforce a role with `httpx.RequireRole` on the route. Services read the
   signed-in user with `actor.From(ctx)`; they never see the cookie.
 - Stock and order writes lock `stock_balances` rows in product id order

@@ -68,6 +68,23 @@ type StockBalance struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type StockCount struct {
+	ID        int64      `json:"id"`
+	Status    string     `json:"status"`
+	Note      *string    `json:"note"`
+	CreatedBy *int64     `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	DecidedBy *int64     `json:"decided_by"`
+	DecidedAt *time.Time `json:"decided_at"`
+}
+
+type StockCountLine struct {
+	CountID   int64 `json:"count_id"`
+	ProductID int64 `json:"product_id"`
+	Expected  int32 `json:"expected"`
+	Counted   int32 `json:"counted"`
+}
+
 type StockMovement struct {
 	ID             int64     `json:"id"`
 	ProductID      int64     `json:"product_id"`

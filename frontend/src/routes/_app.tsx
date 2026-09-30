@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import {
+  ClipboardCheckIcon,
   ClipboardListIcon,
   HistoryIcon,
   LogOutIcon,
@@ -37,7 +38,7 @@ export const Route = createFileRoute('/_app')({
 })
 
 interface NavItem {
-  to: '/orders' | '/stock' | '/ledger' | '/audit' | '/team'
+  to: '/orders' | '/stock' | '/counts' | '/ledger' | '/audit' | '/team'
   label: string
   icon: LucideIcon
   ownerOnly?: boolean
@@ -46,6 +47,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/orders', label: 'ออเดอร์', icon: ReceiptTextIcon },
   { to: '/stock', label: 'สต็อก', icon: PackageIcon },
+  { to: '/counts', label: 'ตรวจนับ', icon: ClipboardCheckIcon },
   { to: '/ledger', label: 'ประวัติสต็อก', icon: HistoryIcon },
   { to: '/audit', label: 'บันทึกการใช้งาน', icon: ClipboardListIcon, ownerOnly: true },
   { to: '/team', label: 'ทีม', icon: UsersIcon, ownerOnly: true },

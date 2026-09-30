@@ -158,6 +158,14 @@ function LedgerPage() {
                         </span>
                       )}
                     </Link>
+                  ) : m.count_id !== null ? (
+                    <Link
+                      to="/counts/$countId"
+                      params={{ countId: m.count_id }}
+                      className="font-medium hover:text-petrol-600 hover:underline"
+                    >
+                      ตรวจนับ #{m.count_id}
+                    </Link>
                   ) : (
                     reason && (
                       <span className="font-medium">

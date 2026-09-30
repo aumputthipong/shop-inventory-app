@@ -46,6 +46,19 @@ export const orderQueryOptions = (id: number) =>
     queryFn: ({ signal }) => api.getOrder(id, signal),
   })
 
+export const countsQueryOptions = (query: { limit: number; offset: number }) =>
+  queryOptions({
+    queryKey: ['counts', query],
+    queryFn: ({ signal }) => api.listCounts(query, signal),
+    placeholderData: keepPreviousData,
+  })
+
+export const countQueryOptions = (id: number) =>
+  queryOptions({
+    queryKey: ['count', id],
+    queryFn: ({ signal }) => api.getCount(id, signal),
+  })
+
 export const auditQueryOptions = (query: { limit: number; offset: number }) =>
   queryOptions({
     queryKey: ['audit', query],
@@ -65,5 +78,7 @@ export function invalidateStock(client: QueryClient) {
     client.invalidateQueries({ queryKey: ['movements'] }),
     client.invalidateQueries({ queryKey: ['orders'] }),
     client.invalidateQueries({ queryKey: ['order'] }),
+    client.invalidateQueries({ queryKey: ['counts'] }),
+    client.invalidateQueries({ queryKey: ['count'] }),
   ])
 }

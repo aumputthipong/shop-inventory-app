@@ -30,7 +30,10 @@ func (t MovementType) Valid() bool {
 	return false
 }
 
-const RefOrder = "order"
+const (
+	RefOrder      = "order"
+	RefStockCount = "stock_count"
+)
 
 // ReasonOpeningBalance marks the stock a product had when it was first entered.
 const ReasonOpeningBalance = "opening_balance"

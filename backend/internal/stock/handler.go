@@ -73,6 +73,7 @@ type movementResponse struct {
 	OrderID        *int64    `json:"order_id"`
 	OrderNo        *string   `json:"order_no"`
 	OrderChannel   *string   `json:"order_channel"`
+	CountID        *int64    `json:"count_id"`
 	Reason         *string   `json:"reason"`
 	Note           *string   `json:"note"`
 	CreatedByName  *string   `json:"created_by_name"`
@@ -191,9 +192,12 @@ func (h *Handler) listMovements(c *gin.Context) {
 
 	out := make([]movementResponse, 0, len(items))
 	for _, m := range items {
-		var orderID *int64
+		var orderID, countID *int64
 		if m.RefType != nil && *m.RefType == RefOrder {
 			orderID = m.RefID
+		}
+		if m.RefType != nil && *m.RefType == RefStockCount {
+			countID = m.RefID
 		}
 		out = append(out, movementResponse{
 			ID:             m.ID,
@@ -209,6 +213,7 @@ func (h *Handler) listMovements(c *gin.Context) {
 			OrderID:        orderID,
 			OrderNo:        m.OrderNo,
 			OrderChannel:   m.OrderChannel,
+			CountID:        countID,
 			Reason:         m.Reason,
 			Note:           m.Note,
 			CreatedByName:  m.CreatedByName,

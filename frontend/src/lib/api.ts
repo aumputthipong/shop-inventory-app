@@ -83,6 +83,7 @@ export interface Movement {
   order_id: number | null
   order_no: string | null
   order_channel: Channel | null
+  count_id: number | null
   reason: string | null
   note: string | null
   created_by_name: string | null
@@ -148,6 +149,46 @@ export interface Shortage {
   name: string
   requested: number
   available: number
+}
+
+export type CountStatus = 'submitted' | 'approved' | 'rejected'
+
+export interface CountLine {
+  product_id: number
+  sku: string
+  name: string
+  expected: number
+  counted: number
+  variance: number
+  on_hand_now: number
+}
+
+export interface StockCount {
+  id: number
+  status: CountStatus
+  note: string | null
+  created_by_name: string | null
+  decided_by_name: string | null
+  created_at: string
+  decided_at: string | null
+  lines: CountLine[]
+}
+
+export interface CountSummary {
+  id: number
+  status: CountStatus
+  note: string | null
+  created_by_name: string | null
+  created_at: string
+  decided_at: string | null
+  line_count: number
+  diff_count: number
+}
+
+export interface NewCount {
+  note?: string
+  approve?: boolean
+  lines: { product_id: number; counted: number }[]
 }
 
 export interface AuditLog {
@@ -311,6 +352,14 @@ export const api = {
   createOrder: (input: NewOrder) => send<Order>('POST', '/api/orders', input),
   orderAction: (id: number, action: OrderAction) =>
     send<Order>('POST', `/api/orders/${id}/${action}`),
+
+  listCounts: (query: { limit?: number; offset?: number }, signal?: AbortSignal) =>
+    apiFetch<Page<CountSummary>>(withQuery('/api/counts', { ...query }), { signal }),
+  getCount: (id: number, signal?: AbortSignal) =>
+    apiFetch<StockCount>(`/api/counts/${id}`, { signal }),
+  createCount: (input: NewCount) => send<StockCount>('POST', '/api/counts', input),
+  decideCount: (id: number, decision: 'approve' | 'reject') =>
+    send<StockCount>('POST', `/api/counts/${id}/${decision}`),
 
   listAuditLogs: (query: { limit?: number; offset?: number }, signal?: AbortSignal) =>
     apiFetch<Page<AuditLog>>(withQuery('/api/audit-logs', { ...query }), { signal }),
