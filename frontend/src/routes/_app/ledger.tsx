@@ -173,6 +173,16 @@ function LedgerPage() {
                         </span>
                       )}
                     </Link>
+                  ) : m.receipt_id !== null ? (
+                    <span className="font-medium">
+                      {m.receipt_reference ? (
+                        <>
+                          ใบส่งของ <span className="code">{m.receipt_reference}</span>
+                        </>
+                      ) : (
+                        `รับของชุด #${m.receipt_id}`
+                      )}
+                    </span>
                   ) : m.count_id !== null ? (
                     <Link
                       to="/counts/$countId"

@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
+import { Route as AppReceiveRouteImport } from './routes/_app/receive'
 import { Route as AppStockRouteImport } from './routes/_app/stock'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
 import { Route as AppCountsIndexRouteImport } from './routes/_app/counts/index'
@@ -51,6 +52,11 @@ const AppAuditRoute = AppAuditRouteImport.update({
 const AppLedgerRoute = AppLedgerRouteImport.update({
   id: '/ledger',
   path: '/ledger',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReceiveRoute = AppReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
   getParentRoute: () => AppRoute,
 } as any)
 const AppStockRoute = AppStockRouteImport.update({
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/account': typeof AppAccountRoute
   '/audit': typeof AppAuditRoute
   '/ledger': typeof AppLedgerRoute
+  '/receive': typeof AppReceiveRoute
   '/stock': typeof AppStockRoute
   '/team': typeof AppTeamRoute
   '/counts/$countId': typeof AppCountsCountIdRoute
@@ -114,6 +121,7 @@ export interface FileRoutesByTo {
   '/account': typeof AppAccountRoute
   '/audit': typeof AppAuditRoute
   '/ledger': typeof AppLedgerRoute
+  '/receive': typeof AppReceiveRoute
   '/stock': typeof AppStockRoute
   '/team': typeof AppTeamRoute
   '/': typeof AppIndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/_app/account': typeof AppAccountRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/ledger': typeof AppLedgerRoute
+  '/_app/receive': typeof AppReceiveRoute
   '/_app/stock': typeof AppStockRoute
   '/_app/team': typeof AppTeamRoute
   '/_app/': typeof AppIndexRoute
@@ -149,6 +158,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/audit'
     | '/ledger'
+    | '/receive'
     | '/stock'
     | '/team'
     | '/counts/$countId'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/account'
     | '/audit'
     | '/ledger'
+    | '/receive'
     | '/stock'
     | '/team'
     | '/'
@@ -179,6 +190,7 @@ export interface FileRouteTypes {
     | '/_app/account'
     | '/_app/audit'
     | '/_app/ledger'
+    | '/_app/receive'
     | '/_app/stock'
     | '/_app/team'
     | '/_app/'
@@ -237,6 +249,13 @@ declare module '@tanstack/react-router' {
       path: '/ledger'
       fullPath: '/ledger'
       preLoaderRoute: typeof AppLedgerRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/receive': {
+      id: '/_app/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof AppReceiveRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/stock': {
@@ -302,6 +321,7 @@ interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
   AppAuditRoute: typeof AppAuditRoute
   AppLedgerRoute: typeof AppLedgerRoute
+  AppReceiveRoute: typeof AppReceiveRoute
   AppStockRoute: typeof AppStockRoute
   AppTeamRoute: typeof AppTeamRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -317,6 +337,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
   AppAuditRoute: AppAuditRoute,
   AppLedgerRoute: AppLedgerRoute,
+  AppReceiveRoute: AppReceiveRoute,
   AppStockRoute: AppStockRoute,
   AppTeamRoute: AppTeamRoute,
   AppIndexRoute: AppIndexRoute,

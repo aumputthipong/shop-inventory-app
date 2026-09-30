@@ -33,12 +33,12 @@ type MovementInfo struct {
 
 type ReversalPlanner func(m MovementInfo) (Change, error)
 
-// PlanReversal undoes a mistyped stock-in or adjustment with an opposite ADJUST, keeping both rows in the ledger.
+// PlanReversal undoes a mistyped stock-in (alone or on a receipt) or adjustment with an opposite ADJUST, keeping both rows in the ledger.
 func PlanReversal(m MovementInfo, now time.Time) (Change, error) {
 	switch {
 	case m.Reversed:
 		return Change{}, ErrAlreadyReversed
-	case m.ReversesID != nil, m.RefType != nil, m.QtyChange == 0,
+	case m.ReversesID != nil, m.RefType != nil && *m.RefType != RefReceipt, m.QtyChange == 0,
 		m.Type != TypeStockIn && m.Type != TypeAdjust:
 		return Change{}, ErrNotReversible
 	case now.Sub(m.CreatedAt) > ReversalWindow:

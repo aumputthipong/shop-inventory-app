@@ -3,11 +3,13 @@ package stock
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/aumputthipong/shop-inventory-app/backend/db/sqlc"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/audit"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
 )
 
@@ -88,6 +90,51 @@ func (r *PgRepository) Reverse(ctx context.Context, id int64, plan ReversalPlann
 	return after, err
 }
 
+func (r *PgRepository) Receive(ctx context.Context, in NewReceipt, entry audit.Entry) (Receipt, error) {
+	ids := make([]int64, 0, len(in.Lines))
+	for _, l := range in.Lines {
+		ids = append(ids, l.ProductID)
+	}
+	slices.Sort(ids)
+
+	var out Receipt
+	err := database.InTx(ctx, r.pool, func(q *sqlc.Queries) error {
+		created, err := q.CreateReceipt(ctx, sqlc.CreateReceiptParams{
+			Reference: optional(in.Reference), Note: optional(in.Note), CreatedBy: actor.IDFrom(ctx),
+		})
+		if err != nil {
+			return fmt.Errorf("insert receipt: %w", err)
+		}
+		out = Receipt{ID: created.ID, Reference: optional(in.Reference), Note: optional(in.Note), CreatedAt: created.CreatedAt}
+
+		locked, err := Lock(ctx, q, ids)
+		if err != nil {
+			return err
+		}
+		refType := RefReceipt
+		for _, l := range in.Lines {
+			row, ok := locked[l.ProductID]
+			if !ok {
+				return fmt.Errorf("%w: %d", ErrProductNotFound, l.ProductID)
+			}
+			after, err := Apply(ctx, q, Change{
+				ProductID: l.ProductID, Type: TypeStockIn, QtyChange: l.Qty, RefType: &refType, RefID: &created.ID,
+			})
+			if err != nil {
+				return err
+			}
+			after.ProductID = l.ProductID
+			out.Lines = append(out.Lines, ReceivedLine{
+				ProductID: l.ProductID, SKU: row.SKU, Name: row.Name, Qty: l.Qty, Balance: after,
+			})
+		}
+
+		entry.EntityID = &created.ID
+		return audit.Write(ctx, q, entry)
+	})
+	return out, err
+}
+
 func (r *PgRepository) ListMovements(ctx context.Context, f MovementFilter) ([]Movement, int64, error) {
 	var typ *string
 	if f.Type != nil {
@@ -109,25 +156,26 @@ func (r *PgRepository) ListMovements(ctx context.Context, f MovementFilter) ([]M
 	items := make([]Movement, 0, len(rows))
 	for _, m := range rows {
 		items = append(items, Movement{
-			ID:             m.ID,
-			ProductID:      m.ProductID,
-			SKU:            m.Sku,
-			ProductName:    m.ProductName,
-			Type:           MovementType(m.Type),
-			QtyChange:      m.QtyChange,
-			ReservedChange: m.ReservedChange,
-			OnHandAfter:    m.OnHandAfter,
-			ReservedAfter:  m.ReservedAfter,
-			RefType:        m.RefType,
-			RefID:          m.RefID,
-			OrderNo:        m.OrderNo,
-			OrderChannel:   m.OrderChannel,
-			Reason:         m.Reason,
-			Note:           m.Note,
-			CreatedByName:  m.CreatedByName,
-			CreatedAt:      m.CreatedAt,
-			ReversesID:     m.ReversesID,
-			Reversed:       m.Reversed,
+			ID:               m.ID,
+			ProductID:        m.ProductID,
+			SKU:              m.Sku,
+			ProductName:      m.ProductName,
+			Type:             MovementType(m.Type),
+			QtyChange:        m.QtyChange,
+			ReservedChange:   m.ReservedChange,
+			OnHandAfter:      m.OnHandAfter,
+			ReservedAfter:    m.ReservedAfter,
+			RefType:          m.RefType,
+			RefID:            m.RefID,
+			OrderNo:          m.OrderNo,
+			OrderChannel:     m.OrderChannel,
+			Reason:           m.Reason,
+			Note:             m.Note,
+			CreatedByName:    m.CreatedByName,
+			CreatedAt:        m.CreatedAt,
+			ReversesID:       m.ReversesID,
+			Reversed:         m.Reversed,
+			ReceiptReference: m.ReceiptReference,
 		})
 	}
 	return items, total, nil

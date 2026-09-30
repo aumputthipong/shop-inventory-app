@@ -2,7 +2,7 @@ openapi: 3.1.0
 
 info:
   title: shop-inventory-app API
-  version: 0.4.0
+  version: 0.5.0
   description: |
     Multi-channel inventory back-office. A single stock pool is sold through
     several channels (store, Shopee, LINE OA).
@@ -387,6 +387,44 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/receipts:
+    post:
+      tags: [stock]
+      summary: Receive several products from one delivery in one step
+      description: |
+        Writes one STOCK_IN per line, all tied to the new receipt, in a single
+        transaction. An unknown product rejects the whole delivery. Staff may
+        receive. Each line can later be undone on its own like any stock-in.
+      operationId: receiveStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lines]
+              properties:
+                reference: { type: string, maxLength: 100, description: The supplier's delivery note or invoice number. }
+                note: { type: string, maxLength: 500 }
+                lines:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [product_id, qty]
+                    properties:
+                      product_id: { type: integer, format: int64 }
+                      qty: { type: integer, minimum: 1, maximum: 100000 }
+      responses:
+        "201":
+          description: Received, with each product's balance afterwards.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Receipt" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Validation" }
 
   /api/orders:
     get:
@@ -997,6 +1035,8 @@ components:
             - $ref: "#/components/schemas/Channel"
             - type: "null"
         count_id: { type: [integer, "null"], format: int64, description: Set on an ADJUST written by an approved stock count. }
+        receipt_id: { type: [integer, "null"], format: int64, description: Set on a STOCK_IN booked through a receipt. }
+        receipt_reference: { type: [string, "null"] }
         reason:
           type: [string, "null"]
           description: count_correction, damaged, lost, other or reversal for ADJUST; opening_balance for a product's first STOCK_IN.
@@ -1060,6 +1100,28 @@ components:
           type: array
           items: { $ref: "#/components/schemas/OrderItem" }
 
+    Receipt:
+      type: object
+      required: [id, lines, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        reference: { type: [string, "null"] }
+        note: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        lines:
+          type: array
+          items:
+            type: object
+            required: [product_id, sku, name, qty, on_hand, reserved, available]
+            properties:
+              product_id: { type: integer, format: int64 }
+              sku: { type: string }
+              name: { type: string }
+              qty: { type: integer }
+              on_hand: { type: integer }
+              reserved: { type: integer }
+              available: { type: integer }
+
     CountStatus:
       type: string
       enum: [submitted, approved, rejected]
@@ -1112,8 +1174,8 @@ components:
         action:
           type: string
           examples: [order.rejected]
-          description: product.create, product.update, stock.in, stock.adjust, stock.reverse, count.submit, count.approve, count.reject, order.create, order.rejected, order.pack, order.ship, order.cancel, user.create, user.disable, user.enable, user.password_reset, user.password_change
-        entity_type: { type: string, enum: [product, order, user, stock_count] }
+          description: product.create, product.update, stock.in, stock.adjust, stock.reverse, stock.receive, count.submit, count.approve, count.reject, order.create, order.rejected, order.pack, order.ship, order.cancel, user.create, user.disable, user.enable, user.password_reset, user.password_change
+        entity_type: { type: string, enum: [product, order, user, stock_count, receipt] }
         entity_id: { type: [integer, "null"], format: int64 }
         detail: { type: object, additionalProperties: true }
         actor_name: { type: [string, "null"] }

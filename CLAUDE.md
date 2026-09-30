@@ -20,10 +20,11 @@ An order first **reserves** stock (reserved goes up), then either **ships** it
 `on_hand - reserved < 0`, so no code path can persist an oversold balance.
 
 Built so far: sign-in with owner and staff roles, products with opening stock,
-stock in and adjust, undoing a mistyped entry, stock counts, the movement
-ledger, orders with all-or-nothing reservation and the pack/ship/cancel flow,
-and the audit log. Channel integrations (Shopee, LINE
-webhooks) are not built yet; channel orders are entered by hand.
+stock in (one product or a whole delivery) and adjust, undoing a mistyped
+entry, stock counts, a today page, the movement ledger, orders with
+all-or-nothing reservation and the pack/ship/cancel flow, and the audit log.
+Channel integrations (Shopee, LINE webhooks) are not built yet; channel orders
+are entered by hand.
 
 ## Stack
 

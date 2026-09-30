@@ -151,10 +151,12 @@ SELECT m.id, m.product_id, p.sku, p.name AS product_name, m.type, m.qty_change,
        m.reserved_change, m.on_hand_after, m.reserved_after, m.ref_type, m.ref_id,
        o.order_no, o.channel AS order_channel, m.reason, m.note, u.name AS created_by_name,
        m.created_at, m.reverses_id,
-       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed
+       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed,
+       sr.reference AS receipt_reference
 FROM stock_movements m
 JOIN products p ON p.id = m.product_id
 LEFT JOIN orders o ON m.ref_type = 'order' AND o.id = m.ref_id
+LEFT JOIN stock_receipts sr ON m.ref_type = 'receipt' AND sr.id = m.ref_id
 LEFT JOIN users u ON u.id = m.created_by
 WHERE ($1::bigint IS NULL OR m.product_id = $1::bigint)
   AND ($2::text IS NULL OR m.type = $2::text)
@@ -170,25 +172,26 @@ type ListMovementsParams struct {
 }
 
 type ListMovementsRow struct {
-	ID             int64     `json:"id"`
-	ProductID      int64     `json:"product_id"`
-	Sku            string    `json:"sku"`
-	ProductName    string    `json:"product_name"`
-	Type           string    `json:"type"`
-	QtyChange      int32     `json:"qty_change"`
-	ReservedChange int32     `json:"reserved_change"`
-	OnHandAfter    int32     `json:"on_hand_after"`
-	ReservedAfter  int32     `json:"reserved_after"`
-	RefType        *string   `json:"ref_type"`
-	RefID          *int64    `json:"ref_id"`
-	OrderNo        *string   `json:"order_no"`
-	OrderChannel   *string   `json:"order_channel"`
-	Reason         *string   `json:"reason"`
-	Note           *string   `json:"note"`
-	CreatedByName  *string   `json:"created_by_name"`
-	CreatedAt      time.Time `json:"created_at"`
-	ReversesID     *int64    `json:"reverses_id"`
-	Reversed       bool      `json:"reversed"`
+	ID               int64     `json:"id"`
+	ProductID        int64     `json:"product_id"`
+	Sku              string    `json:"sku"`
+	ProductName      string    `json:"product_name"`
+	Type             string    `json:"type"`
+	QtyChange        int32     `json:"qty_change"`
+	ReservedChange   int32     `json:"reserved_change"`
+	OnHandAfter      int32     `json:"on_hand_after"`
+	ReservedAfter    int32     `json:"reserved_after"`
+	RefType          *string   `json:"ref_type"`
+	RefID            *int64    `json:"ref_id"`
+	OrderNo          *string   `json:"order_no"`
+	OrderChannel     *string   `json:"order_channel"`
+	Reason           *string   `json:"reason"`
+	Note             *string   `json:"note"`
+	CreatedByName    *string   `json:"created_by_name"`
+	CreatedAt        time.Time `json:"created_at"`
+	ReversesID       *int64    `json:"reverses_id"`
+	Reversed         bool      `json:"reversed"`
+	ReceiptReference *string   `json:"receipt_reference"`
 }
 
 func (q *Queries) ListMovements(ctx context.Context, arg ListMovementsParams) ([]ListMovementsRow, error) {
@@ -225,6 +228,7 @@ func (q *Queries) ListMovements(ctx context.Context, arg ListMovementsParams) ([
 			&i.CreatedAt,
 			&i.ReversesID,
 			&i.Reversed,
+			&i.ReceiptReference,
 		); err != nil {
 			return nil, err
 		}

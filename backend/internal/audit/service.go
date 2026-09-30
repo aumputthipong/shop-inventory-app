@@ -17,6 +17,7 @@ const (
 	ActionStockIn        = "stock.in"
 	ActionStockAdjust    = "stock.adjust"
 	ActionStockReverse   = "stock.reverse"
+	ActionStockReceive   = "stock.receive"
 	ActionCountSubmit    = "count.submit"
 	ActionCountApprove   = "count.approve"
 	ActionCountReject    = "count.reject"
@@ -33,6 +34,7 @@ const (
 	EntityProduct        = "product"
 	EntityOrder          = "order"
 	EntityStockCount     = "stock_count"
+	EntityReceipt        = "receipt"
 	EntityUser           = "user"
 )
 

@@ -31,10 +31,12 @@ SELECT m.id, m.product_id, p.sku, p.name AS product_name, m.type, m.qty_change,
        m.reserved_change, m.on_hand_after, m.reserved_after, m.ref_type, m.ref_id,
        o.order_no, o.channel AS order_channel, m.reason, m.note, u.name AS created_by_name,
        m.created_at, m.reverses_id,
-       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed
+       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed,
+       sr.reference AS receipt_reference
 FROM stock_movements m
 JOIN products p ON p.id = m.product_id
 LEFT JOIN orders o ON m.ref_type = 'order' AND o.id = m.ref_id
+LEFT JOIN stock_receipts sr ON m.ref_type = 'receipt' AND sr.id = m.ref_id
 LEFT JOIN users u ON u.id = m.created_by
 WHERE (sqlc.narg(product_id)::bigint IS NULL OR m.product_id = sqlc.narg(product_id)::bigint)
   AND (sqlc.narg(type)::text IS NULL OR m.type = sqlc.narg(type)::text)

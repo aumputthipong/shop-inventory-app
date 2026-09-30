@@ -13,6 +13,8 @@ import (
 func TestPlanReversal(t *testing.T) {
 	now := time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
 	order := "order"
+	receipt := stock.RefReceipt
+	count := stock.RefStockCount
 	earlier := int64(3)
 	base := stock.MovementInfo{ID: 10, ProductID: 2, Type: stock.TypeStockIn, QtyChange: 50, CreatedAt: now.Add(-time.Hour)}
 
@@ -28,6 +30,8 @@ func TestPlanReversal(t *testing.T) {
 		{"too old", func(m *stock.MovementInfo) { m.CreatedAt = now.Add(-stock.ReversalWindow - time.Minute) }, 0, stock.ErrTooOld},
 		{"only once", func(m *stock.MovementInfo) { m.Reversed = true }, 0, stock.ErrAlreadyReversed},
 		{"not an undo of an undo", func(m *stock.MovementInfo) { m.Type = stock.TypeAdjust; m.ReversesID = &earlier }, 0, stock.ErrNotReversible},
+		{"a line of a delivery can be undone", func(m *stock.MovementInfo) { m.RefType = &receipt }, -50, nil},
+		{"count corrections are fixed by counting again", func(m *stock.MovementInfo) { m.Type = stock.TypeAdjust; m.RefType = &count }, 0, stock.ErrNotReversible},
 		{"order movements go through the order", func(m *stock.MovementInfo) { m.Type = stock.TypeShip; m.RefType = &order }, 0, stock.ErrNotReversible},
 		{"reservations are not reversible here", func(m *stock.MovementInfo) { m.Type = stock.TypeReserve; m.QtyChange = 0 }, 0, stock.ErrNotReversible},
 	}

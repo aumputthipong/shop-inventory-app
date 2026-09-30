@@ -40,6 +40,12 @@ in the same PR as the behaviour it describes.
 - Approval is all or nothing, like an order: if one line would take units that
   orders hold, nothing is adjusted and every such line is reported. The usual
   cause is packed parcels that were not counted.
+- A delivery with many products is one `stock_receipts` row plus one
+  STOCK_IN per line, written in one transaction so a bad line leaves nothing
+  half received. The receipt keeps the supplier's note number so the ledger
+  can show where stock came from. Unlike order and count movements, a receipt
+  line can still be undone on its own: a typo on one line should not force
+  undoing the whole delivery.
 - Money is `numeric(12,2)` in postgres and a decimal string everywhere else
   (sqlc override to `string`, JSON `"600.00"`). Totals are summed in SQL, so no
   float ever touches a price.

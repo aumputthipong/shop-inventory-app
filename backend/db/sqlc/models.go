@@ -102,6 +102,14 @@ type StockMovement struct {
 	ReversesID     *int64    `json:"reverses_id"`
 }
 
+type StockReceipt struct {
+	ID        int64     `json:"id"`
+	Reference *string   `json:"reference"`
+	Note      *string   `json:"note"`
+	CreatedBy *int64    `json:"created_by"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type User struct {
 	ID           int64     `json:"id"`
 	Email        string    `json:"email"`

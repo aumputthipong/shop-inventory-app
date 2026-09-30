@@ -24,6 +24,8 @@ const stockIn: Movement = {
   order_no: null,
   order_channel: null,
   count_id: null,
+  receipt_id: null,
+  receipt_reference: null,
   reason: null,
   note: null,
   created_by_name: 'พลอย',

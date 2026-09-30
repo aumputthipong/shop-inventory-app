@@ -1,6 +1,6 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { PlusIcon } from 'lucide-react'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
+import { PackagePlusIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { ProductFormDialog } from '@/components/stock/product-form-dialog'
@@ -54,17 +54,27 @@ function StockPage() {
                 : `มี ${restock} รายการที่ควรเติมของเร็วๆ นี้`}
           </p>
         </div>
-        {me.isOwner && (
-          <Button
-            variant="outline"
-            onClick={() => {
-              setAdding(true)
-            }}
-          >
-            <PlusIcon aria-hidden="true" />
-            เพิ่มสินค้า
-          </Button>
-        )}
+        <div className="flex flex-wrap justify-end gap-2.5">
+          {products.length > 0 && (
+            <Button asChild variant="outline">
+              <Link to="/receive">
+                <PackagePlusIcon aria-hidden="true" />
+                รับของจากใบส่งของ
+              </Link>
+            </Button>
+          )}
+          {me.isOwner && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setAdding(true)
+              }}
+            >
+              <PlusIcon aria-hidden="true" />
+              เพิ่มสินค้า
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">

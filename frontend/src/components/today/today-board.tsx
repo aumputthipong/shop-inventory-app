@@ -51,7 +51,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
           </Link>
         </Button>
         <Button asChild variant="outline">
-          <Link to="/stock">
+          <Link to="/receive">
             <PackagePlusIcon aria-hidden="true" />
             รับของเข้า
           </Link>

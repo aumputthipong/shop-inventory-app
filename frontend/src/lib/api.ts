@@ -84,6 +84,8 @@ export interface Movement {
   order_no: string | null
   order_channel: Channel | null
   count_id: number | null
+  receipt_id: number | null
+  receipt_reference: string | null
   reason: string | null
   note: string | null
   created_by_name: string | null
@@ -149,6 +151,28 @@ export interface Shortage {
   name: string
   requested: number
   available: number
+}
+
+export interface NewReceipt {
+  reference?: string
+  note?: string
+  lines: { product_id: number; qty: number }[]
+}
+
+export interface Receipt {
+  id: number
+  reference: string | null
+  note: string | null
+  created_at: string
+  lines: {
+    product_id: number
+    sku: string
+    name: string
+    qty: number
+    on_hand: number
+    reserved: number
+    available: number
+  }[]
 }
 
 export type CountStatus = 'submitted' | 'approved' | 'rejected'
@@ -348,6 +372,7 @@ export const api = {
     send<Balance>('POST', `/api/products/${id}/stock-in`, input),
   adjustStock: (id: number, input: { qty_change: number; reason: AdjustReason; note?: string }) =>
     send<Balance>('POST', `/api/products/${id}/adjustments`, input),
+  receiveStock: (input: NewReceipt) => send<Receipt>('POST', '/api/receipts', input),
   reverseMovement: (id: number) => send<Balance>('POST', `/api/movements/${id}/reverse`),
   listMovements: (query: MovementQuery, signal?: AbortSignal) =>
     apiFetch<Page<Movement>>(withQuery('/api/movements', { ...query }), { signal }),
