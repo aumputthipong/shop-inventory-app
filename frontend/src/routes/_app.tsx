@@ -4,6 +4,7 @@ import {
   ClipboardCheckIcon,
   ClipboardListIcon,
   HistoryIcon,
+  HouseIcon,
   LogOutIcon,
   PackageIcon,
   ReceiptTextIcon,
@@ -38,13 +39,14 @@ export const Route = createFileRoute('/_app')({
 })
 
 interface NavItem {
-  to: '/orders' | '/stock' | '/counts' | '/ledger' | '/audit' | '/team'
+  to: '/' | '/orders' | '/stock' | '/counts' | '/ledger' | '/audit' | '/team'
   label: string
   icon: LucideIcon
   ownerOnly?: boolean
 }
 
 const NAV: NavItem[] = [
+  { to: '/', label: 'วันนี้', icon: HouseIcon },
   { to: '/orders', label: 'ออเดอร์', icon: ReceiptTextIcon },
   { to: '/stock', label: 'สต็อก', icon: PackageIcon },
   { to: '/counts', label: 'ตรวจนับ', icon: ClipboardCheckIcon },
@@ -60,7 +62,7 @@ function AppLayout() {
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-40 border-b border-line bg-surface">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 px-4 md:px-6 xl:gap-8 xl:px-10">
-          <Link to="/stock" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <BrandMark />
             <span className="hidden text-[15px] font-semibold tracking-tight xl:inline">
               Shop Inventory
@@ -75,6 +77,7 @@ function AppLayout() {
                 key={item.to}
                 to={item.to}
                 className="flex shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-sm text-ink-2 hover:text-ink"
+                activeOptions={{ exact: item.to === '/' }}
                 activeProps={{
                   className: '!border-petrol-600 font-medium !text-ink',
                 }}

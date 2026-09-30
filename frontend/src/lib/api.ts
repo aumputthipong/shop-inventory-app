@@ -319,6 +319,12 @@ export interface OrderQuery {
   offset?: number
 }
 
+export interface CountQuery {
+  status?: CountStatus
+  limit?: number
+  offset?: number
+}
+
 export const api = {
   getHealth: (signal?: AbortSignal) =>
     apiFetch<HealthResponse>('/healthz', { signal, acceptStatuses: [503] }),
@@ -353,7 +359,7 @@ export const api = {
   orderAction: (id: number, action: OrderAction) =>
     send<Order>('POST', `/api/orders/${id}/${action}`),
 
-  listCounts: (query: { limit?: number; offset?: number }, signal?: AbortSignal) =>
+  listCounts: (query: CountQuery, signal?: AbortSignal) =>
     apiFetch<Page<CountSummary>>(withQuery('/api/counts', { ...query }), { signal }),
   getCount: (id: number, signal?: AbortSignal) =>
     apiFetch<StockCount>(`/api/counts/${id}`, { signal }),

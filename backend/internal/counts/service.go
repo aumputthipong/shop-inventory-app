@@ -109,13 +109,23 @@ func (e *StateError) Error() string {
 	return fmt.Sprintf("stock count is already %s", e.Status)
 }
 
+type Filter struct {
+	Status *Status
+	Limit  int32
+	Offset int32
+}
+
+func (s Status) Valid() bool {
+	return s == StatusSubmitted || s == StatusApproved || s == StatusRejected
+}
+
 type ApprovalPlanner func(countID int64, lines []Line, locked map[int64]stock.LockedRow) ([]stock.Change, error)
 
 type Repository interface {
 	Create(ctx context.Context, in NewCount, plan ApprovalPlanner) (int64, error)
 	Decide(ctx context.Context, id int64, to Status, plan ApprovalPlanner) error
 	Get(ctx context.Context, id int64) (Count, error)
-	List(ctx context.Context, limit, offset int32) ([]Summary, int64, error)
+	List(ctx context.Context, f Filter) ([]Summary, int64, error)
 }
 
 type Service struct {
@@ -179,8 +189,11 @@ func (s *Service) Get(ctx context.Context, id int64) (Count, error) {
 	return c, nil
 }
 
-func (s *Service) List(ctx context.Context, limit, offset int32) ([]Summary, int64, error) {
-	items, total, err := s.repo.List(ctx, limit, offset)
+func (s *Service) List(ctx context.Context, f Filter) ([]Summary, int64, error) {
+	if f.Status != nil && !f.Status.Valid() {
+		return []Summary{}, 0, nil
+	}
+	items, total, err := s.repo.List(ctx, f)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list stock counts: %w", err)
 	}

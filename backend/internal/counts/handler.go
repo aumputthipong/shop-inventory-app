@@ -17,7 +17,7 @@ type Manager interface {
 	Approve(ctx context.Context, id int64) (Count, error)
 	Reject(ctx context.Context, id int64) (Count, error)
 	Get(ctx context.Context, id int64) (Count, error)
-	List(ctx context.Context, limit, offset int32) ([]Summary, int64, error)
+	List(ctx context.Context, f Filter) ([]Summary, int64, error)
 }
 
 type Handler struct {
@@ -102,7 +102,12 @@ type stateDetails struct {
 
 func (h *Handler) list(c *gin.Context) {
 	page := httpx.PageFrom(c)
-	items, total, err := h.svc.List(c.Request.Context(), page.Limit, page.Offset)
+	f := Filter{Limit: page.Limit, Offset: page.Offset}
+	if raw := c.Query("status"); raw != "" {
+		s := Status(raw)
+		f.Status = &s
+	}
+	items, total, err := h.svc.List(c.Request.Context(), f)
 	if err != nil {
 		httpx.RespondInternal(c, err)
 		return

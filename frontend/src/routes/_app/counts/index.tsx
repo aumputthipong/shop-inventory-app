@@ -4,20 +4,27 @@ import { ClipboardCheckIcon } from 'lucide-react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { FilterTabs } from '@/components/filter-tabs'
 import { Pager } from '@/components/pager'
 import { Button } from '@/components/ui/button'
+import type { CountStatus } from '@/lib/api'
 import { formatDateTime } from '@/lib/format'
 import { countStatusChip } from '@/lib/labels'
 import { countsQueryOptions } from '@/lib/queries'
 
 const PAGE = 20
+const STATUSES: CountStatus[] = ['submitted', 'approved', 'rejected']
 
 interface CountsSearch {
+  status?: CountStatus
   offset?: number
 }
 
 export const Route = createFileRoute('/_app/counts/')({
   validateSearch: (search: Record<string, unknown>): CountsSearch => ({
+    status: STATUSES.includes(search.status as CountStatus)
+      ? (search.status as CountStatus)
+      : undefined,
     offset: Number(search.offset) > 0 ? Number(search.offset) : undefined,
   }),
   component: CountsPage,
@@ -27,7 +34,12 @@ function CountsPage() {
   const search = Route.useSearch()
   const navigate = useNavigate({ from: Route.fullPath })
   const offset = search.offset ?? 0
-  const { data, isPending } = useQuery(countsQueryOptions({ limit: PAGE, offset }))
+  const { data, isPending } = useQuery(
+    countsQueryOptions({ status: search.status, limit: PAGE, offset }),
+  )
+  const setSearch = (next: CountsSearch) => {
+    void navigate({ search: next, replace: true })
+  }
 
   const start = (
     <Button asChild>
@@ -51,6 +63,22 @@ function CountsPage() {
       </div>
 
       <section aria-label="รายการตรวจนับ" className="panel overflow-x-auto">
+        <div className="min-w-[760px] border-b border-line px-4 pt-2">
+          <FilterTabs
+            label="สถานะผลนับ"
+            value={search.status}
+            onChange={(status) => {
+              setSearch({ status, offset: undefined })
+            }}
+            options={[
+              { value: undefined, label: 'ทั้งหมด' },
+              ...STATUSES.map((status) => ({
+                value: status,
+                label: countStatusChip[status].label,
+              })),
+            ]}
+          />
+        </div>
         <div className="grid h-9 min-w-[760px] grid-cols-[90px_150px_100px_100px_minmax(0,1fr)_120px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
           <span>เลขที่</span>
           <span>สถานะ</span>
@@ -61,13 +89,16 @@ function CountsPage() {
         </div>
 
         {isPending && <p className="px-4 py-8 text-[13px] text-ink-2">กำลังโหลด...</p>}
-        {data?.items.length === 0 && (
-          <EmptyState
-            title="ยังไม่เคยตรวจนับ"
-            body="แนะนำให้นับเดือนละครั้ง หรือเมื่อสงสัยว่าตัวเลขในระบบไม่ตรงกับของจริง"
-            action={start}
-          />
-        )}
+        {data?.items.length === 0 &&
+          (search.status ? (
+            <EmptyState title="ไม่มีผลนับในสถานะนี้" body="ลองเลือกสถานะอื่น" />
+          ) : (
+            <EmptyState
+              title="ยังไม่เคยตรวจนับ"
+              body="แนะนำให้นับเดือนละครั้ง หรือเมื่อสงสัยว่าตัวเลขในระบบไม่ตรงกับของจริง"
+              action={start}
+            />
+          ))}
         <ul>
           {data?.items.map((c) => {
             const chip = countStatusChip[c.status]
@@ -110,7 +141,7 @@ function CountsPage() {
             limit={PAGE}
             total={data.total}
             onChange={(next) => {
-              void navigate({ search: { offset: next || undefined }, replace: true })
+              setSearch({ ...search, offset: next || undefined })
             }}
           />
         )}

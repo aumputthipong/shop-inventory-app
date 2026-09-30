@@ -40,8 +40,10 @@ SELECT c.id, c.status, c.note, c.created_at, c.decided_at,
        (SELECT count(*) FROM stock_count_lines l WHERE l.count_id = c.id AND l.counted <> l.expected) AS diff_count
 FROM stock_counts c
 LEFT JOIN users cu ON cu.id = c.created_by
+WHERE (sqlc.narg(status)::text IS NULL OR c.status = sqlc.narg(status)::text)
 ORDER BY c.created_at DESC, c.id DESC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CountCounts :one
-SELECT count(*) FROM stock_counts;
+SELECT count(*) FROM stock_counts c
+WHERE (sqlc.narg(status)::text IS NULL OR c.status = sqlc.narg(status)::text);

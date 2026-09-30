@@ -533,6 +533,9 @@ paths:
       summary: Stock counts, newest first
       operationId: listCounts
       parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/CountStatus" }
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
       responses:

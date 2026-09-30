@@ -21,7 +21,7 @@ export const Route = createFileRoute('/login')({
     const me = await context.queryClient.query(meQueryOptions).catch(() => null)
     if (me) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- router control flow
-      throw redirect({ to: '/stock' })
+      throw redirect({ to: '/' })
     }
   },
   component: LoginPage,
@@ -38,7 +38,7 @@ function LoginPage() {
     mutationFn: () => api.login(email, password),
     onSuccess: async (user) => {
       queryClient.setQueryData(meQueryOptions.queryKey, user)
-      await navigate({ to: next?.startsWith('/') ? next : '/stock' })
+      await navigate({ to: next?.startsWith('/') ? next : '/' })
     },
   })
 

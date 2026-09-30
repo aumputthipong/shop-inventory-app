@@ -11,11 +11,12 @@ import (
 )
 
 const countCounts = `-- name: CountCounts :one
-SELECT count(*) FROM stock_counts
+SELECT count(*) FROM stock_counts c
+WHERE ($1::text IS NULL OR c.status = $1::text)
 `
 
-func (q *Queries) CountCounts(ctx context.Context) (int64, error) {
-	row := q.db.QueryRow(ctx, countCounts)
+func (q *Queries) CountCounts(ctx context.Context, status *string) (int64, error) {
+	row := q.db.QueryRow(ctx, countCounts, status)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -163,13 +164,15 @@ SELECT c.id, c.status, c.note, c.created_at, c.decided_at,
        (SELECT count(*) FROM stock_count_lines l WHERE l.count_id = c.id AND l.counted <> l.expected) AS diff_count
 FROM stock_counts c
 LEFT JOIN users cu ON cu.id = c.created_by
+WHERE ($1::text IS NULL OR c.status = $1::text)
 ORDER BY c.created_at DESC, c.id DESC
-LIMIT $2 OFFSET $1
+LIMIT $3 OFFSET $2
 `
 
 type ListCountsParams struct {
-	PageOffset int32 `json:"page_offset"`
-	PageLimit  int32 `json:"page_limit"`
+	Status     *string `json:"status"`
+	PageOffset int32   `json:"page_offset"`
+	PageLimit  int32   `json:"page_limit"`
 }
 
 type ListCountsRow struct {
@@ -184,7 +187,7 @@ type ListCountsRow struct {
 }
 
 func (q *Queries) ListCounts(ctx context.Context, arg ListCountsParams) ([]ListCountsRow, error) {
-	rows, err := q.db.Query(ctx, listCounts, arg.PageOffset, arg.PageLimit)
+	rows, err := q.db.Query(ctx, listCounts, arg.Status, arg.PageOffset, arg.PageLimit)
 	if err != nil {
 		return nil, err
 	}

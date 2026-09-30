@@ -1,6 +1,6 @@
 import { keepPreviousData, queryOptions, type QueryClient } from '@tanstack/react-query'
 
-import { api, type MovementQuery, type OrderQuery } from '@/lib/api'
+import { api, type CountQuery, type MovementQuery, type OrderQuery } from '@/lib/api'
 
 export const healthQueryOptions = queryOptions({
   queryKey: ['health'],
@@ -46,7 +46,7 @@ export const orderQueryOptions = (id: number) =>
     queryFn: ({ signal }) => api.getOrder(id, signal),
   })
 
-export const countsQueryOptions = (query: { limit: number; offset: number }) =>
+export const countsQueryOptions = (query: CountQuery) =>
   queryOptions({
     queryKey: ['counts', query],
     queryFn: ({ signal }) => api.listCounts(query, signal),

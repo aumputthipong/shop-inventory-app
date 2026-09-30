@@ -172,13 +172,19 @@ func (r *PgRepository) Get(ctx context.Context, id int64) (Count, error) {
 	}, nil
 }
 
-func (r *PgRepository) List(ctx context.Context, limit, offset int32) ([]Summary, int64, error) {
+func (r *PgRepository) List(ctx context.Context, f Filter) ([]Summary, int64, error) {
+	var status *string
+	if f.Status != nil {
+		s := string(*f.Status)
+		status = &s
+	}
+
 	q := sqlc.New(r.pool)
-	rows, err := q.ListCounts(ctx, sqlc.ListCountsParams{PageLimit: limit, PageOffset: offset})
+	rows, err := q.ListCounts(ctx, sqlc.ListCountsParams{Status: status, PageLimit: f.Limit, PageOffset: f.Offset})
 	if err != nil {
 		return nil, 0, fmt.Errorf("query stock counts: %w", err)
 	}
-	total, err := q.CountCounts(ctx)
+	total, err := q.CountCounts(ctx, status)
 	if err != nil {
 		return nil, 0, fmt.Errorf("count stock counts: %w", err)
 	}
