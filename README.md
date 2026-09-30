@@ -76,7 +76,7 @@ In a second terminal:
 ```sh
 cd frontend
 npm install
-npm run dev        # http://localhost:5173, proxies /api and /healthz to :8080
+npm run dev        # http://localhost:5173, proxies /api and /healthz to the api on HTTP_PORT
 ```
 
 ## Running the whole shop with Docker

@@ -68,6 +68,9 @@ in the same PR as the behaviour it describes.
 
 ## Frontend
 
+- The vite dev proxy reads `HTTP_PORT` from the repo root `.env`, so moving
+  the api off a busy port is one edit. `VITE_API_PROXY_TARGET` still wins when
+  the api runs somewhere else entirely.
 - Product tiles show the first letter of the name on a colour picked from the
   SKU. A fixed icon set cannot cover every kind of product a shop sells; photo
   upload can replace the tile later. Thai leading vowels (เ แ โ ใ ไ) are skipped
