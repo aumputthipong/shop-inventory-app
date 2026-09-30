@@ -15,8 +15,8 @@ export function ProductAvatar({
     <span
       aria-hidden="true"
       className={cn(
-        'flex shrink-0 items-center justify-center font-bold',
-        size === 'lg' ? 'size-14 rounded-2xl text-2xl' : 'size-11 rounded-xl text-lg',
+        'flex shrink-0 items-center justify-center font-semibold',
+        size === 'lg' ? 'size-12 rounded-md text-xl' : 'size-9 rounded-md text-base',
         productTone(sku),
       )}
     >

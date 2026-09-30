@@ -5,6 +5,7 @@ import { XIcon } from 'lucide-react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { FilterTabs } from '@/components/filter-tabs'
 import { Pager } from '@/components/pager'
 import type { MovementType } from '@/lib/api'
 import { formatDateTime, formatSigned } from '@/lib/format'
@@ -46,40 +47,27 @@ function LedgerPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[30px] leading-[42px] font-bold">ประวัติสต็อก</h1>
-        <p className="text-base text-sand-800">
+        <h1 className="text-[22px] leading-[30px] font-semibold">ประวัติสต็อก</h1>
+        <p className="text-sm text-ink-2">
           ทุกการเปลี่ยนแปลงของสต็อกถูกบันทึกที่นี่ ยอดคงเหลือทุกตัวอธิบายได้จากรายการเหล่านี้
         </p>
       </div>
 
-      <section
-        aria-label="ความเคลื่อนไหวของสต็อก"
-        className="overflow-x-auto rounded-[22px] bg-white p-3 shadow-soft"
-      >
-        <div className="flex flex-wrap items-center gap-2 px-2 pt-2 pb-4">
-          {[undefined, ...TYPES].map((type) => {
-            const active = search.type === type
-            return (
-              <button
-                key={type ?? 'all'}
-                type="button"
-                aria-pressed={active}
-                onClick={() => {
-                  setSearch({ ...search, type, offset: undefined })
-                }}
-                className={cn(
-                  'h-10 rounded-full px-4 text-[15px] font-medium',
-                  active
-                    ? 'bg-ink text-white'
-                    : 'bg-sand-100 text-sand-800 hover:bg-sand-200 hover:text-ink',
-                )}
-              >
-                {type ? movementChip[type].label : 'ทั้งหมด'}
-              </button>
-            )
-          })}
+      <section aria-label="ความเคลื่อนไหวของสต็อก" className="panel overflow-x-auto">
+        <div className="flex min-w-[1080px] flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line px-4 pt-2">
+          <FilterTabs
+            label="ประเภทความเคลื่อนไหว"
+            value={search.type}
+            onChange={(type) => {
+              setSearch({ ...search, type, offset: undefined })
+            }}
+            options={[
+              { value: undefined, label: 'ทั้งหมด' },
+              ...TYPES.map((type) => ({ value: type, label: movementChip[type].label })),
+            ]}
+          />
           {search.product !== undefined && (
-            <span className="ml-auto flex h-10 items-center gap-2 rounded-full bg-petrol-100 pr-1.5 pl-4 text-[15px] font-medium text-petrol-600">
+            <span className="mb-2 flex h-7 items-center gap-1.5 rounded-sm border border-petrol-200 bg-petrol-50 pr-1 pl-2.5 text-[13px] text-petrol-700">
               เฉพาะ {product?.name ?? 'สินค้าที่เลือก'}
               <button
                 type="button"
@@ -87,15 +75,15 @@ function LedgerPage() {
                 onClick={() => {
                   setSearch({ ...search, product: undefined, offset: undefined })
                 }}
-                className="flex size-7 items-center justify-center rounded-full hover:bg-white"
+                className="flex size-5 items-center justify-center rounded-xs hover:bg-petrol-100"
               >
-                <XIcon className="size-4" aria-hidden="true" />
+                <XIcon className="size-3.5" aria-hidden="true" />
               </button>
             </span>
           )}
         </div>
 
-        <div className="grid h-9 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 px-4 text-[13px] font-medium text-sand-800">
+        <div className="grid h-9 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
           <span>เวลา</span>
           <span>สินค้า</span>
           <span>ประเภท</span>
@@ -106,7 +94,7 @@ function LedgerPage() {
           <span>โดย</span>
         </div>
 
-        {isPending && <p className="px-4 py-8 text-sand-800">กำลังโหลด...</p>}
+        {isPending && <p className="px-4 py-8 text-ink-2">กำลังโหลด...</p>}
         {data?.items.length === 0 && (
           <EmptyState
             title="ยังไม่มีความเคลื่อนไหว"
@@ -121,49 +109,44 @@ function LedgerPage() {
             return (
               <li
                 key={m.id}
-                className="grid min-h-14 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 border-b border-sand-200 px-4 py-2.5 last:border-b-0"
+                className="grid min-h-12 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
               >
-                <span className="text-[13px] text-sand-800">{formatDateTime(m.created_at)}</span>
+                <span className="text-[13px] text-ink-2">{formatDateTime(m.created_at)}</span>
                 <span className="flex min-w-0 flex-col">
                   <Link
                     to="/stock"
                     search={{ product: m.product_id }}
-                    className="truncate font-semibold hover:text-petrol-600 hover:underline"
+                    className="truncate font-medium hover:text-petrol-600 hover:underline"
                   >
                     {m.product_name}
                   </Link>
-                  <span className="text-xs text-sand-800">{m.sku}</span>
+                  <span className="code text-xs text-ink-3">{m.sku}</span>
                 </span>
                 <span>
                   <Chip tone={chip.tone}>{chip.label}</Chip>
                 </span>
-                <span
-                  className={cn('text-right font-medium', m.qty_change === 0 && 'text-sand-600')}
-                >
+                <span className={cn('text-right font-medium', m.qty_change === 0 && 'text-ink-3')}>
                   {formatSigned(m.qty_change)}
                 </span>
                 <span
-                  className={cn(
-                    'text-right font-medium',
-                    m.reserved_change === 0 && 'text-sand-600',
-                  )}
+                  className={cn('text-right font-medium', m.reserved_change === 0 && 'text-ink-3')}
                 >
                   {formatSigned(m.reserved_change)}
                 </span>
                 <span className="text-right text-sm">
                   มี {m.on_hand_after} ·{' '}
-                  <span className="font-bold">ขายได้ {m.available_after}</span>
+                  <span className="font-medium text-ink">ขายได้ {m.available_after}</span>
                 </span>
                 <span className="flex min-w-0 flex-col text-sm">
                   {m.order_id !== null && m.order_no ? (
                     <Link
                       to="/orders/$orderId"
                       params={{ orderId: m.order_id }}
-                      className="font-semibold hover:text-petrol-600 hover:underline"
+                      className="font-medium hover:text-petrol-600 hover:underline"
                     >
-                      {m.order_no}
+                      <span className="code">{m.order_no}</span>
                       {m.order_channel && (
-                        <span className="font-normal text-sand-800">
+                        <span className="font-normal text-ink-2">
                           {' '}
                           · {channelLabel[m.order_channel]}
                         </span>
@@ -172,9 +155,9 @@ function LedgerPage() {
                   ) : (
                     reason && <span className="font-medium">{reason}</span>
                   )}
-                  {m.note && <span className="truncate text-sand-800">{m.note}</span>}
+                  {m.note && <span className="truncate text-ink-2">{m.note}</span>}
                 </span>
-                <span className="truncate text-sm text-sand-800">{m.created_by_name ?? '-'}</span>
+                <span className="truncate text-sm text-ink-2">{m.created_by_name ?? '-'}</span>
               </li>
             )
           })}

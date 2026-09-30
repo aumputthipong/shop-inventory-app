@@ -22,11 +22,11 @@ export function QtyStepper({
   }
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-1.5">
       <Button
         type="button"
         variant="outline"
-        size="icon-lg"
+        size="icon"
         aria-label="ลดจำนวน"
         onClick={() => {
           step(-1)
@@ -43,12 +43,12 @@ export function QtyStepper({
         onChange={(e) => {
           onChange(e.target.value)
         }}
-        className="h-12 w-[100px] text-center text-[22px] font-bold"
+        className="h-9 w-20 text-center text-base font-semibold"
       />
       <Button
         type="button"
         variant="outline"
-        size="icon-lg"
+        size="icon"
         aria-label="เพิ่มจำนวน"
         onClick={() => {
           step(1)
@@ -56,7 +56,7 @@ export function QtyStepper({
       >
         <PlusIcon aria-hidden="true" />
       </Button>
-      <span className="ml-1 text-base text-sand-800">{unit}</span>
+      <span className="ml-1 text-sm text-ink-2">{unit}</span>
     </div>
   )
 }

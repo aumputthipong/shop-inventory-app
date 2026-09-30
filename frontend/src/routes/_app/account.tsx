@@ -18,24 +18,24 @@ function AccountPage() {
   return (
     <div className="flex max-w-[720px] flex-col gap-6">
       <div>
-        <h1 className="text-[30px] leading-[42px] font-bold">บัญชีของฉัน</h1>
-        <p className="text-base text-sand-800">ข้อมูลที่ใช้เข้าสู่ระบบ และรหัสผ่านของคุณ</p>
+        <h1 className="text-[22px] leading-[30px] font-semibold">บัญชีของฉัน</h1>
+        <p className="text-sm text-ink-2">ข้อมูลที่ใช้เข้าสู่ระบบ และรหัสผ่านของคุณ</p>
       </div>
 
       <Card icon={<UserRoundIcon className="size-5" />} title="ข้อมูลบัญชี">
         <div className="flex items-center gap-4">
           <span
             aria-hidden="true"
-            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-hold-light text-2xl font-bold text-[#7a4b00]"
+            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-kraft-100 text-lg font-semibold text-kraft-700"
           >
             {productInitial(me.name)}
           </span>
           <dl className="grid flex-1 grid-cols-[100px_minmax(0,1fr)] gap-x-4 gap-y-1.5">
-            <dt className="text-sand-800">ชื่อ</dt>
-            <dd className="font-semibold">{me.name}</dd>
-            <dt className="text-sand-800">อีเมล</dt>
+            <dt className="text-ink-2">ชื่อ</dt>
+            <dd className="font-medium">{me.name}</dd>
+            <dt className="text-ink-2">อีเมล</dt>
             <dd className="truncate">{me.email}</dd>
-            <dt className="text-sand-800">บทบาท</dt>
+            <dt className="text-ink-2">บทบาท</dt>
             <dd>
               <Chip tone={me.isOwner ? 'info' : 'neutral'}>{roleLabel[me.role]}</Chip>
             </dd>
@@ -66,17 +66,14 @@ function Card({
   children: ReactNode
 }) {
   return (
-    <section aria-label={title} className="rounded-[22px] bg-white p-6 shadow-soft">
-      <div className="mb-5 flex items-start gap-3">
-        <span
-          aria-hidden="true"
-          className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-petrol-100 text-petrol-600"
-        >
+    <section aria-label={title} className="panel p-5">
+      <div className="mb-4 flex items-start gap-2.5">
+        <span aria-hidden="true" className="mt-0.5 flex shrink-0 text-petrol-600">
           {icon}
         </span>
         <div>
-          <h2 className="text-lg leading-10 font-bold">{title}</h2>
-          {description && <p className="text-sm text-sand-800">{description}</p>}
+          <h2 className="text-base leading-6 font-semibold">{title}</h2>
+          {description && <p className="text-[13px] text-ink-2">{description}</p>}
         </div>
       </div>
       {children}

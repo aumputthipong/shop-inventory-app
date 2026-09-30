@@ -23,7 +23,7 @@ export function Chip({
   return (
     <span
       className={cn(
-        'inline-flex h-6 shrink-0 items-center rounded-full px-2.5 text-[13px] leading-none font-semibold whitespace-nowrap',
+        'inline-flex h-[22px] shrink-0 items-center rounded-sm px-2 text-xs leading-none font-medium whitespace-nowrap',
         toneClass[tone],
         className,
       )}
@@ -36,11 +36,11 @@ export function ChannelChip({ channel, className }: { channel: Channel; classNam
   return (
     <span
       className={cn(
-        'inline-flex h-7 shrink-0 items-center gap-1.5 rounded-full bg-sand-200 px-3 text-[13px] font-medium whitespace-nowrap',
+        'inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-sm border border-line bg-surface px-2 text-xs font-medium whitespace-nowrap',
         className,
       )}
     >
-      <span aria-hidden="true" className={cn('size-2 rounded-full', channelDot[channel])} />
+      <span aria-hidden="true" className={cn('size-1.5 rounded-full', channelDot[channel])} />
       {channelLabel[channel]}
     </span>
   )

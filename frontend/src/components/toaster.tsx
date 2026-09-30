@@ -35,10 +35,10 @@ export function Toaster({ children }: { children: ReactNode }) {
         {message !== null && (
           <div
             key={version}
-            className="animate-rise flex items-center gap-3 rounded-2xl bg-ink py-3.5 pr-5 pl-3.5 text-[15px] text-white shadow-[0_16px_40px_rgb(43_38_33/0.28)]"
+            className="animate-rise flex items-center gap-3 rounded-lg bg-ink py-3 pr-4 pl-3 text-sm text-white shadow-float"
           >
-            <span className="flex size-[30px] items-center justify-center rounded-full bg-[#2f7d4f]">
-              <CheckIcon className="size-4" strokeWidth={2.6} aria-hidden="true" />
+            <span className="flex size-5 items-center justify-center rounded-full bg-[#2f7d4f]">
+              <CheckIcon className="size-3" strokeWidth={3} aria-hidden="true" />
             </span>
             {message}
           </div>

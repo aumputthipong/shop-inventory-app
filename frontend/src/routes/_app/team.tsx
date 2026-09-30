@@ -60,8 +60,8 @@ function TeamPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <h1 className="text-[30px] leading-[42px] font-bold">ทีม</h1>
-          <p className="text-base text-sand-800">
+          <h1 className="text-[22px] leading-[30px] font-semibold">ทีม</h1>
+          <p className="text-sm text-ink-2">
             พนักงานรับของเข้า ขาย แพ็ก และส่งได้ ส่วนการปรับยอด แก้สินค้า
             และดูบันทึกการใช้งานเป็นของเจ้าของร้าน
           </p>
@@ -76,23 +76,20 @@ function TeamPage() {
         </Button>
       </div>
 
-      <section
-        aria-label="สมาชิกในทีม"
-        className="max-w-[1000px] overflow-x-auto rounded-[22px] bg-white p-3 shadow-soft"
-      >
-        {isPending && <p className="px-4 py-8 text-sand-800">กำลังโหลด...</p>}
+      <section aria-label="สมาชิกในทีม" className="max-w-[1000px] overflow-x-auto panel p-3">
+        {isPending && <p className="px-4 py-8 text-ink-2">กำลังโหลด...</p>}
         <ul className="flex min-w-[760px] flex-col">
           {users?.map((u) => (
             <li
               key={u.id}
               className={cn(
-                'grid min-h-16 grid-cols-[44px_minmax(0,1fr)_120px_auto] items-center gap-4 border-b border-sand-200 px-4 py-3 last:border-b-0',
+                'grid min-h-16 grid-cols-[44px_minmax(0,1fr)_120px_auto] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0',
                 !u.is_active && 'opacity-60',
               )}
             >
               <span
                 aria-hidden="true"
-                className="flex size-11 items-center justify-center rounded-full bg-hold-light text-lg font-bold text-[#7a4b00]"
+                className="flex size-11 items-center justify-center rounded-full bg-kraft-100 text-base font-semibold text-kraft-700"
               >
                 {productInitial(u.name)}
               </span>
@@ -101,7 +98,7 @@ function TeamPage() {
                   {u.name}
                   {!u.is_active && <Chip tone="neutral">ปิดใช้งาน</Chip>}
                 </span>
-                <span className="truncate text-[13px] text-sand-800">
+                <span className="truncate text-[13px] text-ink-2">
                   {u.email} · เข้าร่วม {formatFullDateTime(u.created_at)}
                 </span>
               </span>
@@ -110,7 +107,7 @@ function TeamPage() {
               </span>
               <span className="flex justify-end gap-2">
                 {u.id === me.id ? (
-                  <span className="text-sm text-sand-800">บัญชีของคุณ</span>
+                  <span className="text-sm text-ink-2">บัญชีของคุณ</span>
                 ) : (
                   <>
                     <Button
@@ -188,18 +185,12 @@ function TeamPage() {
             description="เจ้าตัวจะถูกออกจากระบบทันทีและล็อกอินไม่ได้ ประวัติที่เคยทำยังอยู่ครบ เปิดกลับได้ภายหลัง"
           />
           {lastOwner && (
-            <p
-              role="alert"
-              className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg"
-            >
+            <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
               ปิดไม่ได้ ร้านต้องมีเจ้าของร้านที่ใช้งานได้อย่างน้อย 1 คน
             </p>
           )}
           {setActive.isError && !lastOwner && (
-            <p
-              role="alert"
-              className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg"
-            >
+            <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
               บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
             </p>
           )}
@@ -268,7 +259,7 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
         description="แจ้งอีเมลกับรหัสผ่านให้สมาชิกใหม่ใช้เข้าสู่ระบบ"
       />
       <label className="flex flex-col gap-2">
-        <span className="text-[15px] font-semibold">ชื่อ</span>
+        <span className="text-[13px] font-medium text-ink-2">ชื่อ</span>
         <Input
           value={name}
           maxLength={100}
@@ -278,7 +269,7 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
         />
       </label>
       <label className="flex flex-col gap-2">
-        <span className="text-[15px] font-semibold">อีเมล</span>
+        <span className="text-[13px] font-medium text-ink-2">อีเมล</span>
         <Input
           type="email"
           value={email}
@@ -289,7 +280,7 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
       </label>
       <div className="grid grid-cols-2 gap-3">
         <label className="flex flex-col gap-2">
-          <span className="text-[15px] font-semibold">บทบาท</span>
+          <span className="text-[13px] font-medium text-ink-2">บทบาท</span>
           <NativeSelect
             value={role}
             onChange={(e) => {
@@ -301,7 +292,7 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
           </NativeSelect>
         </label>
         <label className="flex flex-col gap-2">
-          <span className="text-[15px] font-semibold">รหัสผ่าน</span>
+          <span className="text-[13px] font-medium text-ink-2">รหัสผ่าน</span>
           <Input
             type="password"
             autoComplete="new-password"
@@ -315,7 +306,7 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
         </label>
       </div>
       {serverError && (
-        <p role="alert" className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
+        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
           {serverError}
         </p>
       )}

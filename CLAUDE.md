@@ -67,6 +67,7 @@ frontend/
   src/routes/              File-based routes; routeTree.gen.ts is generated and committed
   src/lib/api.ts           Typed fetch client, mirrors api/openapi.yaml
   src/components/ui/       shadcn/ui components (vendored; regenerate with the shadcn CLI)
+docs/DESIGN.md             Visual design system (tokens, components, do and don't). Follow it for new UI.
 ```
 
 Backend code is organised **by feature, not by layer**. A feature is one package

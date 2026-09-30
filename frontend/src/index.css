@@ -1,14 +1,18 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource/ibm-plex-sans-thai-looped/400.css';
-@import '@fontsource/ibm-plex-sans-thai-looped/500.css';
-@import '@fontsource/ibm-plex-sans-thai-looped/600.css';
-@import '@fontsource/ibm-plex-sans-thai-looped/700.css';
+@import '@fontsource/ibm-plex-sans-thai/400.css';
+@import '@fontsource/ibm-plex-sans-thai/500.css';
+@import '@fontsource/ibm-plex-sans-thai/600.css';
+@import '@fontsource/ibm-plex-sans-thai/700.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
 
+/* Tokens are documented in docs/DESIGN.md. */
 @theme inline {
-  --font-sans: 'IBM Plex Sans Thai Looped', system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif;
   --font-heading: var(--font-sans);
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -27,80 +31,76 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 @theme {
-  --color-ink: #2b2621;
-  --color-sand-50: #faf8f5;
-  --color-sand-100: #f6f3ef;
-  --color-sand-200: #f4efe8;
-  --color-sand-300: #eee8e0;
-  --color-sand-400: #e4ddd3;
-  --color-sand-500: #d8cfc3;
-  --color-sand-600: #a0968a;
-  --color-sand-700: #8f867b;
-  --color-sand-800: #6f665c;
-  --color-sand-900: #4a433c;
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  --color-canvas: #f5f3ef;
+  --color-surface: #ffffff;
+  --color-surface-2: #faf8f5;
+  --color-line: #e7e2da;
+  --color-line-strong: #d5cec3;
+  --color-ink: #26221e;
+  --color-ink-2: #5f584f;
+  --color-ink-3: #7a7267;
 
   --color-petrol-50: #eef5f6;
-  --color-petrol-100: #e3eff1;
-  --color-petrol-200: #cfe3e7;
-  --color-petrol-300: #bfd9de;
+  --color-petrol-100: #e1eef0;
+  --color-petrol-200: #c9e0e5;
   --color-petrol-600: #0e5e6f;
   --color-petrol-700: #0b4d5b;
 
-  --color-hold: #e0a23a;
-  --color-hold-light: #f7e6c4;
+  --color-kraft-50: #fbf3e4;
+  --color-kraft-100: #f7e6c4;
+  --color-kraft-300: #e9cfa0;
+  --color-kraft-500: #c98a2e;
+  --color-kraft-700: #7a4b00;
 
-  --color-chip-ok: #e3f3e8;
+  --color-chip-ok: #e5f2e8;
   --color-chip-ok-fg: #1e6b3e;
-  --color-chip-warn: #fcefd6;
-  --color-chip-warn-fg: #8a5300;
-  --color-chip-bad: #fce8e4;
-  --color-chip-bad-fg: #b3261e;
-  --color-chip-info: #e4ecfb;
-  --color-chip-info-fg: #2447a0;
-  --color-chip-indigo: #e8e9fb;
-  --color-chip-indigo-fg: #3b3fa8;
-  --color-chip-violet: #efe8fb;
-  --color-chip-violet-fg: #5b3bb0;
-  --color-chip-teal: #dff3f0;
-  --color-chip-teal-fg: #0e6a61;
-  --color-chip-neutral: #f0ece6;
-  --color-chip-neutral-fg: #5e554b;
+  --color-chip-warn: #fbefd6;
+  --color-chip-warn-fg: #7f4d00;
+  --color-chip-bad: #fbe8e4;
+  --color-chip-bad-fg: #a8261d;
+  --color-chip-info: #e6edfa;
+  --color-chip-info-fg: #274b99;
+  --color-chip-indigo: #eaebf9;
+  --color-chip-indigo-fg: #3b3fa0;
+  --color-chip-violet: #efe9fa;
+  --color-chip-violet-fg: #573aa6;
+  --color-chip-teal: #e1f1ee;
+  --color-chip-teal-fg: #0e6158;
+  --color-chip-neutral: #efebe5;
+  --color-chip-neutral-fg: #5a5249;
 
-  --shadow-soft: 0 1px 2px rgb(64 44 24 / 0.04), 0 8px 28px rgb(64 44 24 / 0.06);
-  --shadow-lift: 0 30px 80px rgb(64 44 24 / 0.22), 0 4px 12px rgb(64 44 24 / 0.08);
-  --shadow-petrol: 0 1px 2px rgb(14 94 111 / 0.25), 0 4px 12px rgb(14 94 111 / 0.18);
+  --shadow-float: 0 12px 32px rgb(38 34 30 / 0.16), 0 2px 6px rgb(38 34 30 / 0.08);
 }
 
 :root {
-  --background: #f6f3ef;
-  --foreground: #2b2621;
+  --background: #f5f3ef;
+  --foreground: #26221e;
   --card: #ffffff;
-  --card-foreground: #2b2621;
+  --card-foreground: #26221e;
   --popover: #ffffff;
-  --popover-foreground: #2b2621;
+  --popover-foreground: #26221e;
   --primary: #0e5e6f;
   --primary-foreground: #ffffff;
-  --secondary: #f4efe8;
-  --secondary-foreground: #2b2621;
-  --muted: #f4efe8;
-  --muted-foreground: #6f665c;
-  --accent: #f6f3ef;
-  --accent-foreground: #2b2621;
-  --destructive: #b3261e;
-  --border: #eee8e0;
-  --input: #e4ddd3;
+  --secondary: #faf8f5;
+  --secondary-foreground: #26221e;
+  --muted: #faf8f5;
+  --muted-foreground: #5f584f;
+  --accent: #faf8f5;
+  --accent-foreground: #26221e;
+  --destructive: #a8261d;
+  --border: #e7e2da;
+  --input: #d5cec3;
   --ring: #0e5e6f;
-  --radius: 0.875rem;
+  --radius: 0.5rem;
 }
 
 @layer base {
@@ -112,8 +112,8 @@
     font-variant-numeric: tabular-nums;
   }
   body {
-    @apply bg-background text-foreground antialiased;
-    font-size: 15px;
+    @apply bg-canvas text-ink antialiased;
+    font-size: 14px;
     line-height: 1.6;
   }
   :focus-visible {
@@ -122,26 +122,36 @@
   }
 }
 
-@layer utilities {
-  .bg-hatch {
-    background: repeating-linear-gradient(
-      135deg,
-      var(--color-hold) 0 2px,
-      var(--color-hold-light) 2px 4px
-    );
-  }
+@utility panel {
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+@utility code {
+  font-family: var(--font-mono);
+  font-size: 0.93em;
+  letter-spacing: 0;
+}
+
+@utility bg-hatch {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-kraft-500) 0 2px,
+    var(--color-kraft-100) 2px 4px
+  );
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .animate-rise {
-    animation: rise 0.22s ease-out;
+    animation: rise 0.2s ease-out;
   }
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;

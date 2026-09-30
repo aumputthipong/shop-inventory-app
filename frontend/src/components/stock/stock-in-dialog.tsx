@@ -73,7 +73,7 @@ function StockInForm({ product, onDone }: { product: Product; onDone: () => void
       />
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="stock-in-qty" className="text-[15px] font-semibold">
+        <label htmlFor="stock-in-qty" className="text-[13px] font-medium text-ink-2">
           จำนวน
         </label>
         <QtyStepper id="stock-in-qty" value={qty} onChange={setQty} invalid={n === null} />
@@ -83,7 +83,7 @@ function StockInForm({ product, onDone }: { product: Product; onDone: () => void
       </div>
 
       <label className="flex flex-col gap-2">
-        <span className="text-[15px] font-semibold">โน้ต (ไม่ใส่ก็ได้)</span>
+        <span className="text-[13px] font-medium text-ink-2">โน้ต (ไม่ใส่ก็ได้)</span>
         <Input
           value={note}
           maxLength={500}
@@ -97,7 +97,7 @@ function StockInForm({ product, onDone }: { product: Product; onDone: () => void
       <StockPreview onHand={product.on_hand} reserved={product.reserved} delta={n ?? 0} />
 
       {save.isError && (
-        <p role="alert" className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
+        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
           บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
         </p>
       )}

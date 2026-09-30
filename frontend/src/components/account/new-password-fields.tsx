@@ -19,7 +19,7 @@ export function NewPasswordFields({
   return (
     <>
       <div className="flex flex-col gap-2">
-        <label htmlFor={`${id}-next`} className="text-[15px] font-semibold">
+        <label htmlFor={`${id}-next`} className="text-[13px] font-medium text-ink-2">
           รหัสผ่านใหม่
         </label>
         <Input
@@ -35,13 +35,13 @@ export function NewPasswordFields({
         />
         <span
           id={`${id}-rule`}
-          className={tooShort ? 'text-sm text-destructive' : 'text-sm text-sand-800'}
+          className={tooShort ? 'text-sm text-destructive' : 'text-sm text-ink-2'}
         >
           อย่างน้อย {MIN_PASSWORD_LENGTH} ตัวอักษร
         </span>
       </div>
       <div className="flex flex-col gap-2">
-        <label htmlFor={`${id}-confirm`} className="text-[15px] font-semibold">
+        <label htmlFor={`${id}-confirm`} className="text-[13px] font-medium text-ink-2">
           พิมพ์รหัสผ่านใหม่อีกครั้ง
         </label>
         <Input

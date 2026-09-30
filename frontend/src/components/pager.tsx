@@ -16,7 +16,7 @@ export function Pager({
   const from = total === 0 ? 0 : offset + 1
   const to = Math.min(offset + limit, total)
   return (
-    <div className="flex items-center justify-between px-4 pt-3.5 pb-1.5 text-[13px] text-sand-800">
+    <div className="flex items-center justify-between px-4 pt-3.5 pb-1.5 text-[13px] text-ink-2">
       <span>
         แสดง {from}–{to} จาก {total} รายการ
       </span>

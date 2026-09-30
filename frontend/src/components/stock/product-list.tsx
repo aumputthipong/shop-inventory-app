@@ -4,6 +4,7 @@ import { useState } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { FilterTabs } from '@/components/filter-tabs'
 import { ProductAvatar } from '@/components/product-avatar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,10 +14,10 @@ import { stockStatusChip } from '@/lib/labels'
 
 type Filter = 'all' | 'low' | 'out_of_stock'
 
-const TABS: { id: Filter; label: string }[] = [
-  { id: 'all', label: 'ทั้งหมด' },
-  { id: 'low', label: 'ใกล้หมด' },
-  { id: 'out_of_stock', label: 'หมดแล้ว' },
+const TABS: { value: Filter; label: string }[] = [
+  { value: 'all', label: 'ทั้งหมด' },
+  { value: 'low', label: 'ใกล้หมด' },
+  { value: 'out_of_stock', label: 'หมดแล้ว' },
 ]
 
 export function ProductList({
@@ -48,42 +49,17 @@ export function ProductList({
   )
 
   return (
-    <section
-      aria-label="รายการสินค้า"
-      className="min-w-0 flex-1 rounded-[22px] bg-white p-3 shadow-soft"
-    >
-      <div className="flex flex-wrap items-center justify-between gap-4 px-2 pt-2 pb-4">
-        <div role="group" aria-label="แสดงสินค้า" className="flex flex-wrap gap-2">
-          {TABS.map((tab) => (
-            <button
-              key={tab.id}
-              type="button"
-              aria-pressed={filter === tab.id}
-              onClick={() => {
-                setFilter(tab.id)
-              }}
-              className={cn(
-                'flex h-10 items-center gap-2 rounded-full pr-2 pl-4 text-[15px] font-medium',
-                filter === tab.id
-                  ? 'bg-ink text-white'
-                  : 'bg-sand-100 text-sand-800 hover:bg-sand-200 hover:text-ink',
-              )}
-            >
-              {tab.label}
-              <span
-                className={cn(
-                  'flex h-[26px] min-w-[26px] items-center justify-center rounded-full px-2 text-[13px] font-semibold',
-                  filter === tab.id ? 'bg-white/20' : 'bg-white text-ink',
-                )}
-              >
-                {counts[tab.id]}
-              </span>
-            </button>
-          ))}
-        </div>
-        <label className="relative flex items-center">
+    <section aria-label="รายการสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
+      <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line px-4 pt-2">
+        <FilterTabs
+          label="แสดงสินค้า"
+          value={filter}
+          onChange={setFilter}
+          options={TABS.map((tab) => ({ ...tab, count: counts[tab.value] }))}
+        />
+        <label className="relative mb-2 flex items-center">
           <SearchIcon
-            className="pointer-events-none absolute left-3 size-4 text-sand-700"
+            className="pointer-events-none absolute left-2.5 size-4 text-ink-3"
             aria-hidden="true"
           />
           <Input
@@ -94,21 +70,21 @@ export function ProductList({
             onChange={(e) => {
               setQuery(e.target.value)
             }}
-            className="h-10 w-60 pl-9"
+            className="h-8 w-56 pl-8"
           />
         </label>
       </div>
 
-      <div className="grid h-9 grid-cols-[44px_minmax(0,1fr)_200px_96px] items-center gap-4 px-4 text-[13px] font-medium text-sand-800">
+      <div className="grid h-9 grid-cols-[36px_minmax(0,1fr)_200px_80px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
         <span />
         <span>สินค้า</span>
         <span>ของในคลัง</span>
         <span className="text-right">ขายได้</span>
       </div>
 
-      <ul className="flex flex-col gap-1">
+      <ul>
         {visible.map((p) => (
-          <li key={p.id}>
+          <li key={p.id} className="border-b border-line last:border-b-0">
             <ProductRow
               product={p}
               selected={p.id === selectedId}
@@ -133,7 +109,7 @@ export function ProductList({
         />
       )}
 
-      <p className="px-4 pt-3.5 pb-1.5 text-[13px] text-sand-800">
+      <p className="border-t border-line px-4 py-2.5 text-[13px] text-ink-3">
         แสดง {visible.length} จาก {products.length} รายการ
       </p>
     </section>
@@ -156,33 +132,35 @@ function ProductRow({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        'grid min-h-20 w-full cursor-pointer grid-cols-[44px_minmax(0,1fr)_200px_96px] items-center gap-4 rounded-2xl px-4 py-3.5 text-left',
-        selected ? 'bg-petrol-50 ring-[1.5px] ring-petrol-300 ring-inset' : 'hover:bg-sand-50',
+        'grid min-h-16 w-full cursor-pointer grid-cols-[36px_minmax(0,1fr)_200px_80px] items-center gap-4 px-4 py-3 text-left',
+        selected
+          ? 'bg-petrol-50 shadow-[inset_2px_0_0_var(--color-petrol-600)]'
+          : 'hover:bg-surface-2',
       )}
     >
       <ProductAvatar name={p.name} sku={p.sku} />
-      <span className="flex min-w-0 flex-col gap-1">
-        <span className="truncate text-base leading-[26px] font-semibold">{p.name}</span>
-        <span className="flex items-center gap-2.5">
-          <span className="text-[13px] text-sand-800">{p.sku}</span>
+      <span className="flex min-w-0 flex-col gap-0.5">
+        <span className="truncate text-sm font-medium">{p.name}</span>
+        <span className="flex items-center gap-2">
+          <span className="code text-xs text-ink-3">{p.sku}</span>
           <Chip tone={chip.tone}>{chip.label}</Chip>
           {!p.is_active && <Chip tone="neutral">ปิดขาย</Chip>}
         </span>
       </span>
       <span className="flex flex-col gap-1.5">
         <UnitStrip available={p.available} held={p.reserved} />
-        <span className="flex gap-3 text-[13px] leading-[18px] text-sand-800">
+        <span className="flex gap-3 text-xs text-ink-3">
           <span>มี {p.on_hand}</span>
           <span>จองแล้ว {p.reserved}</span>
         </span>
       </span>
       <span className="flex flex-col items-end">
         <span
-          className={cn('text-[28px] leading-8 font-bold', p.available <= 0 && 'text-destructive')}
+          className={cn('text-xl leading-7 font-semibold', p.available <= 0 && 'text-destructive')}
         >
           {Math.max(p.available, 0)}
         </span>
-        <span className="text-[13px] leading-[18px] text-sand-800">ชิ้น</span>
+        <span className="text-xs text-ink-3">ชิ้น</span>
       </span>
     </button>
   )

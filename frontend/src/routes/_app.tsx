@@ -56,23 +56,28 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b border-sand-300 bg-white">
-        <div className="mx-auto flex h-[68px] max-w-[1440px] items-center gap-4 px-4 md:px-6 xl:gap-9 xl:px-10">
+      <header className="sticky top-0 z-40 border-b border-line bg-surface">
+        <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 px-4 md:px-6 xl:gap-8 xl:px-10">
           <Link to="/stock" className="flex items-center gap-2.5">
             <BrandMark />
-            <span className="hidden text-base font-bold xl:inline">Shop Inventory</span>
+            <span className="hidden text-[15px] font-semibold tracking-tight xl:inline">
+              Shop Inventory
+            </span>
           </Link>
-          <nav aria-label="เมนูหลัก" className="flex min-w-0 items-center gap-1 overflow-x-auto">
+          <nav
+            aria-label="เมนูหลัก"
+            className="flex min-w-0 items-stretch self-stretch overflow-x-auto overflow-y-hidden"
+          >
             {NAV.filter((item) => !item.ownerOnly || me.isOwner).map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex h-10 items-center gap-2 rounded-xl px-3.5 text-[15px] font-medium text-sand-800 hover:bg-sand-100 hover:text-ink"
+                className="flex shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-sm text-ink-2 hover:text-ink"
                 activeProps={{
-                  className: 'bg-petrol-100 font-semibold !text-petrol-600 hover:!bg-petrol-100',
+                  className: '!border-petrol-600 font-medium !text-ink',
                 }}
               >
-                <item.icon className="size-[18px]" aria-hidden="true" />
+                <item.icon className="size-4" aria-hidden="true" />
                 {item.label}
               </Link>
             ))}
@@ -102,30 +107,30 @@ function AccountMenu({ name, roleText }: { name: string; roleText: string }) {
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger className="flex h-12 items-center gap-2.5 rounded-2xl py-1 pr-3 pl-1.5 text-left hover:bg-sand-100">
+      <DropdownMenu.Trigger className="flex h-10 items-center gap-2 rounded-md py-1 pr-2.5 pl-1 text-left hover:bg-surface-2">
         <span
           aria-hidden="true"
-          className="flex size-9 items-center justify-center rounded-full bg-hold-light text-[15px] font-bold text-[#7a4b00]"
+          className="flex size-8 items-center justify-center rounded-full bg-kraft-100 text-[13px] font-semibold text-kraft-700"
         >
           {productInitial(name)}
         </span>
         <span className="flex flex-col leading-[18px]">
-          <span className="text-sm font-semibold">{name}</span>
-          <span className="text-xs text-sand-800">{roleText}</span>
+          <span className="text-[13px] font-medium">{name}</span>
+          <span className="text-xs text-ink-2">{roleText}</span>
         </span>
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 min-w-48 rounded-2xl bg-white p-1.5 shadow-lift"
+          className="z-50 min-w-48 rounded-lg border border-line bg-surface p-1 shadow-float"
         >
           <DropdownMenu.Item
             asChild
-            className="flex h-11 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-[15px] outline-none data-highlighted:bg-sand-100"
+            className="flex h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm outline-none data-highlighted:bg-surface-2"
           >
             <Link to="/account">
-              <UserRoundCogIcon className="size-[18px] text-sand-800" aria-hidden="true" />
+              <UserRoundCogIcon className="size-4 text-ink-2" aria-hidden="true" />
               บัญชีของฉัน
             </Link>
           </DropdownMenu.Item>
@@ -133,9 +138,9 @@ function AccountMenu({ name, roleText }: { name: string; roleText: string }) {
             onSelect={() => {
               logout.mutate()
             }}
-            className="flex h-11 cursor-pointer items-center gap-2.5 rounded-xl px-3 text-[15px] outline-none data-highlighted:bg-sand-100"
+            className="flex h-9 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm outline-none data-highlighted:bg-surface-2"
           >
-            <LogOutIcon className="size-[18px] text-sand-800" aria-hidden="true" />
+            <LogOutIcon className="size-4 text-ink-2" aria-hidden="true" />
             ออกจากระบบ
           </DropdownMenu.Item>
         </DropdownMenu.Content>

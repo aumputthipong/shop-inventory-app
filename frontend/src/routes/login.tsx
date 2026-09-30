@@ -60,18 +60,18 @@ function LoginPage() {
 
   return (
     <main className="flex min-h-svh items-center justify-center p-6">
-      <div className="w-full max-w-[420px] rounded-[26px] bg-white p-8 shadow-soft">
+      <div className="panel w-full max-w-[400px] p-7">
         <div className="mb-6 flex items-center gap-3">
           <BrandMark size={40} />
           <div>
-            <h1 className="text-[22px] leading-8 font-bold">เข้าสู่ระบบหลังร้าน</h1>
-            <p className="text-sm text-sand-800">Shop Inventory</p>
+            <h1 className="text-lg leading-7 font-semibold">เข้าสู่ระบบหลังร้าน</h1>
+            <p className="text-sm text-ink-2">Shop Inventory</p>
           </div>
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
           <label className="flex flex-col gap-2">
-            <span className="text-[15px] font-semibold">อีเมล</span>
+            <span className="text-[13px] font-medium text-ink-2">อีเมล</span>
             <Input
               type="email"
               autoComplete="username"
@@ -83,7 +83,7 @@ function LoginPage() {
             />
           </label>
           <label className="flex flex-col gap-2">
-            <span className="text-[15px] font-semibold">รหัสผ่าน</span>
+            <span className="text-[13px] font-medium text-ink-2">รหัสผ่าน</span>
             <Input
               type="password"
               autoComplete="current-password"
@@ -98,7 +98,7 @@ function LoginPage() {
           {errorMessage && (
             <p
               role="alert"
-              className="rounded-xl bg-chip-bad px-3.5 py-2.5 text-sm text-chip-bad-fg"
+              className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
             >
               {errorMessage}
             </p>

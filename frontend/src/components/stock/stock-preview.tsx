@@ -11,7 +11,7 @@ export function StockPreview({
 }) {
   const available = onHand - reserved
   return (
-    <div className="flex flex-col gap-3.5 rounded-[18px] bg-sand-50 p-[18px]">
+    <div className="flex flex-col gap-3 rounded-md border border-line bg-surface-2 p-4">
       <UnitStrip
         size="lg"
         available={available}
@@ -40,13 +40,15 @@ function Change({
 }) {
   return (
     <div>
-      <div className="text-[13px] text-sand-800">{label}</div>
-      <div className="text-[22px] leading-[30px]" aria-label={`${label} ${before} เป็น ${after}`}>
-        <span className="text-sand-700">{before}</span>
-        <span className="mx-1.5 text-sand-700" aria-hidden="true">
+      <div className="text-xs text-ink-2">{label}</div>
+      <div className="text-lg leading-7" aria-label={`${label} ${before} เป็น ${after}`}>
+        <span className="text-ink-3">{before}</span>
+        <span className="mx-1.5 text-ink-3" aria-hidden="true">
           →
         </span>
-        <span className={highlight ? 'font-bold text-petrol-600' : 'font-bold'}>{after}</span>
+        <span className={highlight ? 'font-semibold text-petrol-600' : 'font-semibold'}>
+          {after}
+        </span>
       </div>
     </div>
   )

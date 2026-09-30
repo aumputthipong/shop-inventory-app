@@ -62,7 +62,7 @@ function ResetForm({ member, onDone }: { member: TeamMember; onDone: () => void 
       />
       <NewPasswordFields next={next} confirm={confirm} onNext={setNext} onConfirm={setConfirm} />
       {save.isError && (
-        <p role="alert" className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
+        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
           บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
         </p>
       )}

@@ -36,7 +36,7 @@ export function ChangePasswordForm() {
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
       <label className="flex flex-col gap-2">
-        <span className="text-[15px] font-semibold">รหัสผ่านปัจจุบัน</span>
+        <span className="text-[13px] font-medium text-ink-2">รหัสผ่านปัจจุบัน</span>
         <Input
           type="password"
           autoComplete="current-password"
@@ -49,7 +49,7 @@ export function ChangePasswordForm() {
       </label>
       <NewPasswordFields next={next} confirm={confirm} onNext={setNext} onConfirm={setConfirm} />
       {save.isError && (
-        <p role="alert" className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
+        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
           {wrongCurrent ? 'รหัสผ่านปัจจุบันไม่ถูกต้อง' : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
         </p>
       )}

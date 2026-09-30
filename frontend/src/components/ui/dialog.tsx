@@ -14,18 +14,18 @@ function DialogContent({
 }: React.ComponentProps<typeof DialogPrimitive.Content>) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/30 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/25 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 grid max-h-[90vh] w-[calc(100%-2rem)] max-w-[500px] -translate-x-1/2 -translate-y-1/2 gap-5 overflow-y-auto rounded-[26px] bg-white p-7 shadow-lift outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-97',
+          'fixed top-1/2 left-1/2 z-50 grid max-h-[90vh] w-[calc(100%-2rem)] max-w-[480px] -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-xl border border-line bg-surface p-6 shadow-float outline-none data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-97',
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute top-6 right-6 flex size-10 items-center justify-center rounded-xl text-sand-800 hover:bg-sand-100 hover:text-ink">
-          <XIcon className="size-5" aria-hidden="true" />
+        <DialogPrimitive.Close className="absolute top-4 right-4 flex size-8 items-center justify-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink">
+          <XIcon className="size-4" aria-hidden="true" />
           <span className="sr-only">ปิด</span>
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
@@ -43,21 +43,21 @@ function DialogHeader({
   description?: React.ReactNode
 }) {
   return (
-    <div className="flex items-start gap-3.5 pr-12">
+    <div className="flex items-start gap-2.5 pr-10">
       {icon && (
         <span
           aria-hidden="true"
-          className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-petrol-100 text-petrol-600"
+          className="mt-1 flex size-5 shrink-0 items-center justify-center text-petrol-600 [&_svg]:size-5"
         >
           {icon}
         </span>
       )}
       <div className="min-w-0">
-        <DialogPrimitive.Title className="text-[21px] leading-[30px] font-bold">
+        <DialogPrimitive.Title className="text-base leading-7 font-semibold">
           {title}
         </DialogPrimitive.Title>
         {description ? (
-          <DialogPrimitive.Description className="text-sm text-sand-800">
+          <DialogPrimitive.Description className="text-sm text-ink-2">
             {description}
           </DialogPrimitive.Description>
         ) : (
@@ -69,7 +69,15 @@ function DialogHeader({
 }
 
 function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div className={cn('flex items-center justify-end gap-2.5 pt-1', className)} {...props} />
+  return (
+    <div
+      className={cn(
+        '-mx-6 -mb-6 mt-2 flex items-center justify-end gap-2 border-t border-line bg-surface-2 px-6 py-3.5',
+        className,
+      )}
+      {...props}
+    />
+  )
 }
 
 const DialogClose = DialogPrimitive.Close

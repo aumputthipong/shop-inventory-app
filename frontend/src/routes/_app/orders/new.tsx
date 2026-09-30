@@ -8,6 +8,7 @@ import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { ProductAvatar } from '@/components/product-avatar'
 import { QtyStepper } from '@/components/qty-stepper'
+import { Segmented } from '@/components/segmented'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ApiError, api, shortagesOf, type Channel, type Product } from '@/lib/api'
@@ -121,26 +122,23 @@ function NewOrderPage() {
       <div>
         <Link
           to="/orders"
-          className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-sand-800 hover:text-ink"
+          className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink"
         >
           <ArrowLeftIcon className="size-4" aria-hidden="true" />
           กลับไปหน้าออเดอร์
         </Link>
-        <h1 className="text-[30px] leading-[42px] font-bold">ขายหน้าร้าน</h1>
-        <p className="text-base text-sand-800">
+        <h1 className="text-[22px] leading-[30px] font-semibold">ขายหน้าร้าน</h1>
+        <p className="text-sm text-ink-2">
           เลือกสินค้า ใส่จำนวน แล้วบันทึก ระบบจะจองของให้ทันที ถ้าของไม่พอจะไม่จองเลยสักชิ้น
         </p>
       </div>
 
       <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
-        <section
-          aria-label="เลือกสินค้า"
-          className="min-w-0 flex-1 rounded-[22px] bg-white p-3 shadow-soft"
-        >
-          <div className="px-2 pt-2 pb-4">
+        <section aria-label="เลือกสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
+          <div className="border-b border-line p-3">
             <label className="relative flex items-center">
               <SearchIcon
-                className="pointer-events-none absolute left-3.5 size-[18px] text-sand-700"
+                className="pointer-events-none absolute left-2.5 size-4 text-ink-3"
                 aria-hidden="true"
               />
               <Input
@@ -151,7 +149,7 @@ function NewOrderPage() {
                 onChange={(e) => {
                   setQuery(e.target.value)
                 }}
-                className="pl-10"
+                className="pl-8"
               />
             </label>
           </div>
@@ -161,29 +159,32 @@ function NewOrderPage() {
               body="ลองค้นด้วยคำอื่น หรือเปิดขายสินค้าที่หน้าสต็อก"
             />
           )}
-          <ul className="flex flex-col gap-1">
+          <ul>
             {choices.map((p) => {
               const chip = stockStatusChip[p.stock_status]
               const soldOut = p.available <= 0
               return (
                 <li
                   key={p.id}
-                  className="grid min-h-[72px] grid-cols-[44px_minmax(0,1fr)_110px_120px] items-center gap-4 rounded-2xl px-4 py-3 hover:bg-sand-50"
+                  className="grid min-h-16 grid-cols-[36px_minmax(0,1fr)_96px_120px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0"
                 >
                   <ProductAvatar name={p.name} sku={p.sku} />
                   <span className="flex min-w-0 flex-col">
-                    <span className="truncate font-semibold">{p.name}</span>
-                    <span className="flex items-center gap-2.5 text-[13px] text-sand-800">
-                      {p.sku} · {formatMoney(p.price)}
+                    <span className="truncate font-medium">{p.name}</span>
+                    <span className="flex items-center gap-2.5 text-[13px] text-ink-2">
+                      <span className="code">{p.sku}</span> · {formatMoney(p.price)}
                     </span>
                   </span>
                   <span className="flex flex-col items-end">
-                    <span className={cn('text-xl font-bold', soldOut && 'text-destructive')}>
+                    <span
+                      className={cn(
+                        'text-lg leading-6 font-semibold',
+                        soldOut && 'text-destructive',
+                      )}
+                    >
                       {Math.max(p.available, 0)}
                     </span>
-                    <Chip tone={chip.tone} className="h-5 px-2 text-xs">
-                      {soldOut ? 'หมดแล้ว' : 'ขายได้'}
-                    </Chip>
+                    <Chip tone={chip.tone}>{soldOut ? 'หมดแล้ว' : 'ขายได้'}</Chip>
                   </span>
                   <Button
                     type="button"
@@ -205,37 +206,28 @@ function NewOrderPage() {
         <form
           onSubmit={onSubmit}
           aria-label="ตะกร้า"
-          className="flex w-full shrink-0 flex-col gap-5 rounded-[22px] bg-white p-6 shadow-soft xl:sticky xl:top-[92px] xl:w-[520px]"
+          className="flex w-full shrink-0 flex-col gap-5 panel p-5 xl:sticky xl:top-[80px] xl:w-[440px]"
         >
-          <h2 className="text-[21px] font-bold">ตะกร้า</h2>
+          <h2 className="text-base font-semibold">ตะกร้า</h2>
 
-          <div
-            role="group"
-            aria-label="ช่องทาง"
-            className="grid grid-cols-3 gap-1 rounded-full bg-sand-200 p-1"
-          >
-            {CHANNELS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                aria-pressed={channel === c}
-                onClick={() => {
-                  setChannel(c)
-                }}
-                className={cn(
-                  'flex h-10 items-center justify-center gap-2 rounded-full font-semibold text-sand-800',
-                  channel === c && 'bg-white text-ink shadow-[0_1px_3px_rgb(64_44_24/0.14)]',
-                )}
-              >
-                <span aria-hidden="true" className={cn('size-2 rounded-full', channelDot[c])} />
-                {channelLabel[c]}
-              </button>
-            ))}
-          </div>
+          <Segmented
+            label="ช่องทาง"
+            value={channel}
+            onChange={setChannel}
+            options={CHANNELS.map((c) => ({
+              value: c,
+              label: (
+                <>
+                  <span aria-hidden="true" className={cn('size-1.5 rounded-full', channelDot[c])} />
+                  {channelLabel[c]}
+                </>
+              ),
+            }))}
+          />
 
           {channel !== 'store' && (
             <label className="flex flex-col gap-2">
-              <span className="text-[15px] font-semibold">
+              <span className="text-[13px] font-medium text-ink-2">
                 เลขออเดอร์จาก {channelLabel[channel]} (ไม่ใส่ก็ได้)
               </span>
               <Input
@@ -251,16 +243,16 @@ function NewOrderPage() {
           {stillShort > 0 && (
             <p
               role="alert"
-              className="flex gap-2.5 rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-[#9a2a1f]"
+              className="flex gap-2 rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
             >
-              <AlertCircleIcon className="mt-0.5 size-[18px] shrink-0" aria-hidden="true" />
+              <AlertCircleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
               สต็อกเปลี่ยนระหว่างนี้ มี {stillShort} รายการที่ของไม่พอแล้ว
               ปรับจำนวนแล้วบันทึกอีกครั้ง ยังไม่มีการจองของ
             </p>
           )}
 
           {rows.length === 0 ? (
-            <p className="rounded-2xl bg-sand-50 px-4 py-8 text-center text-sand-800">
+            <p className="rounded-md border border-dashed border-line-strong px-4 py-8 text-center text-[13px] text-ink-2">
               ยังไม่มีสินค้าในตะกร้า กด “ใส่ตะกร้า” จากรายการด้านซ้าย
             </p>
           ) : (
@@ -268,12 +260,12 @@ function NewOrderPage() {
               {rows.map(({ line, product, error }) => (
                 <li
                   key={line.productId}
-                  className="flex flex-col gap-2 border-b border-sand-200 py-3 last:border-b-0"
+                  className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <span className="flex min-w-0 flex-col">
-                      <span className="truncate font-semibold">{product.name}</span>
-                      <span className="text-[13px] text-sand-800">
+                      <span className="truncate font-medium">{product.name}</span>
+                      <span className="text-[13px] text-ink-2">
                         {formatMoney(product.price)} · ขายได้ {Math.max(product.available, 0)} ชิ้น
                       </span>
                     </span>
@@ -302,7 +294,7 @@ function NewOrderPage() {
                         )
                       }}
                     />
-                    <span className="font-semibold">
+                    <span className="font-medium">
                       {formatMoney(Number(product.price) * (parseQty(line.qty) ?? 0))}
                     </span>
                   </div>
@@ -313,7 +305,7 @@ function NewOrderPage() {
           )}
 
           <label className="flex flex-col gap-2">
-            <span className="text-[15px] font-semibold">โน้ต (ไม่ใส่ก็ได้)</span>
+            <span className="text-[13px] font-medium text-ink-2">โน้ต (ไม่ใส่ก็ได้)</span>
             <Input
               value={note}
               maxLength={500}
@@ -324,15 +316,15 @@ function NewOrderPage() {
             />
           </label>
 
-          <div className="flex items-center justify-between border-t border-sand-300 pt-4">
-            <span className="text-sand-800">ยอดรวม</span>
-            <span className="text-2xl font-bold">{formatMoney(total)}</span>
+          <div className="flex items-center justify-between border-t border-line pt-4">
+            <span className="text-ink-2">ยอดรวม</span>
+            <span className="text-xl font-semibold">{formatMoney(total)}</span>
           </div>
 
           {submit.isError && shortages.size === 0 && (
             <p
               role="alert"
-              className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg"
+              className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
             >
               {submit.error instanceof ApiError && submit.error.code === 'conflict'
                 ? `เลขออเดอร์นี้จาก ${channelLabel[channel]} บันทึกไว้แล้ว`

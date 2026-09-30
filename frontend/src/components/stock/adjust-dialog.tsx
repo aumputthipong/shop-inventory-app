@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { cn } from 'cn'
 import { AlertCircleIcon, MinusIcon, PlusIcon, SlidersHorizontalIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { QtyStepper } from '@/components/qty-stepper'
+import { Segmented } from '@/components/segmented'
 import { StockPreview } from '@/components/stock/stock-preview'
 import { Button } from '@/components/ui/button'
 import {
@@ -105,39 +105,41 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
         description={`${product.name} · ${product.sku}`}
       />
 
-      <div
-        role="group"
-        aria-label="เพิ่มหรือลด"
-        className="grid grid-cols-2 gap-1 rounded-full bg-sand-200 p-1"
-      >
-        {(['add', 'remove'] as const).map((d) => (
-          <button
-            key={d}
-            type="button"
-            aria-pressed={direction === d}
-            onClick={() => {
-              setDirection(d)
-            }}
-            className={cn(
-              'flex h-10 items-center justify-center gap-1.5 rounded-full font-semibold text-sand-800',
-              direction === d && 'bg-white text-ink shadow-[0_1px_3px_rgb(64_44_24/0.14)]',
-            )}
-          >
-            {d === 'add' ? <PlusIcon className="size-4" /> : <MinusIcon className="size-4" />}
-            {d === 'add' ? 'เพิ่ม' : 'ลด'}
-          </button>
-        ))}
-      </div>
+      <Segmented
+        label="เพิ่มหรือลด"
+        value={direction}
+        onChange={setDirection}
+        options={[
+          {
+            value: 'add',
+            label: (
+              <>
+                <PlusIcon className="size-4" aria-hidden="true" />
+                เพิ่ม
+              </>
+            ),
+          },
+          {
+            value: 'remove',
+            label: (
+              <>
+                <MinusIcon className="size-4" aria-hidden="true" />
+                ลด
+              </>
+            ),
+          },
+        ]}
+      />
 
       <div className="flex flex-col gap-2">
-        <label htmlFor="adjust-qty" className="text-[15px] font-semibold">
+        <label htmlFor="adjust-qty" className="text-[13px] font-medium text-ink-2">
           จำนวน
         </label>
         <QtyStepper id="adjust-qty" value={qty} onChange={setQty} invalid={error !== null} />
       </div>
 
       <label className="flex flex-col gap-2">
-        <span className="text-[15px] font-semibold">เหตุผล</span>
+        <span className="text-[13px] font-medium text-ink-2">เหตุผล</span>
         <NativeSelect
           value={reason}
           onChange={(e) => {
@@ -154,7 +156,7 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
       </label>
 
       <label className="flex flex-col gap-2">
-        <span className="text-[15px] font-semibold">
+        <span className="text-[13px] font-medium text-ink-2">
           {reason === 'other' ? 'เกิดอะไรขึ้น' : 'โน้ต (ไม่ใส่ก็ได้)'}
         </span>
         <Input
@@ -172,7 +174,7 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
       {(error ?? serverError) && (
         <p
           role="alert"
-          className="flex gap-2.5 rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-[#9a2a1f]"
+          className="flex gap-2.5 rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-[#9a2a1f]"
         >
           <AlertCircleIcon className="mt-0.5 size-[18px] shrink-0" aria-hidden="true" />
           {error ?? serverError}
@@ -180,7 +182,7 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
       )}
 
       <DialogFooter>
-        <span className="mr-auto text-sm text-sand-800">
+        <span className="mr-auto text-sm text-ink-2">
           {error === null && reason === '' && 'เลือกเหตุผลก่อนนะ'}
           {error === null && needNote && 'เล่าสั้นๆ ว่าเกิดอะไรขึ้น'}
         </span>

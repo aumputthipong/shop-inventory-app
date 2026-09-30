@@ -66,36 +66,33 @@ function AuditPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-[30px] leading-[42px] font-bold">บันทึกการใช้งาน</h1>
-        <p className="text-base text-sand-800">
+        <h1 className="text-[22px] leading-[30px] font-semibold">บันทึกการใช้งาน</h1>
+        <p className="text-sm text-ink-2">
           ใครทำอะไรเมื่อไร รวมถึงออเดอร์ที่ระบบปฏิเสธเพราะของไม่พอ
         </p>
       </div>
 
-      <section
-        aria-label="บันทึกการใช้งาน"
-        className="overflow-x-auto rounded-[22px] bg-white p-3 shadow-soft"
-      >
-        <div className="grid h-9 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 px-4 text-[13px] font-medium text-sand-800">
+      <section aria-label="บันทึกการใช้งาน" className="overflow-x-auto panel p-3">
+        <div className="grid h-9 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 px-4 text-[13px] font-medium text-ink-2">
           <span>เวลา</span>
           <span>ผู้ใช้</span>
           <span>การกระทำ</span>
           <span>รายละเอียด</span>
         </div>
-        {isPending && <p className="px-4 py-8 text-sand-800">กำลังโหลด...</p>}
+        {isPending && <p className="px-4 py-8 text-ink-2">กำลังโหลด...</p>}
         {data?.items.length === 0 && <EmptyState title="ยังไม่มีบันทึก" />}
         <ul className="flex flex-col">
           {data?.items.map((log) => (
             <li
               key={log.id}
-              className="grid min-h-14 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 border-b border-sand-200 px-4 py-2.5 last:border-b-0"
+              className="grid min-h-14 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 border-b border-line px-4 py-2.5 last:border-b-0"
             >
-              <span className="text-[13px] text-sand-800">{formatDateTime(log.created_at)}</span>
+              <span className="text-[13px] text-ink-2">{formatDateTime(log.created_at)}</span>
               <span className="truncate">{log.actor_name ?? 'ระบบ'}</span>
               <span>
                 <Chip tone={tone(log.action)}>{auditActionLabel[log.action] ?? log.action}</Chip>
               </span>
-              <span className="truncate text-sand-900">{describe(log)}</span>
+              <span className="truncate text-ink-2">{describe(log)}</span>
             </li>
           ))}
         </ul>

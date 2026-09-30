@@ -165,7 +165,7 @@ function ProductForm({
       </FormField>
 
       {save.isError && serverField.size === 0 && (
-        <p role="alert" className="rounded-2xl bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
+        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
           บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
         </p>
       )}
@@ -195,7 +195,7 @@ function FormField({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-[15px] font-semibold">{label}</span>
+      <span className="text-[13px] font-medium text-ink-2">{label}</span>
       {children}
       {error && <span className="text-sm text-destructive">{error}</span>}
     </label>

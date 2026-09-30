@@ -94,18 +94,16 @@ function OrderPage() {
       <div>
         <Link
           to="/orders"
-          className="mb-2 inline-flex items-center gap-1.5 text-sm font-semibold text-sand-800 hover:text-ink"
+          className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink"
         >
           <ArrowLeftIcon className="size-4" aria-hidden="true" />
           กลับไปหน้าออเดอร์
         </Link>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-[30px] leading-[42px] font-bold">{order.order_no}</h1>
+            <h1 className="code text-[22px] leading-[30px] font-semibold">{order.order_no}</h1>
             <ChannelChip channel={order.channel} />
-            <Chip tone={chip.tone} className="h-7 px-3 text-sm">
-              {chip.label}
-            </Chip>
+            <Chip tone={chip.tone}>{chip.label}</Chip>
           </div>
           <div className="flex gap-2.5">
             {cancellable && (
@@ -139,65 +137,57 @@ function OrderPage() {
           </div>
         </div>
         {order.external_ref && (
-          <p className="text-sand-800">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
+          <p className="text-ink-2">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
         )}
       </div>
 
       {staleError && (
-        <p role="alert" className="rounded-2xl bg-chip-bad px-4 py-3 text-chip-bad-fg">
+        <p role="alert" className="rounded-lg bg-chip-bad px-4 py-3 text-chip-bad-fg">
           {staleError}
         </p>
       )}
 
       <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start">
-        <section
-          aria-label="รายการสินค้า"
-          className="min-w-0 flex-1 rounded-[22px] bg-white p-6 shadow-soft"
-        >
-          <h2 className="mb-3 text-lg font-bold">สินค้า {order.items.length} รายการ</h2>
+        <section aria-label="รายการสินค้า" className="min-w-0 flex-1 panel p-5">
+          <h2 className="mb-3 text-base font-semibold">สินค้า {order.items.length} รายการ</h2>
           <ul className="flex flex-col">
             {order.items.map((item) => (
               <li
                 key={item.product_id}
-                className="grid min-h-16 grid-cols-[44px_minmax(0,1fr)_90px_120px_130px] items-center gap-4 border-b border-sand-200 py-3 last:border-b-0"
+                className="grid min-h-16 grid-cols-[44px_minmax(0,1fr)_90px_120px_130px] items-center gap-4 border-b border-line py-3 last:border-b-0"
               >
                 <ProductAvatar name={item.name} sku={item.sku} />
                 <span className="flex min-w-0 flex-col">
                   <Link
                     to="/stock"
                     search={{ product: item.product_id }}
-                    className="truncate font-semibold hover:text-petrol-600 hover:underline"
+                    className="truncate font-medium hover:text-petrol-600 hover:underline"
                   >
                     {item.name}
                   </Link>
-                  <span className="text-[13px] text-sand-800">{item.sku}</span>
+                  <span className="code text-xs text-ink-3">{item.sku}</span>
                 </span>
                 <span className="text-right">{item.qty} ชิ้น</span>
-                <span className="text-right text-sand-800">{formatMoney(item.unit_price)}</span>
-                <span className="text-right font-semibold">
+                <span className="text-right text-ink-2">{formatMoney(item.unit_price)}</span>
+                <span className="text-right font-medium">
                   {formatMoney(Number(item.unit_price) * item.qty)}
                 </span>
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex items-center justify-between border-t border-sand-300 pt-4">
-            <span className="text-sand-800">ยอดรวม</span>
-            <span className="text-2xl font-bold">{formatMoney(order.total)}</span>
+          <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
+            <span className="text-ink-2">ยอดรวม</span>
+            <span className="text-xl font-semibold">{formatMoney(order.total)}</span>
           </div>
           {order.note && (
-            <p className="mt-4 rounded-2xl bg-sand-50 px-4 py-3 text-sand-900">
-              โน้ต: {order.note}
-            </p>
+            <p className="mt-4 rounded-lg bg-surface-2 px-4 py-3 text-ink-2">โน้ต: {order.note}</p>
           )}
         </section>
 
-        <aside
-          aria-label="สถานะ"
-          className="w-full shrink-0 rounded-[22px] bg-white p-6 shadow-soft lg:w-[400px]"
-        >
-          <h2 className="mb-4 text-lg font-bold">ความคืบหน้า</h2>
+        <aside aria-label="สถานะ" className="w-full shrink-0 panel p-5 lg:w-[400px]">
+          <h2 className="mb-4 text-base font-semibold">ความคืบหน้า</h2>
           <Timeline order={order} />
-          <p className="mt-5 border-t border-sand-300 pt-4 text-sm text-sand-800">
+          <p className="mt-5 border-t border-line pt-4 text-sm text-ink-2">
             สร้างโดย {order.created_by_name ?? '-'}
           </p>
         </aside>
@@ -259,22 +249,22 @@ function Timeline({ order }: { order: Order }) {
                 aria-hidden="true"
                 className={cn(
                   'absolute top-8 left-[15px] h-[calc(100%-32px)] w-0.5',
-                  done ? 'bg-petrol-300' : 'bg-sand-300',
+                  done ? 'bg-petrol-300' : 'bg-line',
                 )}
               />
             )}
             <span
               className={cn(
                 'flex size-8 shrink-0 items-center justify-center rounded-full',
-                done ? 'bg-petrol-600 text-white' : 'border-2 border-sand-400 bg-white',
+                done ? 'bg-petrol-600 text-white' : 'border-2 border-line-strong bg-white',
                 order.status === 'canceled' && last && 'bg-chip-neutral-fg',
               )}
             >
               {done && <CheckIcon className="size-4" strokeWidth={2.6} aria-hidden="true" />}
             </span>
             <span className="flex flex-col pt-1">
-              <span className={cn('font-semibold', !done && 'text-sand-700')}>{step.label}</span>
-              <span className="text-[13px] text-sand-800">
+              <span className={cn('font-semibold', !done && 'text-ink-3')}>{step.label}</span>
+              <span className="text-[13px] text-ink-2">
                 {step.at ? formatFullDateTime(step.at) : 'ยังไม่ถึงขั้นนี้'}
               </span>
             </span>

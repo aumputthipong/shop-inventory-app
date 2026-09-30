@@ -48,7 +48,7 @@ export function UnitStrip({
       <div
         role="img"
         aria-label="ไม่มีของในคลัง"
-        className={cn('text-[13px] text-sand-700', className)}
+        className={cn('text-[13px] text-ink-3', className)}
       >
         ไม่มีของในคลัง
       </div>
@@ -63,7 +63,7 @@ export function UnitStrip({
           .map((s) => (
             <span
               key={s.kind}
-              className={cn('block rounded-full', size === 'lg' ? 'h-4' : 'h-3', kindClass[s.kind])}
+              className={cn('block rounded-xs', size === 'lg' ? 'h-3' : 'h-2.5', kindClass[s.kind])}
               style={{ width: `${(s.count / total) * 100}%` }}
             />
           ))}
@@ -75,11 +75,7 @@ export function UnitStrip({
     <div
       role="img"
       aria-label={label}
-      className={cn(
-        'flex flex-wrap items-center',
-        size === 'lg' ? 'gap-[5px]' : 'gap-0.5',
-        className,
-      )}
+      className={cn('flex flex-wrap items-center', size === 'lg' ? 'gap-1' : 'gap-0.5', className)}
     >
       {segments.flatMap((s) =>
         Array.from({ length: s.count }, (_, i) => (
@@ -87,7 +83,7 @@ export function UnitStrip({
             key={`${s.kind}-${i}`}
             className={cn(
               'block shrink-0',
-              size === 'lg' ? 'h-7 w-[18px] rounded-md' : 'h-[18px] w-1.5 rounded-[3px]',
+              size === 'lg' ? 'h-5 w-3.5 rounded-xs' : 'h-4 w-1.5 rounded-[1px]',
               kindClass[s.kind],
             )}
           />
@@ -99,7 +95,7 @@ export function UnitStrip({
 
 export function UnitLegend() {
   return (
-    <div className="flex gap-4 text-[13px] text-sand-800">
+    <div className="flex gap-4 text-[13px] text-ink-2">
       <span className="flex items-center gap-1.5">
         <span aria-hidden="true" className="h-4 w-3 rounded bg-petrol-600" />
         ขายได้

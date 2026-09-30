@@ -45,8 +45,8 @@ function StockPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-end justify-between gap-6">
         <div>
-          <h1 className="text-[30px] leading-[42px] font-bold">สต็อกสินค้า</h1>
-          <p className="text-base text-sand-800">
+          <h1 className="text-[22px] leading-[30px] font-semibold">สต็อกสินค้า</h1>
+          <p className="text-sm text-ink-2">
             {products.length === 0
               ? 'เริ่มจากเพิ่มสินค้าชิ้นแรกของร้าน'
               : restock === 0
