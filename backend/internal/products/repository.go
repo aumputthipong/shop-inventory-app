@@ -9,6 +9,7 @@ import (
 	"github.com/aumputthipong/shop-inventory-app/backend/db/sqlc"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/audit"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
 )
 
 const skuConstraint = "products_sku_key"
@@ -86,11 +87,25 @@ func (r *PgRepository) Create(ctx context.Context, in Input) (int64, error) {
 		if err := q.CreateStockBalance(ctx, id); err != nil {
 			return fmt.Errorf("insert stock balance: %w", err)
 		}
+		if in.InitialQty > 0 {
+			if _, err := stock.Lock(ctx, q, []int64{id}); err != nil {
+				return err
+			}
+			reason := stock.ReasonOpeningBalance
+			_, err := stock.Apply(ctx, q, stock.Change{
+				ProductID: id, Type: stock.TypeStockIn, QtyChange: in.InitialQty, Reason: &reason,
+			})
+			if err != nil {
+				return err
+			}
+		}
 		return audit.Write(ctx, q, audit.Entry{
 			Action:     audit.ActionProductCreate,
 			EntityType: audit.EntityProduct,
 			EntityID:   &id,
-			Detail:     map[string]any{"sku": in.SKU, "name": in.Name, "price": in.Price},
+			Detail: map[string]any{
+				"sku": in.SKU, "name": in.Name, "price": in.Price, "initial_qty": in.InitialQty,
+			},
 		})
 	})
 	return id, err

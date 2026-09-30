@@ -32,6 +32,9 @@ func (t MovementType) Valid() bool {
 
 const RefOrder = "order"
 
+// ReasonOpeningBalance marks the stock a product had when it was first entered.
+const ReasonOpeningBalance = "opening_balance"
+
 var (
 	ErrInsufficientStock = errors.New("not enough available stock")
 	ErrProductNotFound   = errors.New("product not found")

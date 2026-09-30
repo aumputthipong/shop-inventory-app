@@ -68,6 +68,8 @@ func TestCreateValidation(t *testing.T) {
 		{"blank name", func(in *products.Input) { in.Name = "   " }, products.ErrInvalidName},
 		{"three decimals", func(in *products.Input) { in.Price = "1.005" }, products.ErrInvalidPrice},
 		{"negative price", func(in *products.Input) { in.Price = "-1" }, products.ErrInvalidPrice},
+		{"negative opening stock", func(in *products.Input) { in.InitialQty = -1 }, products.ErrInvalidQty},
+		{"opening stock above the cap", func(in *products.Input) { in.InitialQty = 100_001 }, products.ErrInvalidQty},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

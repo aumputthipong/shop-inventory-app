@@ -65,7 +65,13 @@ export const auditActionLabel: Record<string, string> = {
   'user.password_change': 'เปลี่ยนรหัสผ่าน',
 }
 
+const otherReasonLabel: Record<string, string> = {
+  opening_balance: 'ยอดตั้งต้น',
+  reversal: 'แก้รายการที่กรอกผิด',
+}
+
 export function movementReason(reason: string | null): string | null {
   if (reason === null) return null
-  return (adjustReasonLabel as Record<string, string | undefined>)[reason] ?? reason
+  const labels: Record<string, string | undefined> = { ...adjustReasonLabel, ...otherReasonLabel }
+  return labels[reason] ?? reason
 }

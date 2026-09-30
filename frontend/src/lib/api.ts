@@ -63,6 +63,7 @@ export interface ProductInput {
   price: string
   low_stock_threshold: number
   is_active?: boolean
+  initial_qty?: number
 }
 
 export type MovementType = 'STOCK_IN' | 'ADJUST' | 'RESERVE' | 'RELEASE' | 'SHIP' | 'RETURN'
