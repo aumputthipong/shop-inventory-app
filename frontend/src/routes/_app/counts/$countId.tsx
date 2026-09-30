@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/empty-state'
 import { Button } from '@/components/ui/button'
 import { ApiError } from '@/lib/api'
 import { varianceTotals } from '@/lib/counts'
-import { formatFullDateTime } from '@/lib/format'
+import { formatFullDateTime, formatSigned } from '@/lib/format'
 import { countStatusChip } from '@/lib/labels'
 import { countQueryOptions } from '@/lib/queries'
 import { useCurrentUser } from '@/lib/session'
@@ -84,8 +84,8 @@ function CountPage() {
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="นับทั้งหมด" value={`${count.lines.length} รายการ`} />
         <Stat label="ไม่ตรงกับระบบ" value={`${totals.changed} รายการ`} />
-        <Stat label="นับได้เกิน" value={`+${totals.added} ชิ้น`} />
-        <Stat label="นับได้ขาด" value={`−${totals.removed} ชิ้น`} />
+        <Stat label="นับได้เกิน" value={`${formatSigned(totals.added)} ชิ้น`} />
+        <Stat label="นับได้ขาด" value={`${formatSigned(-totals.removed)} ชิ้น`} />
       </dl>
 
       {count.status === 'submitted' &&

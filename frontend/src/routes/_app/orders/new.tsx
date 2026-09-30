@@ -234,8 +234,9 @@ function NewOrderPage() {
 
           {channel === 'store' && (
             <div className="flex flex-col gap-2">
+              <span className="text-[13px] font-medium text-ink-2">ลูกค้ารับของเมื่อไร</span>
               <Segmented
-                label="ลูกค้ารับของ"
+                label="ลูกค้ารับของเมื่อไร"
                 value={handover}
                 onChange={setHandover}
                 options={[
