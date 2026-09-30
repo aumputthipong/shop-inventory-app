@@ -231,11 +231,16 @@ function Timeline({ order }: { order: Order }) {
           ...(order.packed_at ? [{ label: 'แพ็กแล้ว', at: order.packed_at }] : []),
           { label: 'ยกเลิก คืนของกลับเข้าสต็อก', at: order.canceled_at },
         ]
-      : [
-          { label: 'จองของแล้ว', at: order.created_at },
-          { label: 'แพ็กแล้ว', at: order.packed_at },
-          { label: 'ส่งแล้ว', at: order.shipped_at },
-        ]
+      : order.status === 'shipped' && order.packed_at === null
+        ? [
+            { label: 'จองของแล้ว', at: order.created_at },
+            { label: 'ลูกค้ารับของที่ร้านแล้ว', at: order.shipped_at },
+          ]
+        : [
+            { label: 'จองของแล้ว', at: order.created_at },
+            { label: 'แพ็กแล้ว', at: order.packed_at },
+            { label: 'ส่งแล้ว', at: order.shipped_at },
+          ]
 
   return (
     <ol className="flex flex-col">

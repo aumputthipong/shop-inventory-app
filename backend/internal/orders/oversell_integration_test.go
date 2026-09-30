@@ -207,6 +207,29 @@ func TestShipAndCancelKeepLedgerAndBalanceInStep(t *testing.T) {
 	e.assertLedgerExplainsBalance(t, productID)
 }
 
+func TestHandedOverStoreSaleShipsAtOnce(t *testing.T) {
+	e := newEnv(t)
+	ctx := t.Context()
+	productID := e.product(t, 5)
+
+	o, err := e.orders.Create(ctx, orders.NewOrder{
+		HandedOver: true, Items: []orders.ItemRequest{{ProductID: productID, Qty: 2}},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, orders.StatusShipped, o.Status)
+	assert.NotNil(t, o.ShippedAt)
+
+	_, err = e.orders.Create(ctx, orders.NewOrder{
+		HandedOver: true, Items: []orders.ItemRequest{{ProductID: productID, Qty: 4}},
+	})
+	require.ErrorIs(t, err, stock.ErrInsufficientStock, "a counter sale cannot oversell either")
+
+	b := e.balance(t, productID)
+	assert.Equal(t, int32(3), b.OnHand)
+	assert.Equal(t, int32(0), b.Reserved)
+	e.assertLedgerExplainsBalance(t, productID)
+}
+
 func TestAdjustCannotTakeReservedUnits(t *testing.T) {
 	e := newEnv(t)
 	ctx := t.Context()

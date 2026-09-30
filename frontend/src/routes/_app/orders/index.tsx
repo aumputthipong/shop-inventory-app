@@ -65,7 +65,7 @@ function OrdersPage() {
             </p>
             <p>
               <span className="font-medium text-ink">ส่งแล้ว</span> ของออกจากร้าน
-              ระบบตัดออกจากคลังให้
+              ระบบตัดออกจากคลังให้ ขายหน้าร้านที่ลูกค้ารับของไปเลยจะเป็นสถานะนี้ทันที
             </p>
             <p>
               <span className="font-medium text-ink">ยกเลิก</span> คืนของที่จองไว้กลับมาขายได้ทันที

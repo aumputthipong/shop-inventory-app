@@ -143,6 +143,7 @@ export interface NewOrder {
   external_ref?: string
   note?: string
   items: { product_id: number; qty: number }[]
+  handed_over?: boolean
 }
 
 export interface Shortage {

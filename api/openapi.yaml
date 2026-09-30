@@ -475,6 +475,10 @@ paths:
                 channel: { $ref: "#/components/schemas/Channel" }
                 external_ref: { type: string, maxLength: 100, description: Order id on the channel; unique per channel. }
                 note: { type: string, maxLength: 500 }
+                handed_over:
+                  type: boolean
+                  default: false
+                  description: Store sales only. The customer leaves with the goods, so the order is reserved and shipped in the same transaction and comes back as shipped.
                 items:
                   type: array
                   minItems: 1

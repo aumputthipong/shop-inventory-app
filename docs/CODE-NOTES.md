@@ -46,6 +46,11 @@ in the same PR as the behaviour it describes.
   can show where stock came from. Unlike order and count movements, a receipt
   line can still be undone on its own: a typo on one line should not force
   undoing the whole delivery.
+- A counter sale where the customer leaves with the goods (`handed_over`)
+  still goes through RESERVE then SHIP inside one transaction, rather than a
+  bare stock-out. It takes the same lock and oversell check as every other
+  order, and the ledger reads the same way for every channel. Only the store
+  channel may do this; online orders always wait to be packed.
 - Money is `numeric(12,2)` in postgres and a decimal string everywhere else
   (sqlc override to `string`, JSON `"600.00"`). Totals are summed in SQL, so no
   float ever touches a price.

@@ -45,6 +45,7 @@ type createRequest struct {
 	ExternalRef string        `json:"external_ref" binding:"max=100"`
 	Note        string        `json:"note" binding:"max=500"`
 	Items       []itemRequest `json:"items" binding:"required,min=1,max=50,dive"`
+	HandedOver  bool          `json:"handed_over"`
 }
 
 type itemResponse struct {
@@ -166,6 +167,7 @@ func (h *Handler) create(c *gin.Context) {
 	}
 	o, err := h.svc.Create(c.Request.Context(), NewOrder{
 		Channel: Channel(req.Channel), ExternalRef: req.ExternalRef, Note: req.Note, Items: items,
+		HandedOver: req.HandedOver,
 	})
 	respond(c, http.StatusCreated, o, err)
 }

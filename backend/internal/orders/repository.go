@@ -81,11 +81,27 @@ func (r *PgRepository) Create(ctx context.Context, in NewOrder, plan Reservation
 			return fmt.Errorf("refresh order total: %w", err)
 		}
 
-		return audit.Write(ctx, q, audit.Entry{
+		err = audit.Write(ctx, q, audit.Entry{
 			Action:     audit.ActionOrderCreate,
 			EntityType: audit.EntityOrder,
 			EntityID:   &orderID,
 			Detail:     map[string]any{"order_no": created.OrderNo, "channel": in.Channel, "items": items},
+		})
+		if err != nil || !in.HandedOver {
+			return err
+		}
+
+		if err := applyEffect(ctx, q, orderID, EffectShip); err != nil {
+			return err
+		}
+		if err := q.SetOrderStatus(ctx, sqlc.SetOrderStatusParams{ID: orderID, Status: string(StatusShipped)}); err != nil {
+			return fmt.Errorf("set order status: %w", err)
+		}
+		return audit.Write(ctx, q, audit.Entry{
+			Action:     audit.ActionOrderShip,
+			EntityType: audit.EntityOrder,
+			EntityID:   &orderID,
+			Detail:     map[string]any{"order_no": created.OrderNo, "from": StatusReserved, "to": StatusShipped, "handed_over": true},
 		})
 	})
 	return orderID, err

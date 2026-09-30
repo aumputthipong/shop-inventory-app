@@ -69,6 +69,8 @@ type NewOrder struct {
 	ExternalRef string
 	Note        string
 	Items       []ItemRequest
+	// HandedOver records a store sale where the customer leaves with the goods, so it ships at once.
+	HandedOver bool
 }
 
 type Line struct {
@@ -302,6 +304,9 @@ func validate(in NewOrder) (NewOrder, error) {
 	in.Note = strings.TrimSpace(in.Note)
 	if utf8.RuneCountInString(in.ExternalRef) > 100 || utf8.RuneCountInString(in.Note) > 500 {
 		return NewOrder{}, fmt.Errorf("%w: text too long", ErrInvalidOrder)
+	}
+	if in.HandedOver && in.Channel != ChannelStore {
+		return NewOrder{}, fmt.Errorf("%w: only a store sale can be handed over at once", ErrInvalidOrder)
 	}
 	if len(in.Items) == 0 || len(in.Items) > MaxItems {
 		return NewOrder{}, fmt.Errorf("%w: an order needs 1 to %d items", ErrInvalidOrder, MaxItems)

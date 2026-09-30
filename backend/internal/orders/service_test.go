@@ -178,6 +178,15 @@ func TestCreateValidatesBeforeTouchingStock(t *testing.T) {
 	}
 }
 
+func TestOnlyStoreSalesAreHandedOverAtOnce(t *testing.T) {
+	repo := &fakeRepo{}
+	_, err := orders.NewService(repo).Create(t.Context(), orders.NewOrder{
+		Channel: orders.ChannelShopee, HandedOver: true, Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}},
+	})
+	require.ErrorIs(t, err, orders.ErrInvalidOrder)
+	assert.Empty(t, repo.created.Items)
+}
+
 func TestCreateDefaultsToStoreChannel(t *testing.T) {
 	repo := &fakeRepo{}
 	o, err := orders.NewService(repo).Create(t.Context(), orders.NewOrder{
