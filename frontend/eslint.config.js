@@ -26,15 +26,11 @@ export default defineConfig([
       },
     },
     rules: {
-      // Numbers render predictably in template strings; the strict default
-      // only forces noise like String(status).
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
     },
   },
   {
-    // Route files export a Route object alongside a local component. The
-    // router plugin's autoCodeSplitting moves the component into its own
-    // module, so fast refresh still works; the rule cannot see that.
+    // autoCodeSplitting moves route components out, so fast refresh still works.
     files: ['src/routes/**/*.tsx'],
     rules: { 'react-refresh/only-export-components': 'off' },
   },

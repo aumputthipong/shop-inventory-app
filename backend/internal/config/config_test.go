@@ -124,7 +124,6 @@ func TestLoad(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// t.Setenv also clears the variable again once the subtest ends.
 			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE", "STATIC_DIR", "COOKIE_SECURE",
 				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN"} {
 				t.Setenv(key, "")

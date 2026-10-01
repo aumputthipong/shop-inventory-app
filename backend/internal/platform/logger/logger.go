@@ -1,4 +1,3 @@
-// Package logger builds the structured logger used across the application.
 package logger
 
 import (
@@ -6,8 +5,6 @@ import (
 	"os"
 )
 
-// New returns a JSON slog logger writing to stdout. The development
-// environment logs at debug level; every other environment logs at info.
 func New(appEnv string) *slog.Logger {
 	level := slog.LevelInfo
 	if appEnv == "development" {

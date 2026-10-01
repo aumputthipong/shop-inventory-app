@@ -1,16 +1,11 @@
-# Backend developer commands. Run from backend/.
-#
-# Variables from ../.env are loaded when that file exists, so DATABASE_URL and
-# friends do not need to be exported by hand. Copy ../.env.example to start.
+# Loads ../.env when present; copy ../.env.example to start.
 -include ../.env
 export DATABASE_URL HTTP_PORT APP_ENV GIN_MODE POSTGRES_PORT
 export SEED_OWNER_EMAIL SEED_OWNER_PASSWORD SEED_STAFF_EMAIL SEED_STAFF_PASSWORD SEED_SAMPLE_DATA TEST_DATABASE_URL POSTGRES_USER
 export STATIC_DIR COOKIE_SECURE LINE_MODE LINE_LOGIN_CHANNEL_ID LINE_LIFF_ID LINE_CHANNEL_ACCESS_TOKEN
 
-# golangci-lint 2.13.2 is built with go1.26 and panics ("file requires newer
-# Go version go1.27") when it type-checks a go1.27 standard library. Forcing
-# the toolchain keeps run, test and lint on the version the linter supports.
-# Override on the command line, e.g. `make test GOTOOLCHAIN=local`.
+# Pinned for golangci-lint, see "Version pins" in CLAUDE.md.
+# Override with e.g. `make test GOTOOLCHAIN=local`.
 export GOTOOLCHAIN := go1.26.8
 
 COMPOSE        := docker compose -f ../docker-compose.yml
