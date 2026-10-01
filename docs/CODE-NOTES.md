@@ -67,6 +67,31 @@ in the same PR as the behaviour it describes.
 - Services read the user from `actor.From(ctx)`. The middleware in `httpx` sets
   it, which keeps gin out of services.
 
+## Backend: LINE orders
+
+- A LINE order is an ordinary order on the `line` channel. It goes through
+  `orders.Service.Create`, so it takes the same row locks and all-or-nothing
+  check as a counter sale; the integration test races the two for the last
+  unit.
+- The customer is identified by the LIFF ID token, which the api checks with
+  LINE's verify endpoint against our LINE Login channel id. The browser never
+  sends a user id the api trusts on its own. The Login channel and the
+  Messaging API channel must sit under the same LINE provider, otherwise the
+  user id from the token is not one the Official Account can message.
+- Status messages go through `orders.Notifier`, called after the transaction
+  commits. A failed push is logged and dropped: the stock change already
+  happened and must not be rolled back because LINE was slow. There is no
+  retry queue; the shop can still message the customer in the chat.
+- `LINE_MODE=dev` swaps in `DevVerifier`, which accepts `dev:<name>`, and a
+  messenger that only logs. It exists so the order form can be demonstrated
+  without a LINE account, and config refuses it in production because anyone
+  could sign in as anyone.
+- The public catalog shows a count only when stock is low ("2 left"), so the
+  shop's exact stock levels are not published to every customer.
+- The order endpoint is public apart from the ID token. Anyone with a LINE
+  account could reserve stock without paying; the shop cancels such orders by
+  hand. Add per-user limits if that becomes a problem.
+
 ## Backend: tests
 
 - Integration tests use `TEST_DATABASE_URL`, not `DATABASE_URL`, because they

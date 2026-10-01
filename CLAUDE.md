@@ -23,8 +23,8 @@ Built so far: sign-in with owner and staff roles, products with opening stock,
 stock in (one product or a whole delivery) and adjust, undoing a mistyped
 entry, stock counts, a today page, the movement ledger, orders with
 all-or-nothing reservation and the pack/ship/cancel flow, and the audit log.
-Channel integrations (Shopee, LINE webhooks) are not built yet; channel orders
-are entered by hand.
+LINE customers can order themselves through a LIFF form (`/line`); Shopee
+orders are still entered by hand.
 
 ## Stack
 
@@ -51,7 +51,7 @@ api/openapi.yaml           Contract, written before handlers. Keep it in step wi
 backend/
   cmd/api/main.go          Wiring only. Does not import gin.
   internal/
-    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE)
+    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE, LINE_*)
     platform/database/     pgxpool setup + startup ping
     platform/logger/       slog JSON handler
     http/                  package httpx: router, middleware, JSON error helpers
@@ -60,6 +60,7 @@ backend/
     products/, stock/      Catalog, balances, stock in/adjust, the movement ledger
     orders/                All-or-nothing reservation and the pack/ship/cancel flow
     counts/                Stock counts: staff submit, owner approves into ADJUST movements
+    line/                  LINE customer ordering (LIFF form, ID token check, status messages)
     audit/                 Who did what, written in the same transaction as the change
     platform/actor/        The signed-in user on context.Context
   cmd/seed/                Dev accounts and sample stock (make seed)
