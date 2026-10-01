@@ -136,6 +136,45 @@ export interface Order {
   shipped_at: string | null
   canceled_at: string | null
   items: OrderItem[]
+  customer: OrderCustomer | null
+}
+
+export interface OrderCustomer {
+  name: string
+  phone: string
+  address: string
+  from_line: boolean
+}
+
+export type LineMode = 'off' | 'dev' | 'live'
+
+export interface LineSettings {
+  mode: LineMode
+  liff_id: string
+}
+
+export interface LineCatalogItem {
+  id: number
+  name: string
+  price: string
+  stock_status: StockStatus
+  available: number | null
+}
+
+export interface LineOrderInput {
+  id_token: string
+  name: string
+  phone: string
+  address: string
+  note?: string
+  items: { product_id: number; qty: number }[]
+}
+
+export interface LineReceipt {
+  order_no: string
+  status: OrderStatus
+  total: string
+  items: { name: string; qty: number; unit_price: string }[]
 }
 
 export interface NewOrder {
@@ -392,6 +431,11 @@ export const api = {
   createCount: (input: NewCount) => send<StockCount>('POST', '/api/counts', input),
   decideCount: (id: number, decision: 'approve' | 'reject') =>
     send<StockCount>('POST', `/api/counts/${id}/${decision}`),
+
+  lineSettings: (signal?: AbortSignal) => apiFetch<LineSettings>('/api/line/settings', { signal }),
+  lineCatalog: (signal?: AbortSignal) =>
+    apiFetch<{ items: LineCatalogItem[] }>('/api/line/catalog', { signal }).then((r) => r.items),
+  placeLineOrder: (input: LineOrderInput) => send<LineReceipt>('POST', '/api/line/orders', input),
 
   listAuditLogs: (query: { limit?: number; offset?: number }, signal?: AbortSignal) =>
     apiFetch<Page<AuditLog>>(withQuery('/api/audit-logs', { ...query }), { signal }),

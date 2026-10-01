@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as LineRouteImport } from './routes/line'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
@@ -27,6 +28,11 @@ import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LineRoute = LineRouteImport.update({
+  id: '/line',
+  path: '/line',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -102,6 +108,7 @@ const AppOrdersNewRoute = AppOrdersNewRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/line': typeof LineRoute
   '/login': typeof LoginRoute
   '/account': typeof AppAccountRoute
   '/audit': typeof AppAuditRoute
@@ -117,6 +124,7 @@ export interface FileRoutesByFullPath {
   '/orders/': typeof AppOrdersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/line': typeof LineRoute
   '/login': typeof LoginRoute
   '/account': typeof AppAccountRoute
   '/audit': typeof AppAuditRoute
@@ -135,6 +143,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/line': typeof LineRoute
   '/login': typeof LoginRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/audit': typeof AppAuditRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/line'
     | '/login'
     | '/account'
     | '/audit'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/line'
     | '/login'
     | '/account'
     | '/audit'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_app'
+    | '/line'
     | '/login'
     | '/_app/account'
     | '/_app/audit'
@@ -204,6 +216,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  LineRoute: typeof LineRoute
   LoginRoute: typeof LoginRoute
 }
 
@@ -214,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/line': {
+      id: '/line'
+      path: '/line'
+      fullPath: '/line'
+      preLoaderRoute: typeof LineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -353,6 +373,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  LineRoute: LineRoute,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport

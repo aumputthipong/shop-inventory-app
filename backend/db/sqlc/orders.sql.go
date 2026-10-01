@@ -31,16 +31,25 @@ func (q *Queries) CountOrders(ctx context.Context, arg CountOrdersParams) (int64
 }
 
 const createOrder = `-- name: CreateOrder :one
-INSERT INTO orders (channel, external_ref, status, note, created_by)
-VALUES ($1, $2, 'reserved', $3, $4)
+INSERT INTO orders (
+    channel, external_ref, status, note, created_by,
+    customer_name, customer_phone, shipping_address, line_user_id
+) VALUES (
+    $1, $2, 'reserved', $3, $4,
+    $5, $6, $7, $8
+)
 RETURNING id, order_no
 `
 
 type CreateOrderParams struct {
-	Channel     string  `json:"channel"`
-	ExternalRef *string `json:"external_ref"`
-	Note        *string `json:"note"`
-	CreatedBy   *int64  `json:"created_by"`
+	Channel         string  `json:"channel"`
+	ExternalRef     *string `json:"external_ref"`
+	Note            *string `json:"note"`
+	CreatedBy       *int64  `json:"created_by"`
+	CustomerName    *string `json:"customer_name"`
+	CustomerPhone   *string `json:"customer_phone"`
+	ShippingAddress *string `json:"shipping_address"`
+	LineUserID      *string `json:"line_user_id"`
 }
 
 type CreateOrderRow struct {
@@ -54,6 +63,10 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Creat
 		arg.ExternalRef,
 		arg.Note,
 		arg.CreatedBy,
+		arg.CustomerName,
+		arg.CustomerPhone,
+		arg.ShippingAddress,
+		arg.LineUserID,
 	)
 	var i CreateOrderRow
 	err := row.Scan(&i.ID, &i.OrderNo)
@@ -63,26 +76,31 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Creat
 const getOrder = `-- name: GetOrder :one
 SELECT o.id, o.order_no, o.channel, o.external_ref, o.status, o.total, o.note,
        u.name AS created_by_name, o.created_at, o.updated_at,
-       o.packed_at, o.shipped_at, o.canceled_at
+       o.packed_at, o.shipped_at, o.canceled_at,
+       o.customer_name, o.customer_phone, o.shipping_address, o.line_user_id
 FROM orders o
 LEFT JOIN users u ON u.id = o.created_by
 WHERE o.id = $1
 `
 
 type GetOrderRow struct {
-	ID            int64      `json:"id"`
-	OrderNo       string     `json:"order_no"`
-	Channel       string     `json:"channel"`
-	ExternalRef   *string    `json:"external_ref"`
-	Status        string     `json:"status"`
-	Total         string     `json:"total"`
-	Note          *string    `json:"note"`
-	CreatedByName *string    `json:"created_by_name"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
-	PackedAt      *time.Time `json:"packed_at"`
-	ShippedAt     *time.Time `json:"shipped_at"`
-	CanceledAt    *time.Time `json:"canceled_at"`
+	ID              int64      `json:"id"`
+	OrderNo         string     `json:"order_no"`
+	Channel         string     `json:"channel"`
+	ExternalRef     *string    `json:"external_ref"`
+	Status          string     `json:"status"`
+	Total           string     `json:"total"`
+	Note            *string    `json:"note"`
+	CreatedByName   *string    `json:"created_by_name"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+	PackedAt        *time.Time `json:"packed_at"`
+	ShippedAt       *time.Time `json:"shipped_at"`
+	CanceledAt      *time.Time `json:"canceled_at"`
+	CustomerName    *string    `json:"customer_name"`
+	CustomerPhone   *string    `json:"customer_phone"`
+	ShippingAddress *string    `json:"shipping_address"`
+	LineUserID      *string    `json:"line_user_id"`
 }
 
 func (q *Queries) GetOrder(ctx context.Context, id int64) (GetOrderRow, error) {
@@ -102,6 +120,10 @@ func (q *Queries) GetOrder(ctx context.Context, id int64) (GetOrderRow, error) {
 		&i.PackedAt,
 		&i.ShippedAt,
 		&i.CanceledAt,
+		&i.CustomerName,
+		&i.CustomerPhone,
+		&i.ShippingAddress,
+		&i.LineUserID,
 	)
 	return i, err
 }

@@ -1,6 +1,11 @@
 -- name: CreateOrder :one
-INSERT INTO orders (channel, external_ref, status, note, created_by)
-VALUES ($1, $2, 'reserved', $3, $4)
+INSERT INTO orders (
+    channel, external_ref, status, note, created_by,
+    customer_name, customer_phone, shipping_address, line_user_id
+) VALUES (
+    sqlc.arg(channel), sqlc.narg(external_ref), 'reserved', sqlc.narg(note), sqlc.narg(created_by),
+    sqlc.narg(customer_name), sqlc.narg(customer_phone), sqlc.narg(shipping_address), sqlc.narg(line_user_id)
+)
 RETURNING id, order_no;
 
 -- name: InsertOrderItem :exec
@@ -30,7 +35,8 @@ WHERE id = sqlc.arg(id);
 -- name: GetOrder :one
 SELECT o.id, o.order_no, o.channel, o.external_ref, o.status, o.total, o.note,
        u.name AS created_by_name, o.created_at, o.updated_at,
-       o.packed_at, o.shipped_at, o.canceled_at
+       o.packed_at, o.shipped_at, o.canceled_at,
+       o.customer_name, o.customer_phone, o.shipping_address, o.line_user_id
 FROM orders o
 LEFT JOIN users u ON u.id = o.created_by
 WHERE o.id = $1;

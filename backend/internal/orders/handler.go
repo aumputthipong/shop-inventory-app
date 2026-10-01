@@ -57,20 +57,28 @@ type itemResponse struct {
 }
 
 type orderResponse struct {
-	ID            int64          `json:"id"`
-	OrderNo       string         `json:"order_no"`
-	Channel       string         `json:"channel"`
-	ExternalRef   *string        `json:"external_ref"`
-	Status        string         `json:"status"`
-	Total         string         `json:"total"`
-	Note          *string        `json:"note"`
-	CreatedByName *string        `json:"created_by_name"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     time.Time      `json:"updated_at"`
-	PackedAt      *time.Time     `json:"packed_at"`
-	ShippedAt     *time.Time     `json:"shipped_at"`
-	CanceledAt    *time.Time     `json:"canceled_at"`
-	Items         []itemResponse `json:"items"`
+	ID            int64             `json:"id"`
+	OrderNo       string            `json:"order_no"`
+	Channel       string            `json:"channel"`
+	ExternalRef   *string           `json:"external_ref"`
+	Status        string            `json:"status"`
+	Total         string            `json:"total"`
+	Note          *string           `json:"note"`
+	CreatedByName *string           `json:"created_by_name"`
+	CreatedAt     time.Time         `json:"created_at"`
+	UpdatedAt     time.Time         `json:"updated_at"`
+	PackedAt      *time.Time        `json:"packed_at"`
+	ShippedAt     *time.Time        `json:"shipped_at"`
+	CanceledAt    *time.Time        `json:"canceled_at"`
+	Items         []itemResponse    `json:"items"`
+	Customer      *customerResponse `json:"customer"`
+}
+
+type customerResponse struct {
+	Name     string `json:"name"`
+	Phone    string `json:"phone"`
+	Address  string `json:"address"`
+	FromLine bool   `json:"from_line"`
 }
 
 type summaryResponse struct {
@@ -117,8 +125,15 @@ func toOrder(o Order) orderResponse {
 		Status: string(o.Status), Total: o.Total, Note: o.Note, CreatedByName: o.CreatedByName,
 		CreatedAt: o.CreatedAt, UpdatedAt: o.UpdatedAt,
 		PackedAt: o.PackedAt, ShippedAt: o.ShippedAt, CanceledAt: o.CanceledAt,
-		Items: items,
+		Items: items, Customer: toCustomer(o.Customer),
 	}
+}
+
+func toCustomer(c *Customer) *customerResponse {
+	if c == nil {
+		return nil
+	}
+	return &customerResponse{Name: c.Name, Phone: c.Phone, Address: c.Address, FromLine: c.LineUserID != ""}
 }
 
 func (h *Handler) list(c *gin.Context) {
