@@ -7,7 +7,6 @@ import { HealthStatus } from '@/components/health-status'
 import { ApiError, api } from '@/lib/api'
 
 function renderWithClient() {
-  // A fresh client per test: no shared cache, and no retries to wait out.
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false } },
   })

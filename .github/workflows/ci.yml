@@ -20,8 +20,7 @@ jobs:
       run:
         working-directory: backend
     env:
-      # golangci-lint v2.13.2 is built with go1.26 and cannot type-check a
-      # go1.27 standard library. Keep this in step with backend/Makefile.
+      # Keep in step with backend/Makefile, see "Version pins" in CLAUDE.md.
       GOTOOLCHAIN: local
     steps:
       - uses: actions/checkout@v7

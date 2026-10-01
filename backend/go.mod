@@ -2,9 +2,7 @@ module github.com/aumputthipong/shop-inventory-app/backend
 
 go 1.25.0
 
-// Lands a fresh clone on the same toolchain the linter understands. This is a
-// floor, not a ceiling: a newer local Go still wins, which is why the Makefile
-// also sets GOTOOLCHAIN. See the note there.
+// See "Version pins" in CLAUDE.md.
 toolchain go1.26.8
 
 require (

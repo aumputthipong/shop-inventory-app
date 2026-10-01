@@ -1,6 +1,3 @@
-// Typed fetch client for the Go api. Shapes mirror api/openapi.yaml; keep the
-// two in step when either changes.
-
 export type HealthStatus = 'ok' | 'degraded'
 export type DependencyStatus = 'ok' | 'error'
 
@@ -23,8 +20,7 @@ export interface ApiErrorBody {
   }
 }
 
-// Thrown for any response outside the caller's accepted statuses. code is the
-// api's stable machine-readable code; branch on it, not on message.
+// Branch on code, never on message: only code is a stable contract.
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
@@ -42,16 +38,13 @@ export class ApiError extends Error {
 }
 
 interface RequestOptions extends RequestInit {
-  // Non-2xx statuses whose body is still a valid T. /healthz answers 503 with
-  // a normal health document, which is data rather than a failure.
   acceptStatuses?: readonly number[]
 }
 
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { acceptStatuses = [], headers, ...init } = options
 
-  // HeadersInit may be a Headers instance or an array of pairs, which an object
-  // spread would silently drop, so normalise through Headers.
+  // Not an object spread: that drops a Headers instance or an array of pairs.
   const requestHeaders = new Headers(headers)
   if (!requestHeaders.has('Accept')) {
     requestHeaders.set('Accept', 'application/json')
@@ -70,7 +63,6 @@ async function readErrorBody(response: Response): Promise<Partial<ApiErrorBody> 
   try {
     return (await response.json()) as Partial<ApiErrorBody>
   } catch {
-    // A proxy or crash page, not our envelope.
     return undefined
   }
 }
