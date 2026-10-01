@@ -22,6 +22,7 @@ import (
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/counts"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/health"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/line"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/logger"
@@ -73,6 +74,11 @@ func run() error {
 	authService := auth.NewService(auth.NewRepository(pool))
 	authHandler := auth.NewHandler(authService, cfg.CookieSecure)
 
+	productService := products.NewService(products.NewRepository(pool))
+	verifier, messenger := lineChannels(cfg.Line, log)
+	orderService := orders.NewService(orders.NewRepository(pool)).WithNotifier(line.NewNotifier(messenger, log))
+	lineService := line.NewService(line.Settings{Mode: cfg.Line.Mode, LIFFID: cfg.Line.LIFFID}, verifier, orderService, productService)
+
 	server := &http.Server{
 		Addr: cfg.Addr(),
 		Handler: httpx.NewRouter(httpx.RouterConfig{
@@ -81,13 +87,14 @@ func run() error {
 			Routes: []httpx.Route{
 				health.NewHandler(pool),
 				authHandler,
+				line.NewHandler(lineService),
 			},
 			Protected: []httpx.Route{
 				authHandler.Protected(),
 				users.NewHandler(users.NewService(users.NewRepository(pool))),
-				products.NewHandler(products.NewService(products.NewRepository(pool))),
+				products.NewHandler(productService),
 				stock.NewHandler(stock.NewService(stock.NewRepository(pool))),
-				orders.NewHandler(orders.NewService(orders.NewRepository(pool))),
+				orders.NewHandler(orderService),
 				counts.NewHandler(counts.NewService(counts.NewRepository(pool))),
 				audit.NewHandler(audit.NewService(audit.NewRepository(pool))),
 			},
@@ -126,4 +133,13 @@ func run() error {
 	log.Info("shutdown complete")
 
 	return nil
+}
+
+// lineChannels picks the real LINE APIs in live mode and log-only fakes otherwise.
+func lineChannels(cfg config.LineConfig, log *slog.Logger) (line.Verifier, line.Messenger) {
+	if cfg.Mode == config.LineModeLive {
+		client := line.NewClient(cfg.LoginChannelID, cfg.AccessToken)
+		return client, client
+	}
+	return line.DevVerifier{}, line.LogMessenger{Logger: log}
 }

@@ -184,13 +184,39 @@ function OrderPage() {
           )}
         </section>
 
-        <aside aria-label="สถานะ" className="w-full shrink-0 panel p-5 lg:w-[400px]">
-          <h2 className="mb-4 text-base font-semibold">ความคืบหน้า</h2>
-          <Timeline order={order} />
-          <p className="mt-5 border-t border-line pt-4 text-sm text-ink-2">
-            สร้างโดย {order.created_by_name ?? '-'}
-          </p>
-        </aside>
+        <div className="flex w-full shrink-0 flex-col gap-6 lg:w-[400px]">
+          {order.customer && (
+            <section aria-label="ลูกค้า" className="panel p-5">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <h2 className="text-base font-semibold">ส่งถึง</h2>
+                {order.customer.from_line && <Chip tone="ok">สั่งเองผ่าน LINE</Chip>}
+              </div>
+              <p className="font-medium">{order.customer.name}</p>
+              {order.customer.phone && (
+                <a
+                  href={`tel:${order.customer.phone}`}
+                  className="text-sm text-petrol-600 hover:underline"
+                >
+                  {order.customer.phone}
+                </a>
+              )}
+              {order.customer.address && (
+                <p className="mt-2 text-sm whitespace-pre-line text-ink-2">
+                  {order.customer.address}
+                </p>
+              )}
+            </section>
+          )}
+          <aside aria-label="สถานะ" className="panel p-5">
+            <h2 className="mb-4 text-base font-semibold">ความคืบหน้า</h2>
+            <Timeline order={order} />
+            <p className="mt-5 border-t border-line pt-4 text-sm text-ink-2">
+              {order.customer?.from_line
+                ? 'ลูกค้าสั่งเองผ่าน LINE ระบบส่งข้อความแจ้งทุกครั้งที่สถานะเปลี่ยน'
+                : `สร้างโดย ${order.created_by_name ?? '-'}`}
+            </p>
+          </aside>
+        </div>
       </div>
 
       <Dialog open={confirmCancel} onOpenChange={setConfirmCancel}>

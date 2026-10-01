@@ -19,19 +19,23 @@ type AuditLog struct {
 }
 
 type Order struct {
-	ID          int64      `json:"id"`
-	OrderNo     string     `json:"order_no"`
-	Channel     string     `json:"channel"`
-	ExternalRef *string    `json:"external_ref"`
-	Status      string     `json:"status"`
-	Total       string     `json:"total"`
-	Note        *string    `json:"note"`
-	CreatedBy   *int64     `json:"created_by"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	PackedAt    *time.Time `json:"packed_at"`
-	ShippedAt   *time.Time `json:"shipped_at"`
-	CanceledAt  *time.Time `json:"canceled_at"`
+	ID              int64      `json:"id"`
+	OrderNo         string     `json:"order_no"`
+	Channel         string     `json:"channel"`
+	ExternalRef     *string    `json:"external_ref"`
+	Status          string     `json:"status"`
+	Total           string     `json:"total"`
+	Note            *string    `json:"note"`
+	CreatedBy       *int64     `json:"created_by"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+	PackedAt        *time.Time `json:"packed_at"`
+	ShippedAt       *time.Time `json:"shipped_at"`
+	CanceledAt      *time.Time `json:"canceled_at"`
+	CustomerName    *string    `json:"customer_name"`
+	CustomerPhone   *string    `json:"customer_phone"`
+	ShippingAddress *string    `json:"shipping_address"`
+	LineUserID      *string    `json:"line_user_id"`
 }
 
 type OrderItem struct {

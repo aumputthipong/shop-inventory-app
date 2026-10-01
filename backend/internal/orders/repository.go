@@ -42,12 +42,19 @@ func (r *PgRepository) Create(ctx context.Context, in NewOrder, plan Reservation
 			return err
 		}
 
-		created, err := q.CreateOrder(ctx, sqlc.CreateOrderParams{
+		params := sqlc.CreateOrderParams{
 			Channel:     string(in.Channel),
 			ExternalRef: optional(in.ExternalRef),
 			Note:        optional(in.Note),
 			CreatedBy:   actor.IDFrom(ctx),
-		})
+		}
+		if c := in.Customer; c != nil {
+			params.CustomerName = optional(c.Name)
+			params.CustomerPhone = optional(c.Phone)
+			params.ShippingAddress = optional(c.Address)
+			params.LineUserID = optional(c.LineUserID)
+		}
+		created, err := q.CreateOrder(ctx, params)
 		if database.IsUniqueViolation(err, externalRefConstraint) {
 			return ErrExternalRefTaken
 		}
@@ -219,12 +226,19 @@ func (r *PgRepository) Get(ctx context.Context, id int64) (Order, error) {
 	for _, it := range rows {
 		items = append(items, Item{ProductID: it.ProductID, SKU: it.Sku, Name: it.Name, Qty: it.Qty, UnitPrice: it.UnitPrice})
 	}
+	var customer *Customer
+	if row.CustomerName != nil || row.CustomerPhone != nil || row.ShippingAddress != nil || row.LineUserID != nil {
+		customer = &Customer{
+			Name: deref(row.CustomerName), Phone: deref(row.CustomerPhone),
+			Address: deref(row.ShippingAddress), LineUserID: deref(row.LineUserID),
+		}
+	}
 	return Order{
 		ID: row.ID, OrderNo: row.OrderNo, Channel: Channel(row.Channel), ExternalRef: row.ExternalRef,
 		Status: Status(row.Status), Total: row.Total, Note: row.Note, CreatedByName: row.CreatedByName,
 		CreatedAt: row.CreatedAt, UpdatedAt: row.UpdatedAt,
 		PackedAt: row.PackedAt, ShippedAt: row.ShippedAt, CanceledAt: row.CanceledAt,
-		Items: items,
+		Items: items, Customer: customer,
 	}, nil
 }
 
@@ -258,6 +272,13 @@ func (r *PgRepository) List(ctx context.Context, f Filter) ([]Summary, int64, er
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 func optional(s string) *string {

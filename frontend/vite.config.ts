@@ -24,6 +24,8 @@ export default defineConfig({
     },
   },
   server: {
+    // LINE reaches the dev server through a tunnel while trying the order form; see docs/LINE-SETUP.md.
+    allowedHosts: ['.trycloudflare.com', '.ngrok-free.app'],
     // Same-origin requests in development, so the api needs no CORS setup.
     proxy: {
       '/api': { target: apiTarget, changeOrigin: true },
