@@ -6,11 +6,15 @@ import { XIcon } from 'lucide-react'
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
+import { HelpNote } from '@/components/help-note'
 import { Pager } from '@/components/pager'
+import { ReverseMovementButton } from '@/components/stock/reverse-movement'
 import type { MovementType } from '@/lib/api'
 import { formatDateTime, formatSigned } from '@/lib/format'
 import { channelLabel, movementChip, movementReason } from '@/lib/labels'
+import { canReverse } from '@/lib/movements'
 import { movementsQueryOptions, productsQueryOptions } from '@/lib/queries'
+import { useCurrentUser } from '@/lib/session'
 
 const PAGE = 25
 const TYPES: MovementType[] = ['STOCK_IN', 'RESERVE', 'RELEASE', 'SHIP', 'ADJUST']
@@ -39,6 +43,7 @@ function LedgerPage() {
   )
   const { data: products } = useQuery(productsQueryOptions)
   const product = products?.find((p) => p.id === search.product)
+  const me = useCurrentUser()
 
   const setSearch = (next: LedgerSearch) => {
     void navigate({ search: next, replace: true })
@@ -51,10 +56,24 @@ function LedgerPage() {
         <p className="text-sm text-ink-2">
           ทุกการเปลี่ยนแปลงของสต็อกถูกบันทึกที่นี่ ยอดคงเหลือทุกตัวอธิบายได้จากรายการเหล่านี้
         </p>
+        <HelpNote question="อ่านประวัตินี้ยังไง" className="mt-2 max-w-2xl">
+          <p>
+            แต่ละแถวคือหนึ่งครั้งที่สต็อกเปลี่ยน ช่อง “ในคลัง” และ “จอง” บอกว่าเปลี่ยนไปกี่ชิ้น ช่อง
+            “คงเหลือหลังจากนั้น” บอกยอดหลังรายการนั้น
+          </p>
+          <p>
+            รับเข้าและปรับยอดทำให้ของในคลังเปลี่ยน จองไม่ทำให้ของออกจากคลัง แค่กันไว้ไม่ให้ขายซ้ำ
+            ส่งออกคือของออกจากร้านจริง
+          </p>
+          <p>
+            ประวัติแก้หรือลบไม่ได้ ถ้ากรอกผิด เจ้าของร้านกด “ยกเลิก” ได้ภายใน 7 วัน
+            ระบบจะลงรายการกลับให้และเก็บของเดิมไว้ให้ดู
+          </p>
+        </HelpNote>
       </div>
 
       <section aria-label="ความเคลื่อนไหวของสต็อก" className="panel overflow-x-auto">
-        <div className="flex min-w-[1080px] flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line px-4 pt-2">
+        <div className="flex min-w-[1160px] flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line px-4 pt-2">
           <FilterTabs
             label="ประเภทความเคลื่อนไหว"
             value={search.type}
@@ -83,7 +102,7 @@ function LedgerPage() {
           )}
         </div>
 
-        <div className="grid h-9 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
+        <div className="grid h-9 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_80px_80px_150px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
           <span>เวลา</span>
           <span>สินค้า</span>
           <span>ประเภท</span>
@@ -92,6 +111,7 @@ function LedgerPage() {
           <span className="text-right">คงเหลือหลังจากนั้น</span>
           <span>อ้างอิง</span>
           <span>โดย</span>
+          <span />
         </div>
 
         {isPending && <p className="px-4 py-8 text-ink-2">กำลังโหลด...</p>}
@@ -109,7 +129,7 @@ function LedgerPage() {
             return (
               <li
                 key={m.id}
-                className="grid min-h-12 min-w-[1080px] grid-cols-[110px_minmax(0,1.2fr)_110px_90px_90px_150px_minmax(0,1fr)_90px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
+                className="grid min-h-12 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_80px_80px_150px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
               >
                 <span className="text-[13px] text-ink-2">{formatDateTime(m.created_at)}</span>
                 <span className="flex min-w-0 flex-col">
@@ -122,8 +142,9 @@ function LedgerPage() {
                   </Link>
                   <span className="code text-xs text-ink-3">{m.sku}</span>
                 </span>
-                <span>
+                <span className="flex flex-wrap gap-1">
                   <Chip tone={chip.tone}>{chip.label}</Chip>
+                  {m.reversed && <Chip tone="neutral">ยกเลิกแล้ว</Chip>}
                 </span>
                 <span className={cn('text-right font-medium', m.qty_change === 0 && 'text-ink-3')}>
                   {formatSigned(m.qty_change)}
@@ -152,12 +173,43 @@ function LedgerPage() {
                         </span>
                       )}
                     </Link>
+                  ) : m.receipt_id !== null ? (
+                    <span className="font-medium">
+                      {m.receipt_reference ? (
+                        <>
+                          ใบส่งของ <span className="code">{m.receipt_reference}</span>
+                        </>
+                      ) : (
+                        `รับของชุด #${m.receipt_id}`
+                      )}
+                    </span>
+                  ) : m.count_id !== null ? (
+                    <Link
+                      to="/counts/$countId"
+                      params={{ countId: m.count_id }}
+                      className="font-medium hover:text-petrol-600 hover:underline"
+                    >
+                      ตรวจนับ #{m.count_id}
+                    </Link>
                   ) : (
-                    reason && <span className="font-medium">{reason}</span>
+                    reason && (
+                      <span className="font-medium">
+                        {reason}
+                        {m.reverses_id !== null && (
+                          <span className="font-normal text-ink-3">
+                            {' '}
+                            ของรายการ #{m.reverses_id}
+                          </span>
+                        )}
+                      </span>
+                    )
                   )}
                   {m.note && <span className="truncate text-ink-2">{m.note}</span>}
                 </span>
                 <span className="truncate text-sm text-ink-2">{m.created_by_name ?? '-'}</span>
+                <span className="flex justify-end">
+                  {me.isOwner && canReverse(m) && <ReverseMovementButton movement={m} />}
+                </span>
               </li>
             )
           })}

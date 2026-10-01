@@ -5,6 +5,7 @@ import { SearchIcon, StoreIcon } from 'lucide-react'
 import { ChannelChip, Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
+import { HelpNote } from '@/components/help-note'
 import { Pager } from '@/components/pager'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,6 +54,23 @@ function OrdersPage() {
           <p className="text-sm text-ink-2">
             ทุกช่องทางใช้สต็อกกองเดียวกัน ออเดอร์จองของไว้จนกว่าจะส่งหรือยกเลิก
           </p>
+          <HelpNote question="สถานะออเดอร์แต่ละแบบหมายถึงอะไร" className="mt-2 max-w-2xl">
+            <p>
+              <span className="font-medium text-ink">จองแล้ว</span> บันทึกออเดอร์แล้ว
+              ของถูกกันไว้ให้ลูกค้าคนนี้ ยังอยู่ในคลัง
+            </p>
+            <p>
+              <span className="font-medium text-ink">แพ็กแล้ว</span> ห่อของเสร็จ รอส่ง
+              ของยังนับว่าอยู่ในคลัง
+            </p>
+            <p>
+              <span className="font-medium text-ink">ส่งแล้ว</span> ของออกจากร้าน
+              ระบบตัดออกจากคลังให้ ขายหน้าร้านที่ลูกค้ารับของไปเลยจะเป็นสถานะนี้ทันที
+            </p>
+            <p>
+              <span className="font-medium text-ink">ยกเลิก</span> คืนของที่จองไว้กลับมาขายได้ทันที
+            </p>
+          </HelpNote>
         </div>
         <Button asChild>
           <Link to="/orders/new">

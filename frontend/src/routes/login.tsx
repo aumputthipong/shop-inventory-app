@@ -21,7 +21,7 @@ export const Route = createFileRoute('/login')({
     const me = await context.queryClient.query(meQueryOptions).catch(() => null)
     if (me) {
       // eslint-disable-next-line @typescript-eslint/only-throw-error -- router control flow
-      throw redirect({ to: '/stock' })
+      throw redirect({ to: '/' })
     }
   },
   component: LoginPage,
@@ -38,7 +38,7 @@ function LoginPage() {
     mutationFn: () => api.login(email, password),
     onSuccess: async (user) => {
       queryClient.setQueryData(meQueryOptions.queryKey, user)
-      await navigate({ to: next?.startsWith('/') ? next : '/stock' })
+      await navigate({ to: next?.startsWith('/') ? next : '/' })
     },
   })
 
@@ -52,11 +52,9 @@ function LoginPage() {
       ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้ง'
       : login.error instanceof ApiError && login.error.code === 'account_disabled'
         ? 'บัญชีนี้ถูกปิดใช้งานแล้ว ติดต่อเจ้าของร้าน'
-        : login.error instanceof ApiError && login.error.code === 'too_many_attempts'
-          ? 'ใส่รหัสผิดหลายครั้งเกินไป รอ 15 นาทีแล้วลองใหม่'
-          : login.error
-            ? 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง'
-            : null
+        : login.error
+          ? 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง'
+          : null
 
   return (
     <main className="flex min-h-svh items-center justify-center p-6">

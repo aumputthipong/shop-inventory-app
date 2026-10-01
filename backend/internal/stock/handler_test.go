@@ -34,6 +34,14 @@ func (okOperator) Adjust(context.Context, stock.AdjustInput) (stock.Balance, err
 	return stock.Balance{OnHand: 1}, nil
 }
 
+func (okOperator) Reverse(context.Context, int64) (stock.Balance, error) {
+	return stock.Balance{ProductID: 1, OnHand: 1}, nil
+}
+
+func (okOperator) Receive(_ context.Context, in stock.NewReceipt) (stock.Receipt, error) {
+	return stock.Receipt{ID: 1, Lines: []stock.ReceivedLine{{ProductID: in.Lines[0].ProductID, Qty: in.Lines[0].Qty}}}, nil
+}
+
 func TestRolesOnStockEndpoints(t *testing.T) {
 	tests := []struct {
 		name       string
@@ -46,6 +54,10 @@ func TestRolesOnStockEndpoints(t *testing.T) {
 		{"staff cannot adjust", actor.RoleStaff, "/api/products/1/adjustments", `{"qty_change":-1,"reason":"lost"}`, http.StatusForbidden},
 		{"owner can adjust", actor.RoleOwner, "/api/products/1/adjustments", `{"qty_change":-1,"reason":"lost"}`, http.StatusOK},
 		{"adjust needs a reason", actor.RoleOwner, "/api/products/1/adjustments", `{"qty_change":-1}`, http.StatusUnprocessableEntity},
+		{"staff cannot reverse a movement", actor.RoleStaff, "/api/movements/7/reverse", "", http.StatusForbidden},
+		{"owner can reverse a movement", actor.RoleOwner, "/api/movements/7/reverse", "", http.StatusOK},
+		{"staff can receive a delivery", actor.RoleStaff, "/api/receipts", `{"reference":"INV-1","lines":[{"product_id":1,"qty":3}]}`, http.StatusCreated},
+		{"a delivery needs lines", actor.RoleStaff, "/api/receipts", `{"lines":[]}`, http.StatusUnprocessableEntity},
 	}
 
 	for _, tt := range tests {

@@ -41,6 +41,7 @@ type createRequest struct {
 	Price             string `json:"price" binding:"required,max=16"`
 	LowStockThreshold int32  `json:"low_stock_threshold" binding:"gte=0,lte=100000"`
 	IsActive          *bool  `json:"is_active"`
+	InitialQty        int32  `json:"initial_qty" binding:"gte=0,lte=100000"`
 }
 
 type updateRequest struct {
@@ -135,7 +136,7 @@ func (h *Handler) create(c *gin.Context) {
 	}
 	d, err := h.svc.Create(c.Request.Context(), Input{
 		SKU: req.SKU, Name: req.Name, Price: req.Price,
-		LowStockThreshold: req.LowStockThreshold, IsActive: active,
+		LowStockThreshold: req.LowStockThreshold, IsActive: active, InitialQty: req.InitialQty,
 	})
 	respond(c, http.StatusCreated, d, err)
 }
@@ -166,6 +167,8 @@ func respond(c *gin.Context, status int, d Detail, err error) {
 		httpx.RespondFieldError(c, "name", err.Error())
 	case errors.Is(err, ErrInvalidPrice):
 		httpx.RespondFieldError(c, "price", err.Error())
+	case errors.Is(err, ErrInvalidQty):
+		httpx.RespondFieldError(c, "initial_qty", err.Error())
 	case err != nil:
 		httpx.RespondInternal(c, err)
 	default:

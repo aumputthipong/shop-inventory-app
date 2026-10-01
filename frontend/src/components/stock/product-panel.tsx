@@ -6,9 +6,11 @@ import { useState, type ReactNode } from 'react'
 
 import { ChannelChip, Chip } from '@/components/chip'
 import { FilterTabs } from '@/components/filter-tabs'
+import { HelpNote } from '@/components/help-note'
 import { ProductAvatar } from '@/components/product-avatar'
 import { AdjustDialog } from '@/components/stock/adjust-dialog'
 import { ProductFormDialog } from '@/components/stock/product-form-dialog'
+import { ReverseMovementButton } from '@/components/stock/reverse-movement'
 import { StockInDialog } from '@/components/stock/stock-in-dialog'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -16,6 +18,7 @@ import { UnitLegend, UnitStrip } from '@/components/unit-strip'
 import { api, type ProductDetail } from '@/lib/api'
 import { formatDateTime, formatMoney, formatSigned } from '@/lib/format'
 import { movementChip, movementReason, orderStatusChip, stockStatusChip } from '@/lib/labels'
+import { canReverse } from '@/lib/movements'
 import { invalidateStock, movementsQueryOptions, productQueryOptions } from '@/lib/queries'
 import { useToast } from '@/lib/toast'
 
@@ -91,7 +94,11 @@ export function ProductPanel({ productId, isOwner }: { productId: number; isOwne
           ]}
         />
       </div>
-      {section === 'holds' ? <Holds product={product} /> : <RecentMoves productId={product.id} />}
+      {section === 'holds' ? (
+        <Holds product={product} />
+      ) : (
+        <RecentMoves productId={product.id} isOwner={isOwner} />
+      )}
 
       <StockInDialog
         product={product}
@@ -226,6 +233,20 @@ function Availability({
       <span className="text-[13px] text-ink-2">{summary}</span>
       <UnitStrip size="lg" available={product.available} held={product.reserved} />
       <UnitLegend />
+      <HelpNote question="ขายได้ มีในคลัง จองแล้ว ต่างกันยังไง">
+        <p>
+          <span className="font-medium text-ink">มีในคลัง</span> คือของที่อยู่ในร้านจริง
+          รวมของที่แพ็กแล้วแต่ยังไม่ได้ส่ง
+        </p>
+        <p>
+          <span className="font-medium text-ink">จองแล้ว</span> คือของที่มีออเดอร์สั่งไว้
+          แต่ยังไม่ได้ส่ง ช่องทางอื่นจะขายชิ้นนี้ซ้ำไม่ได้
+        </p>
+        <p>
+          <span className="font-medium text-ink">ขายได้</span> = มีในคลัง − จองแล้ว
+          คือจำนวนที่ยังรับออเดอร์ใหม่ได้ เมื่อกดส่งของ ชิ้นนั้นจะออกจากคลัง
+        </p>
+      </HelpNote>
       <div
         className={cn(
           'flex items-center gap-2 text-[13px]',
@@ -290,7 +311,7 @@ function Holds({ product }: { product: ProductDetail }) {
   )
 }
 
-function RecentMoves({ productId }: { productId: number }) {
+function RecentMoves({ productId, isOwner }: { productId: number; isOwner: boolean }) {
   const { data, isPending } = useQuery(movementsQueryOptions({ product_id: productId, limit: 5 }))
 
   if (isPending) return <p className="px-5 py-5 text-[13px] text-ink-2">กำลังโหลด...</p>
@@ -310,17 +331,23 @@ function RecentMoves({ productId }: { productId: number }) {
         return (
           <div
             key={m.id}
-            className="grid grid-cols-[88px_minmax(0,1fr)_64px_48px] items-center gap-2 border-b border-line px-5 py-2.5"
+            className="grid grid-cols-[80px_minmax(0,1fr)_56px_44px_auto] items-center gap-2 border-b border-line px-5 py-2.5"
           >
             <span className="text-xs text-ink-3">{formatDateTime(m.created_at)}</span>
             <span className="flex min-w-0 flex-col items-start gap-0.5">
-              <Chip tone={chip.tone}>{chip.label}</Chip>
+              <span className="flex gap-1">
+                <Chip tone={chip.tone}>{chip.label}</Chip>
+                {m.reversed && <Chip tone="neutral">ยกเลิกแล้ว</Chip>}
+              </span>
               <span className="max-w-full truncate text-xs text-ink-3">{ref}</span>
             </span>
             <span className="text-right text-[13px]">{change}</span>
             <span className="flex flex-col items-end">
               <span className="text-[13px] font-medium text-ink-2">{m.available_after}</span>
               <span className="text-[11px] text-ink-3">ขายได้</span>
+            </span>
+            <span className="flex justify-end">
+              {isOwner && canReverse(m) && <ReverseMovementButton movement={m} />}
             </span>
           </div>
         )

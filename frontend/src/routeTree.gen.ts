@@ -10,19 +10,29 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as LineRouteImport } from './routes/line'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppAccountRouteImport } from './routes/_app/account'
 import { Route as AppAuditRouteImport } from './routes/_app/audit'
 import { Route as AppLedgerRouteImport } from './routes/_app/ledger'
+import { Route as AppReceiveRouteImport } from './routes/_app/receive'
 import { Route as AppStockRouteImport } from './routes/_app/stock'
 import { Route as AppTeamRouteImport } from './routes/_app/team'
+import { Route as AppCountsIndexRouteImport } from './routes/_app/counts/index'
+import { Route as AppCountsCountIdRouteImport } from './routes/_app/counts/$countId'
+import { Route as AppCountsNewRouteImport } from './routes/_app/counts/new'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders/index'
 import { Route as AppOrdersOrderIdRouteImport } from './routes/_app/orders/$orderId'
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LineRoute = LineRouteImport.update({
+  id: '/line',
+  path: '/line',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -50,6 +60,11 @@ const AppLedgerRoute = AppLedgerRouteImport.update({
   path: '/ledger',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReceiveRoute = AppReceiveRouteImport.update({
+  id: '/receive',
+  path: '/receive',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppStockRoute = AppStockRouteImport.update({
   id: '/stock',
   path: '/stock',
@@ -58,6 +73,21 @@ const AppStockRoute = AppStockRouteImport.update({
 const AppTeamRoute = AppTeamRouteImport.update({
   id: '/team',
   path: '/team',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCountsIndexRoute = AppCountsIndexRouteImport.update({
+  id: '/counts/',
+  path: '/counts/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCountsCountIdRoute = AppCountsCountIdRouteImport.update({
+  id: '/counts/$countId',
+  path: '/counts/$countId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCountsNewRoute = AppCountsNewRouteImport.update({
+  id: '/counts/new',
+  path: '/counts/new',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOrdersIndexRoute = AppOrdersIndexRouteImport.update({
@@ -78,84 +108,115 @@ const AppOrdersNewRoute = AppOrdersNewRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
+  '/line': typeof LineRoute
   '/login': typeof LoginRoute
   '/account': typeof AppAccountRoute
   '/audit': typeof AppAuditRoute
   '/ledger': typeof AppLedgerRoute
+  '/receive': typeof AppReceiveRoute
   '/stock': typeof AppStockRoute
   '/team': typeof AppTeamRoute
+  '/counts/$countId': typeof AppCountsCountIdRoute
+  '/counts/new': typeof AppCountsNewRoute
   '/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/orders/new': typeof AppOrdersNewRoute
+  '/counts/': typeof AppCountsIndexRoute
   '/orders/': typeof AppOrdersIndexRoute
 }
 export interface FileRoutesByTo {
+  '/line': typeof LineRoute
   '/login': typeof LoginRoute
   '/account': typeof AppAccountRoute
   '/audit': typeof AppAuditRoute
   '/ledger': typeof AppLedgerRoute
+  '/receive': typeof AppReceiveRoute
   '/stock': typeof AppStockRoute
   '/team': typeof AppTeamRoute
   '/': typeof AppIndexRoute
+  '/counts/$countId': typeof AppCountsCountIdRoute
+  '/counts/new': typeof AppCountsNewRoute
   '/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/orders/new': typeof AppOrdersNewRoute
+  '/counts': typeof AppCountsIndexRoute
   '/orders': typeof AppOrdersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
+  '/line': typeof LineRoute
   '/login': typeof LoginRoute
   '/_app/account': typeof AppAccountRoute
   '/_app/audit': typeof AppAuditRoute
   '/_app/ledger': typeof AppLedgerRoute
+  '/_app/receive': typeof AppReceiveRoute
   '/_app/stock': typeof AppStockRoute
   '/_app/team': typeof AppTeamRoute
   '/_app/': typeof AppIndexRoute
+  '/_app/counts/$countId': typeof AppCountsCountIdRoute
+  '/_app/counts/new': typeof AppCountsNewRoute
   '/_app/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/_app/orders/new': typeof AppOrdersNewRoute
+  '/_app/counts/': typeof AppCountsIndexRoute
   '/_app/orders/': typeof AppOrdersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/line'
     | '/login'
     | '/account'
     | '/audit'
     | '/ledger'
+    | '/receive'
     | '/stock'
     | '/team'
+    | '/counts/$countId'
+    | '/counts/new'
     | '/orders/$orderId'
     | '/orders/new'
+    | '/counts/'
     | '/orders/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/line'
     | '/login'
     | '/account'
     | '/audit'
     | '/ledger'
+    | '/receive'
     | '/stock'
     | '/team'
     | '/'
+    | '/counts/$countId'
+    | '/counts/new'
     | '/orders/$orderId'
     | '/orders/new'
+    | '/counts'
     | '/orders'
   id:
     | '__root__'
     | '/_app'
+    | '/line'
     | '/login'
     | '/_app/account'
     | '/_app/audit'
     | '/_app/ledger'
+    | '/_app/receive'
     | '/_app/stock'
     | '/_app/team'
     | '/_app/'
+    | '/_app/counts/$countId'
+    | '/_app/counts/new'
     | '/_app/orders/$orderId'
     | '/_app/orders/new'
+    | '/_app/counts/'
     | '/_app/orders/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
+  LineRoute: typeof LineRoute
   LoginRoute: typeof LoginRoute
 }
 
@@ -166,6 +227,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/line': {
+      id: '/line'
+      path: '/line'
+      fullPath: '/line'
+      preLoaderRoute: typeof LineRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -203,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppLedgerRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/receive': {
+      id: '/_app/receive'
+      path: '/receive'
+      fullPath: '/receive'
+      preLoaderRoute: typeof AppReceiveRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/stock': {
       id: '/_app/stock'
       path: '/stock'
@@ -215,6 +290,27 @@ declare module '@tanstack/react-router' {
       path: '/team'
       fullPath: '/team'
       preLoaderRoute: typeof AppTeamRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/counts/': {
+      id: '/_app/counts/'
+      path: '/counts'
+      fullPath: '/counts/'
+      preLoaderRoute: typeof AppCountsIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/counts/$countId': {
+      id: '/_app/counts/$countId'
+      path: '/counts/$countId'
+      fullPath: '/counts/$countId'
+      preLoaderRoute: typeof AppCountsCountIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/counts/new': {
+      id: '/_app/counts/new'
+      path: '/counts/new'
+      fullPath: '/counts/new'
+      preLoaderRoute: typeof AppCountsNewRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/orders/': {
@@ -245,11 +341,15 @@ interface AppRouteChildren {
   AppAccountRoute: typeof AppAccountRoute
   AppAuditRoute: typeof AppAuditRoute
   AppLedgerRoute: typeof AppLedgerRoute
+  AppReceiveRoute: typeof AppReceiveRoute
   AppStockRoute: typeof AppStockRoute
   AppTeamRoute: typeof AppTeamRoute
   AppIndexRoute: typeof AppIndexRoute
+  AppCountsCountIdRoute: typeof AppCountsCountIdRoute
+  AppCountsNewRoute: typeof AppCountsNewRoute
   AppOrdersOrderIdRoute: typeof AppOrdersOrderIdRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
+  AppCountsIndexRoute: typeof AppCountsIndexRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
 }
 
@@ -257,11 +357,15 @@ const AppRouteChildren: AppRouteChildren = {
   AppAccountRoute: AppAccountRoute,
   AppAuditRoute: AppAuditRoute,
   AppLedgerRoute: AppLedgerRoute,
+  AppReceiveRoute: AppReceiveRoute,
   AppStockRoute: AppStockRoute,
   AppTeamRoute: AppTeamRoute,
   AppIndexRoute: AppIndexRoute,
+  AppCountsCountIdRoute: AppCountsCountIdRoute,
+  AppCountsNewRoute: AppCountsNewRoute,
   AppOrdersOrderIdRoute: AppOrdersOrderIdRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
+  AppCountsIndexRoute: AppCountsIndexRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
 }
 
@@ -269,6 +373,7 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
+  LineRoute: LineRoute,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport

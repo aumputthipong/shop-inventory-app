@@ -19,19 +19,23 @@ type AuditLog struct {
 }
 
 type Order struct {
-	ID          int64      `json:"id"`
-	OrderNo     string     `json:"order_no"`
-	Channel     string     `json:"channel"`
-	ExternalRef *string    `json:"external_ref"`
-	Status      string     `json:"status"`
-	Total       string     `json:"total"`
-	Note        *string    `json:"note"`
-	CreatedBy   *int64     `json:"created_by"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	PackedAt    *time.Time `json:"packed_at"`
-	ShippedAt   *time.Time `json:"shipped_at"`
-	CanceledAt  *time.Time `json:"canceled_at"`
+	ID              int64      `json:"id"`
+	OrderNo         string     `json:"order_no"`
+	Channel         string     `json:"channel"`
+	ExternalRef     *string    `json:"external_ref"`
+	Status          string     `json:"status"`
+	Total           string     `json:"total"`
+	Note            *string    `json:"note"`
+	CreatedBy       *int64     `json:"created_by"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+	PackedAt        *time.Time `json:"packed_at"`
+	ShippedAt       *time.Time `json:"shipped_at"`
+	CanceledAt      *time.Time `json:"canceled_at"`
+	CustomerName    *string    `json:"customer_name"`
+	CustomerPhone   *string    `json:"customer_phone"`
+	ShippingAddress *string    `json:"shipping_address"`
+	LineUserID      *string    `json:"line_user_id"`
 }
 
 type OrderItem struct {
@@ -68,6 +72,23 @@ type StockBalance struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type StockCount struct {
+	ID        int64      `json:"id"`
+	Status    string     `json:"status"`
+	Note      *string    `json:"note"`
+	CreatedBy *int64     `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	DecidedBy *int64     `json:"decided_by"`
+	DecidedAt *time.Time `json:"decided_at"`
+}
+
+type StockCountLine struct {
+	CountID   int64 `json:"count_id"`
+	ProductID int64 `json:"product_id"`
+	Expected  int32 `json:"expected"`
+	Counted   int32 `json:"counted"`
+}
+
 type StockMovement struct {
 	ID             int64     `json:"id"`
 	ProductID      int64     `json:"product_id"`
@@ -82,6 +103,15 @@ type StockMovement struct {
 	Note           *string   `json:"note"`
 	OnHandAfter    int32     `json:"on_hand_after"`
 	ReservedAfter  int32     `json:"reserved_after"`
+	ReversesID     *int64    `json:"reverses_id"`
+}
+
+type StockReceipt struct {
+	ID        int64     `json:"id"`
+	Reference *string   `json:"reference"`
+	Note      *string   `json:"note"`
+	CreatedBy *int64    `json:"created_by"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type User struct {

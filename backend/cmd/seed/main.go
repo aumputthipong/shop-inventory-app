@@ -110,6 +110,7 @@ func seedStock(ctx context.Context, pool *pgxpool.Pool) error {
 		{"SKU-0002", "กางเกงยีนส์ขายาว 32", "600.00", 5, 8},
 		{"SKU-0003", "หมวกแก๊ป สีดำ", "250.00", 3, 4},
 		{"SKU-0004", "กระเป๋าผ้า canvas", "350.00", 10, 60},
+		{"SKU-0005", "ไดร์เป่าผม รุ่นพกพา", "890.00", 2, 1},
 	}
 	ids := make(map[string]int64, len(catalog))
 	for _, p := range catalog {

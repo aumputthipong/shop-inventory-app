@@ -207,6 +207,78 @@ func TestShipAndCancelKeepLedgerAndBalanceInStep(t *testing.T) {
 	e.assertLedgerExplainsBalance(t, productID)
 }
 
+func TestHandedOverStoreSaleShipsAtOnce(t *testing.T) {
+	e := newEnv(t)
+	ctx := t.Context()
+	productID := e.product(t, 5)
+
+	o, err := e.orders.Create(ctx, orders.NewOrder{
+		HandedOver: true, Items: []orders.ItemRequest{{ProductID: productID, Qty: 2}},
+	})
+	require.NoError(t, err)
+	assert.Equal(t, orders.StatusShipped, o.Status)
+	assert.NotNil(t, o.ShippedAt)
+
+	_, err = e.orders.Create(ctx, orders.NewOrder{
+		HandedOver: true, Items: []orders.ItemRequest{{ProductID: productID, Qty: 4}},
+	})
+	require.ErrorIs(t, err, stock.ErrInsufficientStock, "a counter sale cannot oversell either")
+
+	b := e.balance(t, productID)
+	assert.Equal(t, int32(3), b.OnHand)
+	assert.Equal(t, int32(0), b.Reserved)
+	e.assertLedgerExplainsBalance(t, productID)
+}
+
+func TestLineAndCounterCompeteForTheLastUnit(t *testing.T) {
+	e := newEnv(t)
+	productID := e.product(t, 1)
+
+	errs := race(2, func(i int) error {
+		in := orders.NewOrder{HandedOver: true, Items: []orders.ItemRequest{{ProductID: productID, Qty: 1}}}
+		if i == 0 {
+			in = orders.NewOrder{
+				Channel: orders.ChannelLine, Items: []orders.ItemRequest{{ProductID: productID, Qty: 1}},
+				Customer: &orders.Customer{Name: "พลอย", Phone: "0812345678", Address: "กรุงเทพ", LineUserID: "U-race"},
+			}
+		}
+		_, err := e.orders.Create(t.Context(), in)
+		return err
+	})
+
+	var won, lost int
+	for _, err := range errs {
+		switch {
+		case err == nil:
+			won++
+		case errors.Is(err, stock.ErrInsufficientStock):
+			lost++
+		default:
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+	assert.Equal(t, 1, won, "exactly one channel gets the last unit")
+	assert.Equal(t, 1, lost)
+	assert.GreaterOrEqual(t, e.balance(t, productID).Available(), int32(0))
+	e.assertLedgerExplainsBalance(t, productID)
+}
+
+func TestLineOrderKeepsItsCustomer(t *testing.T) {
+	e := newEnv(t)
+	productID := e.product(t, 3)
+
+	o, err := e.orders.Create(t.Context(), orders.NewOrder{
+		Channel: orders.ChannelLine, Items: []orders.ItemRequest{{ProductID: productID, Qty: 1}},
+		Customer: &orders.Customer{Name: "พลอย", Phone: "0812345678", Address: "12 สุขุมวิท", LineUserID: "U-keep"},
+	})
+	require.NoError(t, err)
+
+	got, err := e.orders.Get(t.Context(), o.ID)
+	require.NoError(t, err)
+	require.NotNil(t, got.Customer)
+	assert.Equal(t, orders.Customer{Name: "พลอย", Phone: "0812345678", Address: "12 สุขุมวิท", LineUserID: "U-keep"}, *got.Customer)
+}
+
 func TestAdjustCannotTakeReservedUnits(t *testing.T) {
 	e := newEnv(t)
 	ctx := t.Context()

@@ -57,14 +57,51 @@ func (q *Queries) CountMovements(ctx context.Context, arg CountMovementsParams) 
 	return count, err
 }
 
+const getMovement = `-- name: GetMovement :one
+SELECT m.id, m.product_id, m.type, m.qty_change, m.reserved_change, m.ref_type, m.reverses_id,
+       m.created_at,
+       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed
+FROM stock_movements m
+WHERE m.id = $1
+`
+
+type GetMovementRow struct {
+	ID             int64     `json:"id"`
+	ProductID      int64     `json:"product_id"`
+	Type           string    `json:"type"`
+	QtyChange      int32     `json:"qty_change"`
+	ReservedChange int32     `json:"reserved_change"`
+	RefType        *string   `json:"ref_type"`
+	ReversesID     *int64    `json:"reverses_id"`
+	CreatedAt      time.Time `json:"created_at"`
+	Reversed       bool      `json:"reversed"`
+}
+
+func (q *Queries) GetMovement(ctx context.Context, id int64) (GetMovementRow, error) {
+	row := q.db.QueryRow(ctx, getMovement, id)
+	var i GetMovementRow
+	err := row.Scan(
+		&i.ID,
+		&i.ProductID,
+		&i.Type,
+		&i.QtyChange,
+		&i.ReservedChange,
+		&i.RefType,
+		&i.ReversesID,
+		&i.CreatedAt,
+		&i.Reversed,
+	)
+	return i, err
+}
+
 const insertMovement = `-- name: InsertMovement :one
 INSERT INTO stock_movements (
     product_id, type, qty_change, reserved_change, ref_type, ref_id,
-    reason, note, created_by, on_hand_after, reserved_after
+    reason, note, created_by, on_hand_after, reserved_after, reverses_id
 ) VALUES (
     $1, $2, $3, $4,
     $5, $6, $7, $8,
-    $9, $10, $11
+    $9, $10, $11, $12
 )
 RETURNING id, created_at
 `
@@ -81,6 +118,7 @@ type InsertMovementParams struct {
 	CreatedBy      *int64  `json:"created_by"`
 	OnHandAfter    int32   `json:"on_hand_after"`
 	ReservedAfter  int32   `json:"reserved_after"`
+	ReversesID     *int64  `json:"reverses_id"`
 }
 
 type InsertMovementRow struct {
@@ -101,6 +139,7 @@ func (q *Queries) InsertMovement(ctx context.Context, arg InsertMovementParams) 
 		arg.CreatedBy,
 		arg.OnHandAfter,
 		arg.ReservedAfter,
+		arg.ReversesID,
 	)
 	var i InsertMovementRow
 	err := row.Scan(&i.ID, &i.CreatedAt)
@@ -111,10 +150,13 @@ const listMovements = `-- name: ListMovements :many
 SELECT m.id, m.product_id, p.sku, p.name AS product_name, m.type, m.qty_change,
        m.reserved_change, m.on_hand_after, m.reserved_after, m.ref_type, m.ref_id,
        o.order_no, o.channel AS order_channel, m.reason, m.note, u.name AS created_by_name,
-       m.created_at
+       m.created_at, m.reverses_id,
+       EXISTS (SELECT 1 FROM stock_movements r WHERE r.reverses_id = m.id) AS reversed,
+       sr.reference AS receipt_reference
 FROM stock_movements m
 JOIN products p ON p.id = m.product_id
 LEFT JOIN orders o ON m.ref_type = 'order' AND o.id = m.ref_id
+LEFT JOIN stock_receipts sr ON m.ref_type = 'receipt' AND sr.id = m.ref_id
 LEFT JOIN users u ON u.id = m.created_by
 WHERE ($1::bigint IS NULL OR m.product_id = $1::bigint)
   AND ($2::text IS NULL OR m.type = $2::text)
@@ -130,23 +172,26 @@ type ListMovementsParams struct {
 }
 
 type ListMovementsRow struct {
-	ID             int64     `json:"id"`
-	ProductID      int64     `json:"product_id"`
-	Sku            string    `json:"sku"`
-	ProductName    string    `json:"product_name"`
-	Type           string    `json:"type"`
-	QtyChange      int32     `json:"qty_change"`
-	ReservedChange int32     `json:"reserved_change"`
-	OnHandAfter    int32     `json:"on_hand_after"`
-	ReservedAfter  int32     `json:"reserved_after"`
-	RefType        *string   `json:"ref_type"`
-	RefID          *int64    `json:"ref_id"`
-	OrderNo        *string   `json:"order_no"`
-	OrderChannel   *string   `json:"order_channel"`
-	Reason         *string   `json:"reason"`
-	Note           *string   `json:"note"`
-	CreatedByName  *string   `json:"created_by_name"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID               int64     `json:"id"`
+	ProductID        int64     `json:"product_id"`
+	Sku              string    `json:"sku"`
+	ProductName      string    `json:"product_name"`
+	Type             string    `json:"type"`
+	QtyChange        int32     `json:"qty_change"`
+	ReservedChange   int32     `json:"reserved_change"`
+	OnHandAfter      int32     `json:"on_hand_after"`
+	ReservedAfter    int32     `json:"reserved_after"`
+	RefType          *string   `json:"ref_type"`
+	RefID            *int64    `json:"ref_id"`
+	OrderNo          *string   `json:"order_no"`
+	OrderChannel     *string   `json:"order_channel"`
+	Reason           *string   `json:"reason"`
+	Note             *string   `json:"note"`
+	CreatedByName    *string   `json:"created_by_name"`
+	CreatedAt        time.Time `json:"created_at"`
+	ReversesID       *int64    `json:"reverses_id"`
+	Reversed         bool      `json:"reversed"`
+	ReceiptReference *string   `json:"receipt_reference"`
 }
 
 func (q *Queries) ListMovements(ctx context.Context, arg ListMovementsParams) ([]ListMovementsRow, error) {
@@ -181,6 +226,9 @@ func (q *Queries) ListMovements(ctx context.Context, arg ListMovementsParams) ([
 			&i.Note,
 			&i.CreatedByName,
 			&i.CreatedAt,
+			&i.ReversesID,
+			&i.Reversed,
+			&i.ReceiptReference,
 		); err != nil {
 			return nil, err
 		}

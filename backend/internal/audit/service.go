@@ -16,6 +16,11 @@ const (
 	ActionProductUpdate  = "product.update"
 	ActionStockIn        = "stock.in"
 	ActionStockAdjust    = "stock.adjust"
+	ActionStockReverse   = "stock.reverse"
+	ActionStockReceive   = "stock.receive"
+	ActionCountSubmit    = "count.submit"
+	ActionCountApprove   = "count.approve"
+	ActionCountReject    = "count.reject"
 	ActionOrderCreate    = "order.create"
 	ActionOrderRejected  = "order.rejected"
 	ActionOrderPack      = "order.pack"
@@ -28,6 +33,8 @@ const (
 	ActionPasswordChange = "user.password_change"
 	EntityProduct        = "product"
 	EntityOrder          = "order"
+	EntityStockCount     = "stock_count"
+	EntityReceipt        = "receipt"
 	EntityUser           = "user"
 )
 

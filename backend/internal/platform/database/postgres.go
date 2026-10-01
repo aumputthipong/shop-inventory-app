@@ -1,4 +1,3 @@
-// Package database opens and verifies the postgres connection pool.
 package database
 
 import (
@@ -17,9 +16,7 @@ const (
 	pingTimeout     = 5 * time.Second
 )
 
-// NewPool parses the dsn, opens a pgx pool and verifies it with a ping so that
-// a misconfigured database fails at startup rather than on the first request.
-// The caller owns the returned pool and must Close it.
+// NewPool returns a pool that has already answered a ping; the caller must Close it.
 func NewPool(ctx context.Context, dsn string) (*pgxpool.Pool, error) {
 	cfg, err := pgxpool.ParseConfig(dsn)
 	if err != nil {

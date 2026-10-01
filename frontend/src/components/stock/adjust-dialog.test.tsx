@@ -83,4 +83,33 @@ describe('AdjustDialog', () => {
       note: 'ตะเข็บขาด',
     })
   })
+
+  it('turns a counted quantity into the difference', async () => {
+    const adjust = vi
+      .spyOn(api, 'adjustStock')
+      .mockResolvedValue({ product_id: 2, on_hand: 6, reserved: 5, available: 1 })
+    const user = userEvent.setup()
+    renderDialog()
+
+    await user.click(screen.getByRole('button', { name: 'นับได้จริง' }))
+    await user.type(screen.getByRole('textbox', { name: 'นับได้จริง (ชิ้น)' }), '6')
+    await user.click(screen.getByRole('button', { name: 'ตั้งยอดเป็น 6 ชิ้น' }))
+
+    expect(adjust).toHaveBeenCalledWith(2, {
+      qty_change: -2,
+      reason: 'count_correction',
+      note: '',
+    })
+  })
+
+  it('will not count below what orders hold', async () => {
+    const user = userEvent.setup()
+    renderDialog()
+
+    await user.click(screen.getByRole('button', { name: 'นับได้จริง' }))
+    await user.type(screen.getByRole('textbox', { name: 'นับได้จริง (ชิ้น)' }), '4')
+
+    expect(screen.getByRole('alert')).toHaveTextContent('นับได้น้อยกว่าของที่ถูกจองไว้ 5 ชิ้น')
+    expect(screen.getByRole('button', { name: 'ตั้งยอดเป็น 4 ชิ้น' })).toBeDisabled()
+  })
 })

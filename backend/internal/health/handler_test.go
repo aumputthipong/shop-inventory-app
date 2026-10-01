@@ -17,7 +17,6 @@ import (
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
 )
 
-// stubPinger stands in for the pgx pool so this test needs no database.
 type stubPinger struct {
 	err    error
 	called bool
@@ -26,8 +25,6 @@ type stubPinger struct {
 func (s *stubPinger) Ping(ctx context.Context) error {
 	s.called = true
 
-	// The handler must hand down a live context with a deadline, never a
-	// canceled one and never *gin.Context.
 	if _, ok := ctx.Deadline(); !ok {
 		return errors.New("expected the handler to apply a ping deadline")
 	}
@@ -84,8 +81,6 @@ func TestHealthz(t *testing.T) {
 	}
 }
 
-// The request id middleware must reach the health route, since the whole
-// router is what gets mounted in production.
 func TestHealthzEchoesRequestID(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	request := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/healthz", nil)

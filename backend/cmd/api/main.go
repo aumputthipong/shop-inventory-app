@@ -1,8 +1,3 @@
-// Command api runs the shop-inventory-app http server.
-//
-// This file is wiring only: load config, build the logger, open the database
-// pool, build the router, serve, and shut down gracefully. Business logic lives
-// in feature packages under internal/.
 package main
 
 import (
@@ -19,8 +14,10 @@ import (
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/audit"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/auth"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/counts"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/health"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/line"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/logger"
@@ -42,8 +39,6 @@ func main() {
 	}
 }
 
-// run owns the whole lifecycle and returns an error instead of exiting, which
-// keeps os.Exit confined to main and lets every defer below actually run.
 func run() error {
 	cfg, err := config.Load()
 	if err != nil {
@@ -53,8 +48,6 @@ func run() error {
 	log := logger.New(cfg.AppEnv)
 	slog.SetDefault(log)
 
-	// The signal context is canceled on the first SIGINT or SIGTERM, which is
-	// what triggers the graceful shutdown below.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
@@ -72,6 +65,11 @@ func run() error {
 	authService := auth.NewService(auth.NewRepository(pool))
 	authHandler := auth.NewHandler(authService, cfg.CookieSecure)
 
+	productService := products.NewService(products.NewRepository(pool))
+	verifier, messenger := lineChannels(cfg.Line, log)
+	orderService := orders.NewService(orders.NewRepository(pool)).WithNotifier(line.NewNotifier(messenger, log))
+	lineService := line.NewService(line.Settings{Mode: cfg.Line.Mode, LIFFID: cfg.Line.LIFFID}, verifier, orderService, productService)
+
 	server := &http.Server{
 		Addr: cfg.Addr(),
 		Handler: httpx.NewRouter(httpx.RouterConfig{
@@ -80,13 +78,15 @@ func run() error {
 			Routes: []httpx.Route{
 				health.NewHandler(pool),
 				authHandler,
+				line.NewHandler(lineService),
 			},
 			Protected: []httpx.Route{
 				authHandler.Protected(),
 				users.NewHandler(users.NewService(users.NewRepository(pool))),
-				products.NewHandler(products.NewService(products.NewRepository(pool))),
+				products.NewHandler(productService),
 				stock.NewHandler(stock.NewService(stock.NewRepository(pool))),
-				orders.NewHandler(orders.NewService(orders.NewRepository(pool))),
+				orders.NewHandler(orderService),
+				counts.NewHandler(counts.NewService(counts.NewRepository(pool))),
 				audit.NewHandler(audit.NewService(audit.NewRepository(pool))),
 			},
 			Sessions:  authService,
@@ -112,8 +112,7 @@ func run() error {
 		log.Info("shutdown signal received")
 	}
 
-	// A fresh context: the signal context is already canceled, and shutdown
-	// needs its own budget to drain in-flight requests.
+	// Not ctx: it is already canceled by the time shutdown starts.
 	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancelShutdown()
 
@@ -124,4 +123,13 @@ func run() error {
 	log.Info("shutdown complete")
 
 	return nil
+}
+
+// lineChannels picks the real LINE APIs in live mode and log-only fakes otherwise.
+func lineChannels(cfg config.LineConfig, log *slog.Logger) (line.Verifier, line.Messenger) {
+	if cfg.Mode == config.LineModeLive {
+		client := line.NewClient(cfg.LoginChannelID, cfg.AccessToken)
+		return client, client
+	}
+	return line.DevVerifier{}, line.LogMessenger{Logger: log}
 }

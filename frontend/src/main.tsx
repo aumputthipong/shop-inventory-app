@@ -15,7 +15,8 @@ const queryClient = new QueryClient({
       if (
         error instanceof ApiError &&
         error.status === 401 &&
-        router.state.location.pathname !== '/login'
+        router.state.location.pathname !== '/login' &&
+        !router.state.location.pathname.startsWith('/line')
       ) {
         queryClient.clear()
         void router.navigate({ to: '/login', search: { redirect: router.state.location.href } })

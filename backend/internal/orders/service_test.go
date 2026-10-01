@@ -159,6 +159,41 @@ func (f *fakeRepo) Get(_ context.Context, id int64) (orders.Order, error) {
 	return orders.Order{ID: id}, nil
 }
 
+type countingNotifier struct {
+	seen []int64
+}
+
+func (n *countingNotifier) OrderUpdated(_ context.Context, o orders.Order) {
+	n.seen = append(n.seen, o.ID)
+}
+
+func (f *fakeRepo) Transition(context.Context, int64, orders.Action, orders.TransitionPlanner) error {
+	return nil
+}
+
+func TestNotifierHearsCommittedChangesOnly(t *testing.T) {
+	n := &countingNotifier{}
+	svc := orders.NewService(&fakeRepo{}).WithNotifier(n)
+
+	_, err := svc.Create(t.Context(), orders.NewOrder{Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}}})
+	require.NoError(t, err)
+	_, err = svc.Apply(t.Context(), 7, orders.ActionPack)
+	require.NoError(t, err)
+	_, err = svc.Create(t.Context(), orders.NewOrder{Items: []orders.ItemRequest{{ProductID: 1, Qty: 5}}})
+	require.Error(t, err)
+
+	assert.Equal(t, []int64{7, 7}, n.seen, "a rejected order sends nothing")
+}
+
+func TestLineCustomerNeedsLineChannel(t *testing.T) {
+	repo := &fakeRepo{}
+	_, err := orders.NewService(repo).Create(t.Context(), orders.NewOrder{
+		Channel: orders.ChannelShopee, Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}},
+		Customer: &orders.Customer{Name: "x", LineUserID: "U1"},
+	})
+	require.ErrorIs(t, err, orders.ErrInvalidOrder)
+}
+
 func TestCreateValidatesBeforeTouchingStock(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -176,6 +211,15 @@ func TestCreateValidatesBeforeTouchingStock(t *testing.T) {
 			assert.Empty(t, repo.created.Items)
 		})
 	}
+}
+
+func TestOnlyStoreSalesAreHandedOverAtOnce(t *testing.T) {
+	repo := &fakeRepo{}
+	_, err := orders.NewService(repo).Create(t.Context(), orders.NewOrder{
+		Channel: orders.ChannelShopee, HandedOver: true, Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}},
+	})
+	require.ErrorIs(t, err, orders.ErrInvalidOrder)
+	assert.Empty(t, repo.created.Items)
 }
 
 func TestCreateDefaultsToStoreChannel(t *testing.T) {

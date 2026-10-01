@@ -1,10 +1,3 @@
-// Package httpx owns the gin engine, the shared middleware and the JSON error
-// helpers.
-//
-// This package and feature-level handler.go files are the only places allowed
-// to import gin; see the Gin rules in CLAUDE.md, which golangci-lint enforces
-// through depguard. NewRouter deliberately returns net/http's Handler so that
-// *gin.Engine does not leak into cmd/api.
 package httpx
 
 import (
@@ -19,13 +12,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Route registers one feature's endpoints on the engine. Feature packages
-// implement this so that the router does not need to know their internals.
 type Route interface {
 	Register(router gin.IRouter)
 }
 
-// RouterConfig carries everything NewRouter needs to build the handler.
 type RouterConfig struct {
 	Logger    *slog.Logger
 	GinMode   string
@@ -35,14 +25,11 @@ type RouterConfig struct {
 	StaticDir string
 }
 
-// NewRouter builds the application http handler.
 func NewRouter(cfg RouterConfig) http.Handler {
 	gin.SetMode(cfg.GinMode)
 
 	engine := gin.New()
 
-	// Trusted proxies are set explicitly. nil means gin trusts no proxy
-	// headers, which is correct until the api runs behind a known proxy.
 	if err := engine.SetTrustedProxies(nil); err != nil {
 		cfg.Logger.Error("set trusted proxies", slog.String("error", err.Error()))
 	}

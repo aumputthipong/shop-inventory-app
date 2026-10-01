@@ -64,23 +64,26 @@ type AdjustInput struct {
 }
 
 type Movement struct {
-	ID             int64
-	ProductID      int64
-	SKU            string
-	ProductName    string
-	Type           MovementType
-	QtyChange      int32
-	ReservedChange int32
-	OnHandAfter    int32
-	ReservedAfter  int32
-	RefType        *string
-	RefID          *int64
-	OrderNo        *string
-	OrderChannel   *string
-	Reason         *string
-	Note           *string
-	CreatedByName  *string
-	CreatedAt      time.Time
+	ID               int64
+	ProductID        int64
+	SKU              string
+	ProductName      string
+	Type             MovementType
+	QtyChange        int32
+	ReservedChange   int32
+	OnHandAfter      int32
+	ReservedAfter    int32
+	RefType          *string
+	RefID            *int64
+	OrderNo          *string
+	OrderChannel     *string
+	Reason           *string
+	Note             *string
+	CreatedByName    *string
+	CreatedAt        time.Time
+	ReversesID       *int64
+	Reversed         bool
+	ReceiptReference *string
 }
 
 type MovementFilter struct {
@@ -96,14 +99,17 @@ type Check func(current Balance) error
 type Repository interface {
 	Apply(ctx context.Context, c Change, check Check, entry audit.Entry) (Balance, error)
 	ListMovements(ctx context.Context, f MovementFilter) ([]Movement, int64, error)
+	Reverse(ctx context.Context, id int64, plan ReversalPlanner, entry audit.Entry) (Balance, error)
+	Receive(ctx context.Context, in NewReceipt, entry audit.Entry) (Receipt, error)
 }
 
 type Service struct {
 	repo Repository
+	now  func() time.Time
 }
 
 func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+	return &Service{repo: repo, now: time.Now}
 }
 
 func (s *Service) StockIn(ctx context.Context, in ReceiptInput) (Balance, error) {

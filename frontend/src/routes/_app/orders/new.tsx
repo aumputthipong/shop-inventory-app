@@ -42,6 +42,8 @@ function NewOrderPage() {
   const [channel, setChannel] = useState<Channel>('store')
   const [externalRef, setExternalRef] = useState('')
   const [note, setNote] = useState('')
+  const [handover, setHandover] = useState<'now' | 'later'>('now')
+  const handedOver = channel === 'store' && handover === 'now'
 
   const byId = new Map(products.map((p) => [p.id, p]))
   const q = query.trim().toLowerCase()
@@ -58,9 +60,14 @@ function NewOrderPage() {
         external_ref: channel === 'store' ? undefined : externalRef.trim() || undefined,
         note: note.trim() || undefined,
         items: lines.map((l) => ({ product_id: l.productId, qty: parseQty(l.qty) ?? 0 })),
+        handed_over: handedOver || undefined,
       }),
     onSuccess: async (order) => {
-      toast(`บันทึก ${order.order_no} แล้ว จองของให้เรียบร้อย`)
+      toast(
+        order.status === 'shipped'
+          ? `ขาย ${order.order_no} แล้ว ตัดของออกจากคลังให้แล้ว`
+          : `บันทึก ${order.order_no} แล้ว จองของให้เรียบร้อย`,
+      )
       await invalidateStock(queryClient)
       await navigate({ to: '/orders/$orderId', params: { orderId: order.id } })
     },
@@ -129,7 +136,7 @@ function NewOrderPage() {
         </Link>
         <h1 className="text-[22px] leading-[30px] font-semibold">ขายหน้าร้าน</h1>
         <p className="text-sm text-ink-2">
-          เลือกสินค้า ใส่จำนวน แล้วบันทึก ระบบจะจองของให้ทันที ถ้าของไม่พอจะไม่จองเลยสักชิ้น
+          เลือกสินค้า ใส่จำนวน แล้วบันทึก ถ้าของไม่พอ ระบบจะไม่บันทึกเลยสักชิ้น
         </p>
       </div>
 
@@ -224,6 +231,26 @@ function NewOrderPage() {
               ),
             }))}
           />
+
+          {channel === 'store' && (
+            <div className="flex flex-col gap-2">
+              <span className="text-[13px] font-medium text-ink-2">ลูกค้ารับของเมื่อไร</span>
+              <Segmented
+                label="ลูกค้ารับของเมื่อไร"
+                value={handover}
+                onChange={setHandover}
+                options={[
+                  { value: 'now', label: 'รับของไปเลย' },
+                  { value: 'later', label: 'จองไว้ มารับทีหลัง' },
+                ]}
+              />
+              <p className="text-xs text-ink-3">
+                {handover === 'now'
+                  ? 'ตัดของออกจากคลังทันที ไม่ต้องกดแพ็กและส่ง'
+                  : 'กันของไว้ให้ลูกค้า กดส่งเมื่อลูกค้ามารับ'}
+              </p>
+            </div>
+          )}
 
           {channel !== 'store' && (
             <label className="flex flex-col gap-2">
@@ -333,7 +360,7 @@ function NewOrderPage() {
           )}
 
           <Button type="submit" size="lg" disabled={!canSubmit}>
-            {submit.isPending ? 'กำลังจองของ...' : 'บันทึกและจองของ'}
+            {submit.isPending ? 'กำลังบันทึก...' : handedOver ? 'บันทึกการขาย' : 'บันทึกและจองของ'}
           </Button>
         </form>
       </div>

@@ -9,8 +9,7 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// Stable machine-readable error codes. Clients branch on these, never on the
-// human-readable message.
+// API contract: clients branch on these codes, so never rename one.
 const (
 	CodeBadRequest   = "bad_request"
 	CodeValidation   = "validation_failed"
@@ -25,16 +24,12 @@ const (
 	CodeInsufficientStock  = "insufficient_stock"
 	CodeInvalidState       = "invalid_state"
 	CodeAccountDisabled    = "account_disabled"
-	CodeTooManyAttempts    = "too_many_attempts"
 )
 
-// ErrorResponse is the single error envelope every endpoint returns.
 type ErrorResponse struct {
 	Error ErrorBody `json:"error"`
 }
 
-// ErrorBody carries the code, a human-readable message and, for validation
-// failures, the offending fields.
 type ErrorBody struct {
 	Code      string       `json:"code"`
 	Message   string       `json:"message"`
@@ -43,13 +38,11 @@ type ErrorBody struct {
 	Details   any          `json:"details,omitempty"`
 }
 
-// FieldError describes one failed validation constraint.
 type FieldError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
 }
 
-// RespondError aborts the request with the shared JSON error envelope.
 func RespondError(c *gin.Context, status int, code, message string) {
 	c.AbortWithStatusJSON(status, ErrorResponse{
 		Error: ErrorBody{
@@ -88,12 +81,7 @@ func RespondInternal(c *gin.Context, err error) {
 	RespondError(c, http.StatusInternalServerError, CodeInternal, "internal server error")
 }
 
-// RespondBindError turns an error returned by ShouldBind into the shared
-// envelope. Validation failures become a per-field 422; anything else, such as
-// malformed JSON, becomes a 400.
-//
-// Handlers use this instead of Bind/MustBind so that gin never writes its own
-// error body and never sets a status behind our back.
+// RespondBindError answers 422 with per-field errors for validation failures, else 400.
 func RespondBindError(c *gin.Context, err error) {
 	var validationErrs validator.ValidationErrors
 	if errors.As(err, &validationErrs) {
@@ -119,7 +107,6 @@ func RespondBindError(c *gin.Context, err error) {
 	RespondError(c, http.StatusBadRequest, CodeBadRequest, "request body could not be decoded")
 }
 
-// describeConstraint renders one validator tag as a readable sentence.
 func describeConstraint(fieldErr validator.FieldError) string {
 	switch fieldErr.Tag() {
 	case "required":

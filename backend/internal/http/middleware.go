@@ -15,17 +15,10 @@ import (
 	"github.com/google/uuid"
 )
 
-// RequestIDHeader is both read from the incoming request and echoed back on
-// the response, so a request can be traced across the proxy boundary.
 const RequestIDHeader = "X-Request-ID"
 
-// requestIDKey is unexported and of a private type so that no other package can
-// collide with it in a context.
 type requestIDKey struct{}
 
-// RequestID attaches a request id to the *request context* rather than only to
-// the gin context. Handlers hand c.Request.Context() to services, so services
-// can log the same id without ever seeing *gin.Context.
 func RequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.GetHeader(RequestIDHeader)
@@ -40,15 +33,11 @@ func RequestID() gin.HandlerFunc {
 	}
 }
 
-// RequestIDFrom returns the id attached by RequestID, or an empty string when
-// the context did not pass through that middleware.
 func RequestIDFrom(ctx context.Context) string {
 	id, _ := ctx.Value(requestIDKey{}).(string)
 	return id
 }
 
-// RequestLogger logs one structured line per completed request. The level
-// tracks the response status so that error budgets are greppable.
 func RequestLogger(logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
@@ -77,9 +66,6 @@ func RequestLogger(logger *slog.Logger) gin.HandlerFunc {
 	}
 }
 
-// Recovery converts a panic into a 500 using the shared error envelope. We use
-// our own rather than gin.Recovery so the response body and the log format
-// match every other error the api produces.
 func Recovery(logger *slog.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -88,8 +74,6 @@ func Recovery(logger *slog.Logger) gin.HandlerFunc {
 				return
 			}
 
-			// A broken pipe means the client is already gone, so there is
-			// nothing left to write a status to.
 			if isBrokenPipe(recovered) {
 				logger.LogAttrs(c.Request.Context(), slog.LevelWarn, "client connection closed",
 					slog.String("request_id", RequestIDFrom(c.Request.Context())),

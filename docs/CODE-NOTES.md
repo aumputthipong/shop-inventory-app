@@ -4,6 +4,36 @@ Why the code is the way it is, grouped by area. Rules live in `CLAUDE.md`; this
 file holds the reasoning that would otherwise end up in comments. Update a note
 in the same PR as the behaviour it describes.
 
+## Backend: startup and shutdown
+
+- `run()` returns an error instead of exiting so that every `defer` in it runs.
+  `os.Exit` in `main` would skip them.
+- `database.NewPool` pings before returning, so a wrong `DATABASE_URL` fails at
+  startup instead of on the first request.
+- Shutdown uses a fresh `context.Background()` with its own timeout. The signal
+  context is already canceled by then and would abort the drain immediately.
+
+## Backend: http
+
+- `httpx.NewRouter` returns `http.Handler`, not `*gin.Engine`, so `cmd/api`
+  never imports gin.
+- `Recovery` replaces `gin.Recovery` so a panic produces the same JSON envelope
+  and log format as every other error. A broken pipe is logged at warn and not
+  answered, since the client is gone.
+- `RequestLogger` picks the log level from the response status (5xx error, 4xx
+  warn), so failures can be filtered by level.
+- The request id is echoed in `X-Request-ID` and in every error body, so a
+  failed request can be traced from the client to the log line.
+- Error `code` values are the contract clients branch on; `message` is for
+  humans and may change.
+
+## Backend: health
+
+- `/healthz` answers 503 when the database is unreachable, so a load balancer
+  takes the instance out of rotation instead of sending it traffic.
+- The database ping is capped at 2s so a hung database cannot hold the
+  endpoint open past a load balancer's own timeout.
+
 ## Backend: stock and orders
 
 - Every write that decides on stock first locks the `stock_balances` rows it
@@ -25,6 +55,32 @@ in the same PR as the behaviour it describes.
   history.
 - A rejected order is written to the audit log after its transaction rolls
   back, because the rollback would otherwise erase the record of the attempt.
+- A mistyped stock-in or adjustment is undone by an opposite ADJUST that
+  points at it (`reverses_id`), never by deleting or editing the row, so the
+  ledger still shows what happened. A unique index on `reverses_id` stops the
+  same row being undone twice under concurrency. Order movements are excluded:
+  cancelling the order is the undo for those.
+- A stock count stores, per line, what was counted and the `on_hand` at the
+  moment it was saved (`expected`). Approval applies `counted - expected`, not
+  `counted - on_hand now`: sales shipped between counting and approval already
+  left the shelf and the ledger, so using today's number would count them
+  twice. Staff can count but only an owner approves, because approval rewrites
+  balances. Count adjustments carry `ref_type = stock_count` and are not
+  undoable one by one; a wrong count is fixed by counting again.
+- Approval is all or nothing, like an order: if one line would take units that
+  orders hold, nothing is adjusted and every such line is reported. The usual
+  cause is packed parcels that were not counted.
+- A delivery with many products is one `stock_receipts` row plus one
+  STOCK_IN per line, written in one transaction so a bad line leaves nothing
+  half received. The receipt keeps the supplier's note number so the ledger
+  can show where stock came from. Unlike order and count movements, a receipt
+  line can still be undone on its own: a typo on one line should not force
+  undoing the whole delivery.
+- A counter sale where the customer leaves with the goods (`handed_over`)
+  still goes through RESERVE then SHIP inside one transaction, rather than a
+  bare stock-out. It takes the same lock and oversell check as every other
+  order, and the ledger reads the same way for every channel. Only the store
+  channel may do this; online orders always wait to be packed.
 - Money is `numeric(12,2)` in postgres and a decimal string everywhere else
   (sqlc override to `string`, JSON `"600.00"`). Totals are summed in SQL, so no
   float ever touches a price.
@@ -36,15 +92,35 @@ in the same PR as the behaviour it describes.
   sessions, and logout is a row delete, which a JWT cannot offer.
 - `auth.Login` runs bcrypt against a dummy hash when the email is unknown, so
   response time does not reveal which emails have accounts.
-- Failed sign-ins are counted per email in memory: 5 within 15 minutes locks
-  that email until the window passes, even for the right password. It resets
-  on restart and is not shared between api instances, and someone who knows an
-  email can lock it out for 15 minutes. Good enough for one shop on one
-  instance; move it to postgres or redis before running more than one.
 - Disabling a member or resetting their password deletes their sessions in the
   same transaction, so the change takes effect on their next request.
 - Services read the user from `actor.From(ctx)`. The middleware in `httpx` sets
   it, which keeps gin out of services.
+
+## Backend: LINE orders
+
+- A LINE order is an ordinary order on the `line` channel. It goes through
+  `orders.Service.Create`, so it takes the same row locks and all-or-nothing
+  check as a counter sale; the integration test races the two for the last
+  unit.
+- The customer is identified by the LIFF ID token, which the api checks with
+  LINE's verify endpoint against our LINE Login channel id. The browser never
+  sends a user id the api trusts on its own. The Login channel and the
+  Messaging API channel must sit under the same LINE provider, otherwise the
+  user id from the token is not one the Official Account can message.
+- Status messages go through `orders.Notifier`, called after the transaction
+  commits. A failed push is logged and dropped: the stock change already
+  happened and must not be rolled back because LINE was slow. There is no
+  retry queue; the shop can still message the customer in the chat.
+- `LINE_MODE=dev` swaps in `DevVerifier`, which accepts `dev:<name>`, and a
+  messenger that only logs. It exists so the order form can be demonstrated
+  without a LINE account, and config refuses it in production because anyone
+  could sign in as anyone.
+- The public catalog shows a count only when stock is low ("2 left"), so the
+  shop's exact stock levels are not published to every customer.
+- The order endpoint is public apart from the ID token. Anyone with a LINE
+  account could reserve stock without paying; the shop cancels such orders by
+  hand. Add per-user limits if that becomes a problem.
 
 ## Backend: tests
 
@@ -68,9 +144,18 @@ in the same PR as the behaviour it describes.
 
 ## Frontend
 
-- The vite dev proxy reads `HTTP_PORT` from the repo root `.env`, so moving
-  the api off a busy port is one edit. `VITE_API_PROXY_TARGET` still wins when
-  the api runs somewhere else entirely.
+- The vite dev server proxies `/api` and `/healthz` to the Go api, so requests
+  are same-origin in development and the api needs no CORS setup. The target
+  port comes from `HTTP_PORT` in the repo root `.env`, so moving the api off a
+  busy port is one edit; `VITE_API_PROXY_TARGET` wins when the api runs
+  somewhere else entirely.
+- `apiFetch` takes `acceptStatuses` for non-2xx responses whose body is still
+  data. `/healthz` answering 503 is a health report, not a failure.
+- ESLint allows numbers in template strings; the strict default only forces
+  `String(status)` noise.
+- Route files and shadcn/ui components have `react-refresh/only-export-components`
+  off: the router's autoCodeSplitting moves route components into their own
+  module, and shadcn exports cva variant helpers by design.
 - Product tiles show the first letter of the name on a colour picked from the
   SKU. A fixed icon set cannot cover every kind of product a shop sells; photo
   upload can replace the tile later. Thai leading vowels (เ แ โ ใ ไ) are skipped
@@ -83,3 +168,9 @@ in the same PR as the behaviour it describes.
 - The new-order page keeps the server's shortage list after a 409 and marks
   each short line with what is left, because the counter staff did nothing
   wrong: another channel sold the stock first.
+
+## Tooling
+
+- `.gitattributes` forces LF because `core.autocrlf=true` on Windows checks
+  files out with CRLF, and gofmt and prettier then flag every file.
+- The Go toolchain pin is explained under "Version pins" in `CLAUDE.md`.

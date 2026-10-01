@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 	"unicode/utf8"
+
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
 )
 
 var (
@@ -17,6 +19,7 @@ var (
 	ErrInvalidSKU   = errors.New("sku may use letters, digits, dot, dash and underscore")
 	ErrInvalidName  = errors.New("name is required")
 	ErrInvalidPrice = errors.New("price must be a number with at most 2 decimals")
+	ErrInvalidQty   = errors.New("initial quantity out of range")
 )
 
 var (
@@ -80,6 +83,7 @@ type Input struct {
 	Price             string
 	LowStockThreshold int32
 	IsActive          bool
+	InitialQty        int32
 }
 
 type Patch struct {
@@ -134,6 +138,9 @@ func (s *Service) Create(ctx context.Context, in Input) (Detail, error) {
 	in, err := normalize(in)
 	if err != nil {
 		return Detail{}, err
+	}
+	if in.InitialQty < 0 || in.InitialQty > stock.MaxQty {
+		return Detail{}, ErrInvalidQty
 	}
 	id, err := s.repo.Create(ctx, in)
 	if err != nil {

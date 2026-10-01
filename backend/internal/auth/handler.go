@@ -99,10 +99,6 @@ func (h *Handler) login(c *gin.Context) {
 		httpx.RespondError(c, http.StatusUnauthorized, httpx.CodeInvalidCredentials, "email or password is incorrect")
 		return
 	}
-	if errors.Is(err, ErrTooManyAttempts) {
-		httpx.RespondError(c, http.StatusTooManyRequests, httpx.CodeTooManyAttempts, err.Error())
-		return
-	}
 	if errors.Is(err, ErrAccountDisabled) {
 		httpx.RespondError(c, http.StatusForbidden, httpx.CodeAccountDisabled, "this account has been disabled")
 		return

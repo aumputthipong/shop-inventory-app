@@ -1,6 +1,3 @@
-// Typed fetch client for the Go api. Shapes mirror api/openapi.yaml; keep the
-// two in step when either changes.
-
 export type HealthStatus = 'ok' | 'degraded'
 export type DependencyStatus = 'ok' | 'error'
 
@@ -63,6 +60,7 @@ export interface ProductInput {
   price: string
   low_stock_threshold: number
   is_active?: boolean
+  initial_qty?: number
 }
 
 export type MovementType = 'STOCK_IN' | 'ADJUST' | 'RESERVE' | 'RELEASE' | 'SHIP' | 'RETURN'
@@ -82,10 +80,15 @@ export interface Movement {
   order_id: number | null
   order_no: string | null
   order_channel: Channel | null
+  count_id: number | null
+  receipt_id: number | null
+  receipt_reference: string | null
   reason: string | null
   note: string | null
   created_by_name: string | null
   created_at: string
+  reverses_id: number | null
+  reversed: boolean
 }
 
 export interface Balance {
@@ -130,6 +133,45 @@ export interface Order {
   shipped_at: string | null
   canceled_at: string | null
   items: OrderItem[]
+  customer: OrderCustomer | null
+}
+
+export interface OrderCustomer {
+  name: string
+  phone: string
+  address: string
+  from_line: boolean
+}
+
+export type LineMode = 'off' | 'dev' | 'live'
+
+export interface LineSettings {
+  mode: LineMode
+  liff_id: string
+}
+
+export interface LineCatalogItem {
+  id: number
+  name: string
+  price: string
+  stock_status: StockStatus
+  available: number | null
+}
+
+export interface LineOrderInput {
+  id_token: string
+  name: string
+  phone: string
+  address: string
+  note?: string
+  items: { product_id: number; qty: number }[]
+}
+
+export interface LineReceipt {
+  order_no: string
+  status: OrderStatus
+  total: string
+  items: { name: string; qty: number; unit_price: string }[]
 }
 
 export interface NewOrder {
@@ -137,6 +179,7 @@ export interface NewOrder {
   external_ref?: string
   note?: string
   items: { product_id: number; qty: number }[]
+  handed_over?: boolean
 }
 
 export interface Shortage {
@@ -145,6 +188,68 @@ export interface Shortage {
   name: string
   requested: number
   available: number
+}
+
+export interface NewReceipt {
+  reference?: string
+  note?: string
+  lines: { product_id: number; qty: number }[]
+}
+
+export interface Receipt {
+  id: number
+  reference: string | null
+  note: string | null
+  created_at: string
+  lines: {
+    product_id: number
+    sku: string
+    name: string
+    qty: number
+    on_hand: number
+    reserved: number
+    available: number
+  }[]
+}
+
+export type CountStatus = 'submitted' | 'approved' | 'rejected'
+
+export interface CountLine {
+  product_id: number
+  sku: string
+  name: string
+  expected: number
+  counted: number
+  variance: number
+  on_hand_now: number
+}
+
+export interface StockCount {
+  id: number
+  status: CountStatus
+  note: string | null
+  created_by_name: string | null
+  decided_by_name: string | null
+  created_at: string
+  decided_at: string | null
+  lines: CountLine[]
+}
+
+export interface CountSummary {
+  id: number
+  status: CountStatus
+  note: string | null
+  created_by_name: string | null
+  created_at: string
+  decided_at: string | null
+  line_count: number
+  diff_count: number
+}
+
+export interface NewCount {
+  note?: string
+  approve?: boolean
+  lines: { product_id: number; counted: number }[]
 }
 
 export interface AuditLog {
@@ -177,8 +282,7 @@ export interface ApiErrorBody {
   }
 }
 
-// Thrown for any response outside the caller's accepted statuses. code is the
-// api's stable machine-readable code; branch on it, not on message.
+// Branch on code, never on message: only code is a stable contract.
 export class ApiError extends Error {
   readonly status: number
   readonly code: string
@@ -206,16 +310,13 @@ export function shortagesOf(error: unknown): Shortage[] {
 }
 
 interface RequestOptions extends RequestInit {
-  // Non-2xx statuses whose body is still a valid T. /healthz answers 503 with
-  // a normal health document, which is data rather than a failure.
   acceptStatuses?: readonly number[]
 }
 
 export async function apiFetch<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { acceptStatuses = [], headers, ...init } = options
 
-  // HeadersInit may be a Headers instance or an array of pairs, which an object
-  // spread would silently drop, so normalise through Headers.
+  // Not an object spread: that drops a Headers instance or an array of pairs.
   const requestHeaders = new Headers(headers)
   if (!requestHeaders.has('Accept')) {
     requestHeaders.set('Accept', 'application/json')
@@ -237,7 +338,6 @@ async function readErrorBody(response: Response): Promise<Partial<ApiErrorBody> 
   try {
     return (await response.json()) as Partial<ApiErrorBody>
   } catch {
-    // A proxy or crash page, not our envelope.
     return undefined
   }
 }
@@ -275,6 +375,12 @@ export interface OrderQuery {
   offset?: number
 }
 
+export interface CountQuery {
+  status?: CountStatus
+  limit?: number
+  offset?: number
+}
+
 export const api = {
   getHealth: (signal?: AbortSignal) =>
     apiFetch<HealthResponse>('/healthz', { signal, acceptStatuses: [503] }),
@@ -298,6 +404,8 @@ export const api = {
     send<Balance>('POST', `/api/products/${id}/stock-in`, input),
   adjustStock: (id: number, input: { qty_change: number; reason: AdjustReason; note?: string }) =>
     send<Balance>('POST', `/api/products/${id}/adjustments`, input),
+  receiveStock: (input: NewReceipt) => send<Receipt>('POST', '/api/receipts', input),
+  reverseMovement: (id: number) => send<Balance>('POST', `/api/movements/${id}/reverse`),
   listMovements: (query: MovementQuery, signal?: AbortSignal) =>
     apiFetch<Page<Movement>>(withQuery('/api/movements', { ...query }), { signal }),
 
@@ -307,6 +415,19 @@ export const api = {
   createOrder: (input: NewOrder) => send<Order>('POST', '/api/orders', input),
   orderAction: (id: number, action: OrderAction) =>
     send<Order>('POST', `/api/orders/${id}/${action}`),
+
+  listCounts: (query: CountQuery, signal?: AbortSignal) =>
+    apiFetch<Page<CountSummary>>(withQuery('/api/counts', { ...query }), { signal }),
+  getCount: (id: number, signal?: AbortSignal) =>
+    apiFetch<StockCount>(`/api/counts/${id}`, { signal }),
+  createCount: (input: NewCount) => send<StockCount>('POST', '/api/counts', input),
+  decideCount: (id: number, decision: 'approve' | 'reject') =>
+    send<StockCount>('POST', `/api/counts/${id}/${decision}`),
+
+  lineSettings: (signal?: AbortSignal) => apiFetch<LineSettings>('/api/line/settings', { signal }),
+  lineCatalog: (signal?: AbortSignal) =>
+    apiFetch<{ items: LineCatalogItem[] }>('/api/line/catalog', { signal }).then((r) => r.items),
+  placeLineOrder: (input: LineOrderInput) => send<LineReceipt>('POST', '/api/line/orders', input),
 
   listAuditLogs: (query: { limit?: number; offset?: number }, signal?: AbortSignal) =>
     apiFetch<Page<AuditLog>>(withQuery('/api/audit-logs', { ...query }), { signal }),

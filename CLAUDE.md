@@ -19,10 +19,12 @@ An order first **reserves** stock (reserved goes up), then either **ships** it
 `available` is always derived, never stored. The database refuses any row where
 `on_hand - reserved < 0`, so no code path can persist an oversold balance.
 
-Built so far: sign-in with owner and staff roles, products, stock in and adjust,
-the movement ledger, orders with all-or-nothing reservation and the
-pack/ship/cancel flow, and the audit log. Channel integrations (Shopee, LINE
-webhooks) are not built yet; channel orders are entered by hand.
+Built so far: sign-in with owner and staff roles, products with opening stock,
+stock in (one product or a whole delivery) and adjust, undoing a mistyped
+entry, stock counts, a today page, the movement ledger, orders with
+all-or-nothing reservation and the pack/ship/cancel flow, and the audit log.
+LINE customers can order themselves through a LIFF form (`/line`); Shopee
+orders are still entered by hand.
 
 ## Stack
 
@@ -49,7 +51,7 @@ api/openapi.yaml           Contract, written before handlers. Keep it in step wi
 backend/
   cmd/api/main.go          Wiring only. Does not import gin.
   internal/
-    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE)
+    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE, LINE_*)
     platform/database/     pgxpool setup + startup ping
     platform/logger/       slog JSON handler
     http/                  package httpx: router, middleware, JSON error helpers
@@ -57,6 +59,8 @@ backend/
     auth/, users/          Cookie sessions, password hashing, team accounts
     products/, stock/      Catalog, balances, stock in/adjust, the movement ledger
     orders/                All-or-nothing reservation and the pack/ship/cancel flow
+    counts/                Stock counts: staff submit, owner approves into ADJUST movements
+    line/                  LINE customer ordering (LIFF form, ID token check, status messages)
     audit/                 Who did what, written in the same transaction as the change
     platform/actor/        The signed-in user on context.Context
   cmd/seed/                Dev accounts and sample stock (make seed)
@@ -67,7 +71,11 @@ frontend/
   src/routes/              File-based routes; routeTree.gen.ts is generated and committed
   src/lib/api.ts           Typed fetch client, mirrors api/openapi.yaml
   src/components/ui/       shadcn/ui components (vendored; regenerate with the shadcn CLI)
-docs/DESIGN.md             Visual design system (tokens, components, do and don't). Follow it for new UI.
+docs/
+  CODE-NOTES.md            Why the code is the way it is, grouped by area
+  DESIGN.md                Visual design system (tokens, components, do and don't). Follow it for new UI.
+  LINE-SETUP.md            Connecting a LINE Official Account for customer ordering
+  adr/                     Architecture decision records (created with the first one)
 ```
 
 Backend code is organised **by feature, not by layer**. A feature is one package
@@ -131,9 +139,10 @@ it via `httpx.RequestIDFrom(ctx)` without seeing gin.
 
 ## Roles
 
-- `owner` can do everything. `staff` can receive stock, create orders and
-  pack, ship or cancel them, but cannot adjust stock, create or edit products,
-  manage users or read the audit log.
+- `owner` can do everything. `staff` can receive stock, submit stock counts,
+  create orders and pack, ship or cancel them, but cannot adjust stock, approve
+  counts, undo movements, create or edit products, manage users or read the
+  audit log.
 - Enforce a role with `httpx.RequireRole` on the route. Services read the
   signed-in user with `actor.From(ctx)`; they never see the cookie.
 - Stock and order writes lock `stock_balances` rows in product id order
@@ -147,6 +156,40 @@ it via `httpx.RequestIDFrom(ctx)` without seeing gin.
 - Config comes from the environment only. `.env.example` is committed; `.env`
   never is.
 - No emoji in code, comments, logs or commit messages.
+
+## Comments
+
+**Default: no comment.** A clear name is the explanation. Comments are English,
+short and rare.
+
+| Kind | Example | Rule |
+|---|---|---|
+| Section label | `// Handlers`, `{/* Header */}` | 1-3 words, only where a long file or JSX tree benefits from signposts |
+| One-line API doc | `// NewPool returns a pool that has already answered a ping; the caller must Close it.` | Only when the name and types don't already say it. Never on every export |
+| Trap | `// 404 not 403: anti-enumeration (docs/adr/0004)` | One line at the spot where the mistake would be made, pointing to docs for the why |
+| Tool input | `//go:build`, `//nolint`, `// eslint-disable-next-line x -- why`, `// @ts-expect-error`, `-- name: X :one` | Exempt, tools read these |
+
+Tool annotations are not comments. Deleting one silently breaks what reads it,
+so keep them and do not add a prose line above that repeats them.
+
+Everything else stays out of code:
+
+- Rationale and history go to `docs/CODE-NOTES.md`, or an ADR in `docs/adr/`
+  for a real decision.
+- Narration is deleted. If a comment explains what a name means, rename the
+  thing instead.
+
+Budget and limits:
+
+- Any comment block is at most 2 content lines, tool input excepted.
+- Doc comments are not required on exported symbols. golangci-lint's
+  `comments` exclusion preset stays on for that reason.
+- The test: would a competent teammate fail to guess this? If not, delete it.
+- Never duplicate a rule that lives in this file or `docs/`; copies drift.
+- No changelog markers, commented-out code, "Note:" narration, or paragraphs
+  explaining a UI choice.
+- A PR that changes behaviour updates its note in `docs/CODE-NOTES.md` too.
+- Applied migrations keep their original comments, since they are never edited.
 
 ## Testing
 

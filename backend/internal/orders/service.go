@@ -69,6 +69,17 @@ type NewOrder struct {
 	ExternalRef string
 	Note        string
 	Items       []ItemRequest
+	// HandedOver records a store sale where the customer leaves with the goods, so it ships at once.
+	HandedOver bool
+	Customer   *Customer
+}
+
+// Customer is who an order ships to. LineUserID is set only for orders placed through LINE.
+type Customer struct {
+	Name       string
+	Phone      string
+	Address    string
+	LineUserID string
 }
 
 type Line struct {
@@ -150,6 +161,7 @@ type Order struct {
 	ShippedAt     *time.Time
 	CanceledAt    *time.Time
 	Items         []Item
+	Customer      *Customer
 }
 
 type Summary struct {
@@ -183,12 +195,29 @@ type Repository interface {
 	List(ctx context.Context, f Filter) ([]Summary, int64, error)
 }
 
+// Notifier hears about every order created or moved, after its transaction commits.
+type Notifier interface {
+	OrderUpdated(ctx context.Context, o Order)
+}
+
 type Service struct {
-	repo Repository
+	repo     Repository
+	notifier Notifier
 }
 
 func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
+}
+
+func (s *Service) WithNotifier(n Notifier) *Service {
+	s.notifier = n
+	return s
+}
+
+func (s *Service) notify(ctx context.Context, o Order) {
+	if s.notifier != nil {
+		s.notifier.OrderUpdated(ctx, o)
+	}
 }
 
 func (s *Service) Create(ctx context.Context, in NewOrder) (Order, error) {
@@ -214,7 +243,12 @@ func (s *Service) Create(ctx context.Context, in NewOrder) (Order, error) {
 		}
 		return Order{}, fmt.Errorf("create order: %w", err)
 	}
-	return s.Get(ctx, id)
+	o, err := s.Get(ctx, id)
+	if err != nil {
+		return Order{}, err
+	}
+	s.notify(ctx, o)
+	return o, nil
 }
 
 func (s *Service) Apply(ctx context.Context, id int64, action Action) (Order, error) {
@@ -228,7 +262,12 @@ func (s *Service) Apply(ctx context.Context, id int64, action Action) (Order, er
 		}
 		return Order{}, fmt.Errorf("%s order: %w", action, err)
 	}
-	return s.Get(ctx, id)
+	o, err := s.Get(ctx, id)
+	if err != nil {
+		return Order{}, err
+	}
+	s.notify(ctx, o)
+	return o, nil
 }
 
 func (s *Service) Get(ctx context.Context, id int64) (Order, error) {
@@ -302,6 +341,20 @@ func validate(in NewOrder) (NewOrder, error) {
 	in.Note = strings.TrimSpace(in.Note)
 	if utf8.RuneCountInString(in.ExternalRef) > 100 || utf8.RuneCountInString(in.Note) > 500 {
 		return NewOrder{}, fmt.Errorf("%w: text too long", ErrInvalidOrder)
+	}
+	if in.Customer != nil {
+		c := *in.Customer
+		c.Name, c.Phone, c.Address = strings.TrimSpace(c.Name), strings.TrimSpace(c.Phone), strings.TrimSpace(c.Address)
+		if utf8.RuneCountInString(c.Name) > 100 || utf8.RuneCountInString(c.Phone) > 20 || utf8.RuneCountInString(c.Address) > 500 {
+			return NewOrder{}, fmt.Errorf("%w: customer details too long", ErrInvalidOrder)
+		}
+		if c.LineUserID != "" && in.Channel != ChannelLine {
+			return NewOrder{}, fmt.Errorf("%w: a LINE customer needs the line channel", ErrInvalidOrder)
+		}
+		in.Customer = &c
+	}
+	if in.HandedOver && in.Channel != ChannelStore {
+		return NewOrder{}, fmt.Errorf("%w: only a store sale can be handed over at once", ErrInvalidOrder)
 	}
 	if len(in.Items) == 0 || len(in.Items) > MaxItems {
 		return NewOrder{}, fmt.Errorf("%w: an order needs 1 to %d items", ErrInvalidOrder, MaxItems)
