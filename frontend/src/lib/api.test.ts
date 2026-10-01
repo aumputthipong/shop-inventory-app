@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { ApiError, api, apiFetch } from '@/lib/api'
+import { ApiError, api, apiFetch, shortagesOf } from '@/lib/api'
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -48,5 +48,28 @@ describe('apiFetch', () => {
     const error: unknown = await apiFetch('/healthz').catch((e: unknown) => e)
 
     expect(error).toMatchObject({ status: 502, code: 'http_error' })
+  })
+})
+
+describe('shortagesOf', () => {
+  it('reads the short lines from an insufficient_stock error', () => {
+    const error = new ApiError(409, {
+      error: {
+        code: 'insufficient_stock',
+        message: 'stock changed',
+        details: {
+          items: [{ product_id: 2, sku: 'SKU-0002', name: 'jeans', requested: 3, available: 2 }],
+        },
+      },
+    })
+
+    expect(shortagesOf(error)).toEqual([
+      { product_id: 2, sku: 'SKU-0002', name: 'jeans', requested: 3, available: 2 },
+    ])
+  })
+
+  it('returns nothing for other errors', () => {
+    expect(shortagesOf(new ApiError(500, undefined))).toEqual([])
+    expect(shortagesOf(new Error('boom'))).toEqual([])
   })
 })

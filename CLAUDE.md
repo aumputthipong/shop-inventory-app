@@ -19,7 +19,12 @@ An order first **reserves** stock (reserved goes up), then either **ships** it
 `available` is always derived, never stored. The database refuses any row where
 `on_hand - reserved < 0`, so no code path can persist an oversold balance.
 
-Channel integrations are not built yet. The repo is currently a scaffold.
+Built so far: sign-in with owner and staff roles, products with opening stock,
+stock in (one product or a whole delivery) and adjust, undoing a mistyped
+entry, stock counts, a today page, the movement ledger, orders with
+all-or-nothing reservation and the pack/ship/cancel flow, and the audit log.
+LINE customers can order themselves through a LIFF form (`/line`); Shopee
+orders are still entered by hand.
 
 ## Stack
 
@@ -46,11 +51,19 @@ api/openapi.yaml           Contract, written before handlers. Keep it in step wi
 backend/
   cmd/api/main.go          Wiring only. Does not import gin.
   internal/
-    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE)
+    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE, LINE_*)
     platform/database/     pgxpool setup + startup ping
     platform/logger/       slog JSON handler
     http/                  package httpx: router, middleware, JSON error helpers
     health/                GET /healthz
+    auth/, users/          Cookie sessions, password hashing, team accounts
+    products/, stock/      Catalog, balances, stock in/adjust, the movement ledger
+    orders/                All-or-nothing reservation and the pack/ship/cancel flow
+    counts/                Stock counts: staff submit, owner approves into ADJUST movements
+    line/                  LINE customer ordering (LIFF form, ID token check, status messages)
+    audit/                 Who did what, written in the same transaction as the change
+    platform/actor/        The signed-in user on context.Context
+  cmd/seed/                Dev accounts and sample stock (make seed)
   db/migrations/           golang-migrate SQL, the single source of schema truth
   db/queries/              sqlc input
   db/sqlc/                 sqlc output (generated, committed, never hand-edited)
@@ -60,6 +73,8 @@ frontend/
   src/components/ui/       shadcn/ui components (vendored; regenerate with the shadcn CLI)
 docs/
   CODE-NOTES.md            Why the code is the way it is, grouped by area
+  DESIGN.md                Visual design system (tokens, components, do and don't). Follow it for new UI.
+  LINE-SETUP.md            Connecting a LINE Official Account for customer ordering
   adr/                     Architecture decision records (created with the first one)
 ```
 
@@ -78,7 +93,9 @@ Backend, from `backend/` (needs GNU make; the root `.env` is loaded automaticall
 | `make migrate-new name=add_orders` | Create a sequential migration pair |
 | `make sqlc` | Regenerate `db/sqlc` |
 | `make run` | Run the api on `HTTP_PORT` |
+| `make seed` | Create dev accounts and sample stock (empty database only) |
 | `make test` | Unit tests (no database needed) |
+| `make test-integration` | Create and migrate the test database, then run `-tags integration` tests |
 | `make lint` | golangci-lint, including the depguard gin rules |
 | `make fmt` | gofmt + goimports |
 
@@ -119,6 +136,17 @@ it via `httpx.RequestIDFrom(ctx)` without seeing gin.
 - Run `make sqlc` after changing migrations or queries, and commit the output.
 - Handlers never serialise sqlc models directly. Map them to response types;
   `sqlc.User` carries `password_hash` with a JSON tag.
+
+## Roles
+
+- `owner` can do everything. `staff` can receive stock, submit stock counts,
+  create orders and pack, ship or cancel them, but cannot adjust stock, approve
+  counts, undo movements, create or edit products, manage users or read the
+  audit log.
+- Enforce a role with `httpx.RequireRole` on the route. Services read the
+  signed-in user with `actor.From(ctx)`; they never see the cookie.
+- Stock and order writes lock `stock_balances` rows in product id order
+  (`stock.Lock`) before deciding anything, then write through `stock.Apply`.
 
 ## Code rules
 
@@ -173,8 +201,9 @@ Budget and limits:
 - Frontend: Vitest + Testing Library. Test behaviour through roles and text,
   not implementation details. Stub the api at `api.*`, not at `fetch`, in
   component tests.
-- Integration tests against a real database will get their own build tag and
-  CI job when the first repository lands.
+- Integration tests carry the `integration` build tag and run against
+  `TEST_DATABASE_URL` (`make test-integration`, CI job `backend integration`).
+  They create their own rows; never point them at the dev database.
 
 ## Git
 

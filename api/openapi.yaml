@@ -2,18 +2,21 @@ openapi: 3.1.0
 
 info:
   title: shop-inventory-app API
-  version: 0.1.0
+  version: 0.6.0
   description: |
     Multi-channel inventory back-office. A single stock pool is sold through
     several channels (store, Shopee, LINE OA).
 
     Stock is tracked as on_hand and reserved, where available = on_hand -
-    reserved. Reservations are what prevent two channels from selling the same
-    unit under concurrent orders.
+    reserved. An order reserves every line or none of them, inside one
+    transaction that locks the balance rows, so two channels can never sell
+    the same unit.
 
-    This document is the contract and is written before the handlers. It
-    currently covers the health endpoint only; product, stock and channel
-    endpoints are added as those features land.
+    Every endpoint under /api except /api/auth/login, /api/auth/logout and
+    /api/line/* needs the session cookie set by login. The /api/line endpoints
+    serve customers ordering from the shop's LINE Official Account; they prove
+    who they are with a LINE ID token instead. Owner-only endpoints answer 403 for
+    staff.
 
 servers:
   - url: http://localhost:8080
@@ -22,6 +25,19 @@ servers:
 tags:
   - name: system
     description: Operational endpoints used by orchestrators and load balancers.
+  - name: auth
+  - name: products
+  - name: stock
+  - name: orders
+  - name: counts
+    description: Physical stock counts. Staff submit, an owner approves and the differences become ADJUST movements.
+  - name: line
+    description: Customer order form opened inside LINE (LIFF). Public; orders need a LINE ID token.
+  - name: audit
+  - name: users
+
+security:
+  - session: []
 
 paths:
   /healthz:
@@ -65,7 +81,887 @@ paths:
                     status: degraded
                     db: error
 
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: Sign in and receive the session cookie
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Signed in. Sets the HttpOnly, SameSite=Lax `sid` cookie for 7 days.
+          headers:
+            Set-Cookie:
+              schema: { type: string }
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401":
+          description: Wrong email or password (code invalid_credentials). The same answer for unknown emails.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "403":
+          description: Correct password but the account is disabled (code account_disabled).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/auth/logout:
+    post:
+      tags: [auth]
+      summary: End the current session
+      operationId: logout
+      security: []
+      responses:
+        "204":
+          description: Session deleted and cookie cleared.
+
+  /api/auth/me:
+    get:
+      tags: [auth]
+      summary: The signed-in user
+      operationId: me
+      responses:
+        "200":
+          description: Current user.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/auth/password:
+    post:
+      tags: [auth]
+      summary: Change the signed-in user's password
+      description: Signs out every other session of this user; the current one stays.
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties:
+                current_password: { type: string }
+                new_password: { type: string, minLength: 8 }
+      responses:
+        "204":
+          description: Changed.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422":
+          description: Wrong current password (field current_password) or a new password that is too short (field new_password).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/products:
+    get:
+      tags: [products]
+      summary: Every product with its stock balance
+      operationId: listProducts
+      parameters:
+        - name: q
+          in: query
+          description: Case-insensitive match on name or SKU.
+          schema: { type: string }
+      responses:
+        "200":
+          description: Products ordered by SKU.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Product" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [products]
+      summary: Create a product (owner)
+      description: A new product starts with a zero balance; use stock-in to add units.
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProductInput" }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: Another product already uses this SKU (code conflict).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/products/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [products]
+      summary: One product, its balance and the open orders holding it
+      operationId: getProduct
+      responses:
+        "200":
+          description: Product detail.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [products]
+      summary: Change product fields (owner)
+      description: Only the fields sent are changed. Deactivating stops new orders but keeps existing reservations.
+      operationId: updateProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sku: { type: string, maxLength: 40 }
+                name: { type: string, maxLength: 200 }
+                price: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+                low_stock_threshold: { type: integer, minimum: 0 }
+                is_active: { type: boolean }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ProductDetail" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Another product already uses this SKU.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/products/{id}/stock-in:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [stock]
+      summary: Receive units into stock
+      operationId: stockIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [qty]
+              properties:
+                qty: { type: integer, minimum: 1, maximum: 100000 }
+                note: { type: string, maxLength: 500 }
+      responses:
+        "200":
+          description: New balance. A STOCK_IN movement was recorded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Balance" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/products/{id}/adjustments:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [stock]
+      summary: Correct on-hand stock with a reason (owner)
+      description: |
+        A negative change can only take units that are available. Units held
+        by orders cannot be adjusted away; the response is 409 with how many
+        could have been removed.
+      operationId: adjustStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [qty_change, reason]
+              properties:
+                qty_change: { type: integer, minimum: -100000, maximum: 100000, not: { const: 0 } }
+                reason: { type: string, enum: [count_correction, damaged, lost, other] }
+                note: { type: string, maxLength: 500, description: Required when reason is other. }
+      responses:
+        "200":
+          description: New balance. An ADJUST movement was recorded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Balance" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Not enough available stock (code insufficient_stock).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+              examples:
+                held:
+                  value:
+                    error:
+                      code: insufficient_stock
+                      message: not enough available stock
+                      details: { requested: 4, available: 3, reserved: 5 }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/movements:
+    get:
+      tags: [stock]
+      summary: The stock ledger, newest first
+      operationId: listMovements
+      parameters:
+        - name: product_id
+          in: query
+          schema: { type: integer, format: int64 }
+        - name: type
+          in: query
+          schema: { $ref: "#/components/schemas/MovementType" }
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of movements. Each row carries the balance right after it.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/Movement" }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/movements/{id}/reverse:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [stock]
+      summary: Undo a mistyped stock-in or adjustment (owner)
+      description: |
+        Writes an opposite ADJUST with reason reversal and reverses_id pointing at the original;
+        both rows stay in the ledger. Only STOCK_IN and ADJUST rows from the last 7 days that are
+        not tied to an order, not a reversal themselves and not already reversed qualify.
+      operationId: reverseMovement
+      responses:
+        "200":
+          description: New balance.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Balance" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: |
+            invalid_state with details.reason already_reversed, not_reversible or too_old, or
+            insufficient_stock when orders already hold the units the reversal would remove.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/receipts:
+    post:
+      tags: [stock]
+      summary: Receive several products from one delivery in one step
+      description: |
+        Writes one STOCK_IN per line, all tied to the new receipt, in a single
+        transaction. An unknown product rejects the whole delivery. Staff may
+        receive. Each line can later be undone on its own like any stock-in.
+      operationId: receiveStock
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lines]
+              properties:
+                reference: { type: string, maxLength: 100, description: The supplier's delivery note or invoice number. }
+                note: { type: string, maxLength: 500 }
+                lines:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [product_id, qty]
+                    properties:
+                      product_id: { type: integer, format: int64 }
+                      qty: { type: integer, minimum: 1, maximum: 100000 }
+      responses:
+        "201":
+          description: Received, with each product's balance afterwards.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Receipt" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/orders:
+    get:
+      tags: [orders]
+      summary: Orders, newest first
+      operationId: listOrders
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/OrderStatus" }
+        - name: q
+          in: query
+          description: Matches order number or channel reference.
+          schema: { type: string }
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of orders.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/OrderSummary" }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [orders]
+      summary: Create an order and reserve its stock, all or nothing
+      description: |
+        Locks the balance rows of every line in product id order, checks each
+        line against available stock, then reserves them all in one
+        transaction. If any line is short nothing is reserved, the attempt is
+        written to the audit log, and the response lists every short line.
+      operationId: createOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              properties:
+                channel: { $ref: "#/components/schemas/Channel" }
+                external_ref: { type: string, maxLength: 100, description: Order id on the channel; unique per channel. }
+                note: { type: string, maxLength: 500 }
+                handed_over:
+                  type: boolean
+                  default: false
+                  description: Store sales only. The customer leaves with the goods, so the order is reserved and shipped in the same transaction and comes back as shipped.
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 50
+                  items:
+                    type: object
+                    required: [product_id, qty]
+                    properties:
+                      product_id: { type: integer, format: int64 }
+                      qty: { type: integer, minimum: 1, maximum: 100000 }
+      responses:
+        "201":
+          description: Created with status reserved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: |
+            insufficient_stock with details.items listing every short line, or
+            conflict when the channel reference was already recorded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+              examples:
+                short:
+                  value:
+                    error:
+                      code: insufficient_stock
+                      message: stock changed and some items no longer have enough available
+                      details:
+                        items:
+                          - { product_id: 2, sku: SKU-0002, name: กางเกงยีนส์ขายาว 32, requested: 3, available: 2 }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/orders/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [orders]
+      summary: One order with its lines
+      operationId: getOrder
+      responses:
+        "200":
+          description: Order.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Order" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/orders/{id}/pack:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [orders]
+      summary: reserved to packed; stock is unchanged
+      operationId: packOrder
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/orders/{id}/ship:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [orders]
+      summary: packed to shipped; on_hand and reserved both drop (SHIP movements)
+      operationId: shipOrder
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/orders/{id}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [orders]
+      summary: reserved or packed to canceled; reserved units are released (RELEASE movements)
+      operationId: cancelOrder
+      responses:
+        "200": { $ref: "#/components/responses/OrderOk" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/counts:
+    get:
+      tags: [counts]
+      summary: Stock counts, newest first
+      operationId: listCounts
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: "#/components/schemas/CountStatus" }
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of stock counts.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/CountSummary" }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [counts]
+      summary: Submit a stock count, and optionally approve it at once (owner)
+      description: |
+        Each line records what was counted and, as expected, the product's
+        on_hand when the count is saved. Only the products listed are counted.
+        With approve true (owners only) the count is saved and approved in one
+        transaction, so a shortage leaves nothing behind.
+      operationId: createCount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [lines]
+              properties:
+                note: { type: string, maxLength: 500 }
+                approve: { type: boolean, default: false }
+                lines:
+                  type: array
+                  minItems: 1
+                  maxItems: 500
+                  items:
+                    type: object
+                    required: [product_id, counted]
+                    properties:
+                      product_id: { type: integer, format: int64 }
+                      counted: { type: integer, minimum: 0, maximum: 100000 }
+      responses:
+        "201":
+          description: Created, with status submitted or approved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/CountShortage" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/counts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [counts]
+      summary: One stock count with its lines
+      operationId: getCount
+      responses:
+        "200":
+          description: Stock count.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/counts/{id}/approve:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [counts]
+      summary: Approve a submitted count and adjust stock by each line's variance (owner)
+      description: |
+        Writes one ADJUST per line whose counted differs from expected, with
+        reason count_correction and the count as its reference. The variance is
+        measured against on_hand when the count was saved, so movements since
+        then are kept. Refused as a whole if any removal would take units that
+        orders hold.
+      operationId: approveCount
+      responses:
+        "200":
+          description: The count, now approved.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: insufficient_stock with details.items, or invalid_state with details.status when the count was already decided.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/counts/{id}/reject:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [counts]
+      summary: Reject a submitted count; stock is unchanged (owner)
+      operationId: rejectCount
+      responses:
+        "200":
+          description: The count, now rejected.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StockCount" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: invalid_state with details.status when the count was already decided.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/line/settings:
+    get:
+      tags: [line]
+      summary: How the LINE order form should sign the customer in
+      operationId: lineSettings
+      security: []
+      responses:
+        "200":
+          description: off hides the form, dev fakes sign-in, live uses LIFF with liff_id.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [mode, liff_id]
+                properties:
+                  mode: { type: string, enum: ["off", dev, live] }
+                  liff_id: { type: string }
+
+  /api/line/catalog:
+    get:
+      tags: [line]
+      summary: Products a customer can order
+      description: Active products only. available is given only when stock is low, so exact counts stay private.
+      operationId: lineCatalog
+      security: []
+      responses:
+        "200":
+          description: Catalog.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, name, price, stock_status, available]
+                      properties:
+                        id: { type: integer, format: int64 }
+                        name: { type: string }
+                        price: { $ref: "#/components/schemas/Money" }
+                        stock_status: { $ref: "#/components/schemas/StockStatus" }
+                        available: { type: [integer, "null"] }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/line/orders:
+    post:
+      tags: [line]
+      summary: Place an order as a LINE customer
+      description: |
+        The ID token is checked with LINE (or, in dev mode, must look like
+        dev:<name>). The order goes through the same all-or-nothing
+        reservation as every other channel, on the line channel, and the
+        customer gets a LINE message now and whenever its status changes.
+      operationId: placeLineOrder
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id_token, name, phone, address, items]
+              properties:
+                id_token: { type: string, description: From liff.getIDToken(). }
+                name: { type: string, maxLength: 100 }
+                phone: { type: string, maxLength: 20, description: "Thai number, 9 or 10 digits starting with 0; spaces and dashes are ignored." }
+                address: { type: string, maxLength: 500 }
+                note: { type: string, maxLength: 500 }
+                items:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items:
+                    type: object
+                    required: [product_id, qty]
+                    properties:
+                      product_id: { type: integer, format: int64 }
+                      qty: { type: integer, minimum: 1, maximum: 100 }
+      responses:
+        "201":
+          description: Placed and reserved.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [order_no, status, total, items]
+                properties:
+                  order_no: { type: string }
+                  status: { $ref: "#/components/schemas/OrderStatus" }
+                  total: { $ref: "#/components/schemas/Money" }
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [name, qty, unit_price]
+                      properties:
+                        name: { type: string }
+                        qty: { type: integer }
+                        unit_price: { $ref: "#/components/schemas/Money" }
+        "401":
+          description: The LINE ID token is missing, expired or not for this channel.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: insufficient_stock; details.items lists each product that ran out, with how many are left.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/audit-logs:
+    get:
+      tags: [audit]
+      summary: Who did what, newest first (owner)
+      operationId: listAuditLogs
+      parameters:
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Offset"
+      responses:
+        "200":
+          description: A page of audit entries.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, total]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/AuditLog" }
+                  total: { type: integer }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /api/users:
+    get:
+      tags: [users]
+      summary: Team members (owner)
+      operationId: listUsers
+      responses:
+        "200":
+          description: Users.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: "#/components/schemas/TeamMember" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [users]
+      summary: Add a team member (owner)
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, name, role, password]
+              properties:
+                email: { type: string, format: email }
+                name: { type: string, maxLength: 100 }
+                role: { $ref: "#/components/schemas/Role" }
+                password: { type: string, minLength: 8 }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TeamMember" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409":
+          description: Email already has an account (code conflict).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422": { $ref: "#/components/responses/Validation" }
+
+  /api/users/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    patch:
+      tags: [users]
+      summary: Disable or re-enable a member (owner)
+      description: Disabling deletes the member's sessions at once. Owners cannot disable themselves or the last active owner.
+      operationId: setUserActive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_active]
+              properties:
+                is_active: { type: boolean }
+      responses:
+        "200":
+          description: Updated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TeamMember" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: invalid_state with details.reason self or last_owner.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+
+  /api/users/{id}/password:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    post:
+      tags: [users]
+      summary: Set a new password for a member who forgot theirs (owner)
+      description: Signs the member out everywhere.
+      operationId: resetUserPassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 8 }
+      responses:
+        "204":
+          description: Changed.
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: invalid_state with details.reason self; use /api/auth/password instead.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
+        "422": { $ref: "#/components/responses/Validation" }
+
 components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: sid
+
   headers:
     RequestId:
       description: |
@@ -73,6 +969,58 @@ components:
         client did not supply one.
       schema:
         type: string
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64, minimum: 1 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 200, default: 50 }
+    Offset:
+      name: offset
+      in: query
+      schema: { type: integer, minimum: 0, default: 0 }
+
+  responses:
+    Unauthorized:
+      description: No valid session (code unauthorized).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    Forbidden:
+      description: The signed-in role may not do this (code forbidden).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    NotFound:
+      description: No such resource (code not_found).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    Validation:
+      description: The request body failed validation (code validation_failed).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    InvalidState:
+      description: The order's current status does not allow this action (code invalid_state).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    CountShortage:
+      description: insufficient_stock; details.items lists every product whose missing units orders already hold.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    OrderOk:
+      description: The order after the transition.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Order" }
 
   schemas:
     HealthResponse:
@@ -87,6 +1035,285 @@ components:
           type: string
           enum: [ok, error]
           description: Result of the database ping.
+
+    Role:
+      type: string
+      enum: [owner, staff]
+
+    User:
+      type: object
+      required: [id, email, name, role]
+      properties:
+        id: { type: integer, format: int64 }
+        email: { type: string }
+        name: { type: string }
+        role: { $ref: "#/components/schemas/Role" }
+
+    TeamMember:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          required: [is_active, created_at]
+          properties:
+            is_active: { type: boolean }
+            created_at: { type: string, format: date-time }
+
+    Money:
+      type: string
+      pattern: '^\d{1,10}\.\d{2}$'
+      description: Baht as a decimal string, never a float.
+      examples: ["600.00"]
+
+    ProductInput:
+      type: object
+      required: [sku, name, price]
+      properties:
+        sku: { type: string, pattern: '^[A-Za-z0-9._-]{1,40}$' }
+        name: { type: string, maxLength: 200 }
+        price: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+        low_stock_threshold: { type: integer, minimum: 0, default: 0 }
+        is_active: { type: boolean, default: true }
+        initial_qty:
+          type: integer
+          minimum: 0
+          maximum: 100000
+          default: 0
+          description: Stock the shop already holds. Recorded as a STOCK_IN movement with reason opening_balance.
+
+    StockStatus:
+      type: string
+      enum: [in_stock, low, out_of_stock]
+      description: out_of_stock when available <= 0, low when available <= low_stock_threshold.
+
+    Product:
+      type: object
+      required: [id, sku, name, price, low_stock_threshold, is_active, on_hand, reserved, available, stock_status, created_at, updated_at]
+      properties:
+        id: { type: integer, format: int64 }
+        sku: { type: string }
+        name: { type: string }
+        price: { $ref: "#/components/schemas/Money" }
+        low_stock_threshold: { type: integer }
+        is_active: { type: boolean }
+        on_hand: { type: integer }
+        reserved: { type: integer }
+        available: { type: integer, description: on_hand - reserved }
+        stock_status: { $ref: "#/components/schemas/StockStatus" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    Hold:
+      type: object
+      required: [order_id, order_no, channel, status, qty, created_at]
+      properties:
+        order_id: { type: integer, format: int64 }
+        order_no: { type: string }
+        channel: { $ref: "#/components/schemas/Channel" }
+        status: { $ref: "#/components/schemas/OrderStatus" }
+        qty: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    ProductDetail:
+      allOf:
+        - $ref: "#/components/schemas/Product"
+        - type: object
+          required: [holds]
+          properties:
+            holds:
+              type: array
+              description: Open orders (reserved or packed) holding this product.
+              items: { $ref: "#/components/schemas/Hold" }
+
+    Balance:
+      type: object
+      required: [product_id, on_hand, reserved, available]
+      properties:
+        product_id: { type: integer, format: int64 }
+        on_hand: { type: integer }
+        reserved: { type: integer }
+        available: { type: integer }
+
+    MovementType:
+      type: string
+      enum: [STOCK_IN, ADJUST, RESERVE, RELEASE, SHIP, RETURN]
+
+    Movement:
+      type: object
+      required: [id, product_id, sku, product_name, type, qty_change, reserved_change, on_hand_after, reserved_after, available_after, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        product_id: { type: integer, format: int64 }
+        sku: { type: string }
+        product_name: { type: string }
+        type: { $ref: "#/components/schemas/MovementType" }
+        qty_change: { type: integer, description: Change to on_hand. }
+        reserved_change: { type: integer, description: Change to reserved. }
+        on_hand_after: { type: integer }
+        reserved_after: { type: integer }
+        available_after: { type: integer }
+        order_id: { type: [integer, "null"], format: int64 }
+        order_no: { type: [string, "null"] }
+        order_channel:
+          oneOf:
+            - $ref: "#/components/schemas/Channel"
+            - type: "null"
+        count_id: { type: [integer, "null"], format: int64, description: Set on an ADJUST written by an approved stock count. }
+        receipt_id: { type: [integer, "null"], format: int64, description: Set on a STOCK_IN booked through a receipt. }
+        receipt_reference: { type: [string, "null"] }
+        reason:
+          type: [string, "null"]
+          description: count_correction, damaged, lost, other or reversal for ADJUST; opening_balance for a product's first STOCK_IN.
+        note: { type: [string, "null"] }
+        created_by_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        reverses_id: { type: [integer, "null"], format: int64, description: Set on a reversal; the movement it undoes. }
+        reversed: { type: boolean, description: True once another movement has reversed this one. }
+
+    Channel:
+      type: string
+      enum: [store, shopee, line]
+      default: store
+
+    OrderStatus:
+      type: string
+      enum: [reserved, packed, shipped, canceled]
+
+    OrderItem:
+      type: object
+      required: [product_id, sku, name, qty, unit_price]
+      properties:
+        product_id: { type: integer, format: int64 }
+        sku: { type: string }
+        name: { type: string }
+        qty: { type: integer }
+        unit_price: { $ref: "#/components/schemas/Money" }
+
+    OrderSummary:
+      type: object
+      required: [id, order_no, channel, status, total, item_count, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        order_no: { type: string, examples: [ORD-2026-00012] }
+        channel: { $ref: "#/components/schemas/Channel" }
+        external_ref: { type: [string, "null"] }
+        status: { $ref: "#/components/schemas/OrderStatus" }
+        total: { $ref: "#/components/schemas/Money" }
+        item_count: { type: integer, description: Sum of line quantities. }
+        created_by_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+
+    Order:
+      type: object
+      required: [id, order_no, channel, status, total, items, created_at, updated_at]
+      properties:
+        id: { type: integer, format: int64 }
+        order_no: { type: string }
+        channel: { $ref: "#/components/schemas/Channel" }
+        external_ref: { type: [string, "null"] }
+        status: { $ref: "#/components/schemas/OrderStatus" }
+        total: { $ref: "#/components/schemas/Money" }
+        note: { type: [string, "null"] }
+        created_by_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        packed_at: { type: [string, "null"], format: date-time }
+        shipped_at: { type: [string, "null"], format: date-time }
+        canceled_at: { type: [string, "null"], format: date-time }
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/OrderItem" }
+        customer:
+          description: Who the order ships to; set for orders placed through LINE.
+          oneOf:
+            - type: object
+              required: [name, phone, address, from_line]
+              properties:
+                name: { type: string }
+                phone: { type: string }
+                address: { type: string }
+                from_line: { type: boolean, description: The customer ordered through LINE and gets status messages there. }
+            - type: "null"
+
+    Receipt:
+      type: object
+      required: [id, lines, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        reference: { type: [string, "null"] }
+        note: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        lines:
+          type: array
+          items:
+            type: object
+            required: [product_id, sku, name, qty, on_hand, reserved, available]
+            properties:
+              product_id: { type: integer, format: int64 }
+              sku: { type: string }
+              name: { type: string }
+              qty: { type: integer }
+              on_hand: { type: integer }
+              reserved: { type: integer }
+              available: { type: integer }
+
+    CountStatus:
+      type: string
+      enum: [submitted, approved, rejected]
+
+    CountLine:
+      type: object
+      required: [product_id, sku, name, expected, counted, variance, on_hand_now]
+      properties:
+        product_id: { type: integer, format: int64 }
+        sku: { type: string }
+        name: { type: string }
+        expected: { type: integer, description: on_hand when the count was saved. }
+        counted: { type: integer }
+        variance: { type: integer, description: counted - expected. }
+        on_hand_now: { type: integer }
+
+    StockCount:
+      type: object
+      required: [id, status, lines, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/CountStatus" }
+        note: { type: [string, "null"] }
+        created_by_name: { type: [string, "null"] }
+        decided_by_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        decided_at: { type: [string, "null"], format: date-time }
+        lines:
+          type: array
+          items: { $ref: "#/components/schemas/CountLine" }
+
+    CountSummary:
+      type: object
+      required: [id, status, line_count, diff_count, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        status: { $ref: "#/components/schemas/CountStatus" }
+        note: { type: [string, "null"] }
+        created_by_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
+        decided_at: { type: [string, "null"], format: date-time }
+        line_count: { type: integer }
+        diff_count: { type: integer, description: Lines whose counted differs from expected. }
+
+    AuditLog:
+      type: object
+      required: [id, action, entity_type, detail, created_at]
+      properties:
+        id: { type: integer, format: int64 }
+        action:
+          type: string
+          examples: [order.rejected]
+          description: product.create, product.update, stock.in, stock.adjust, stock.reverse, stock.receive, count.submit, count.approve, count.reject, order.create, order.rejected, order.pack, order.ship, order.cancel, user.create, user.disable, user.enable, user.password_reset, user.password_change
+        entity_type: { type: string, enum: [product, order, user, stock_count, receipt] }
+        entity_id: { type: [integer, "null"], format: int64 }
+        detail: { type: object, additionalProperties: true }
+        actor_name: { type: [string, "null"] }
+        created_at: { type: string, format: date-time }
 
     ErrorResponse:
       type: object
@@ -107,6 +1334,12 @@ components:
                 - internal_error
                 - service_unavailable
                 - unauthorized
+                - forbidden
+                - conflict
+                - invalid_credentials
+                - insufficient_stock
+                - invalid_state
+                - account_disabled
             message:
               type: string
               description: Human-readable explanation. Not intended for programmatic use.
@@ -118,6 +1351,8 @@ components:
               description: Present only for validation_failed.
               items:
                 $ref: "#/components/schemas/FieldError"
+            details:
+              description: Code-specific data, such as the short lines of insufficient_stock.
 
     FieldError:
       type: object

@@ -26,6 +26,7 @@ func TestLoad(t *testing.T) {
 				HTTPPort:    8080,
 				AppEnv:      config.EnvDevelopment,
 				GinMode:     config.GinModeDebug,
+				Line:        config.LineConfig{Mode: config.LineModeDev},
 			},
 		},
 		{
@@ -35,13 +36,64 @@ func TestLoad(t *testing.T) {
 				"HTTP_PORT":    "9090",
 				"APP_ENV":      config.EnvProduction,
 				"GIN_MODE":     config.GinModeRelease,
+				"STATIC_DIR":   "/app/web",
+			},
+			want: config.Config{
+				DatabaseURL:  testDSN,
+				HTTPPort:     9090,
+				AppEnv:       config.EnvProduction,
+				GinMode:      config.GinModeRelease,
+				StaticDir:    "/app/web",
+				CookieSecure: true,
+				Line:         config.LineConfig{Mode: config.LineModeOff},
+			},
+		},
+		{
+			name: "secure cookies can be turned off for plain http",
+			env:  map[string]string{"DATABASE_URL": testDSN, "APP_ENV": config.EnvProduction, "COOKIE_SECURE": "false"},
+			want: config.Config{
+				DatabaseURL: testDSN,
+				HTTPPort:    8080,
+				AppEnv:      config.EnvProduction,
+				GinMode:     config.GinModeDebug,
+				Line:        config.LineConfig{Mode: config.LineModeOff},
+			},
+		},
+		{
+			name: "live LINE reads every channel setting",
+			env: map[string]string{
+				"DATABASE_URL": testDSN, "LINE_MODE": config.LineModeLive, "LINE_LOGIN_CHANNEL_ID": "1650000000",
+				"LINE_LIFF_ID": "1650000000-abcd", "LINE_CHANNEL_ACCESS_TOKEN": "token",
 			},
 			want: config.Config{
 				DatabaseURL: testDSN,
-				HTTPPort:    9090,
-				AppEnv:      config.EnvProduction,
-				GinMode:     config.GinModeRelease,
+				HTTPPort:    8080,
+				AppEnv:      config.EnvDevelopment,
+				GinMode:     config.GinModeDebug,
+				Line: config.LineConfig{
+					Mode: config.LineModeLive, LoginChannelID: "1650000000", LIFFID: "1650000000-abcd", AccessToken: "token",
+				},
 			},
+		},
+		{
+			name:    "live LINE needs its channels",
+			env:     map[string]string{"DATABASE_URL": testDSN, "LINE_MODE": config.LineModeLive},
+			wantErr: "LINE_MODE live needs",
+		},
+		{
+			name:    "fake LINE sign-in is refused in production",
+			env:     map[string]string{"DATABASE_URL": testDSN, "APP_ENV": config.EnvProduction, "LINE_MODE": config.LineModeDev},
+			wantErr: "not allowed in production",
+		},
+		{
+			name:    "unknown LINE mode is rejected",
+			env:     map[string]string{"DATABASE_URL": testDSN, "LINE_MODE": "maybe"},
+			wantErr: `LINE_MODE "maybe"`,
+		},
+		{
+			name:    "cookie secure must be a boolean",
+			env:     map[string]string{"DATABASE_URL": testDSN, "COOKIE_SECURE": "yes"},
+			wantErr: `COOKIE_SECURE "yes"`,
 		},
 		{
 			name:    "database url is required",
@@ -72,7 +124,8 @@ func TestLoad(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE"} {
+			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE", "STATIC_DIR", "COOKIE_SECURE",
+				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN"} {
 				t.Setenv(key, "")
 			}
 			for key, value := range tt.env {

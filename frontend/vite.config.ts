@@ -3,9 +3,10 @@ import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 
-const apiTarget = process.env.VITE_API_PROXY_TARGET ?? 'http://localhost:8080'
+const { HTTP_PORT = '8080' } = loadEnv('', path.resolve(import.meta.dirname, '..'), 'HTTP_PORT')
+const apiTarget = process.env.VITE_API_PROXY_TARGET ?? `http://localhost:${HTTP_PORT}`
 
 export default defineConfig({
   plugins: [
@@ -20,6 +21,7 @@ export default defineConfig({
     },
   },
   server: {
+    allowedHosts: ['.trycloudflare.com', '.ngrok-free.app'],
     proxy: {
       '/api': { target: apiTarget, changeOrigin: true },
       '/healthz': { target: apiTarget, changeOrigin: true },
