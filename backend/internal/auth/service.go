@@ -28,7 +28,6 @@ var (
 	ErrAccountDisabled    = errors.New("account is disabled")
 	ErrWrongPassword      = errors.New("current password is wrong")
 	ErrWeakPassword       = errors.New("password too short")
-	ErrTooManyAttempts    = errors.New("too many failed sign-ins, try again later")
 )
 
 type User struct {
@@ -63,23 +62,18 @@ type Service struct {
 	repo      Repository
 	now       func() time.Time
 	dummyHash []byte
-	attempts  *attemptLimiter
 }
 
 func NewService(repo Repository) *Service {
 	dummy, _ := bcrypt.GenerateFromPassword([]byte("timing-equalizer"), bcrypt.DefaultCost)
-	return &Service{repo: repo, now: time.Now, dummyHash: dummy, attempts: newAttemptLimiter(time.Now)}
+	return &Service{repo: repo, now: time.Now, dummyHash: dummy}
 }
 
 func (s *Service) Login(ctx context.Context, email, password string) (Session, error) {
-	if s.attempts.blocked(email) {
-		return Session{}, ErrTooManyAttempts
-	}
 	creds, err := s.repo.FindByEmail(ctx, strings.TrimSpace(email))
 	if errors.Is(err, ErrUserNotFound) {
 		// Same bcrypt cost either way, so response time does not reveal which emails exist.
 		_ = bcrypt.CompareHashAndPassword(s.dummyHash, []byte(password))
-		s.attempts.fail(email)
 		return Session{}, ErrInvalidCredentials
 	}
 	if err != nil {
@@ -87,10 +81,8 @@ func (s *Service) Login(ctx context.Context, email, password string) (Session, e
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(creds.PasswordHash), []byte(password)) != nil {
-		s.attempts.fail(email)
 		return Session{}, ErrInvalidCredentials
 	}
-	s.attempts.reset(email)
 	if !creds.Active {
 		return Session{}, ErrAccountDisabled
 	}

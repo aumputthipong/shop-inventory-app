@@ -1210,7 +1210,6 @@ components:
                 - insufficient_stock
                 - invalid_state
                 - account_disabled
-                - too_many_attempts
             message:
               type: string
               description: Human-readable explanation. Not intended for programmatic use.

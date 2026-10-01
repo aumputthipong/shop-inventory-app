@@ -25,7 +25,6 @@ const (
 	CodeInsufficientStock  = "insufficient_stock"
 	CodeInvalidState       = "invalid_state"
 	CodeAccountDisabled    = "account_disabled"
-	CodeTooManyAttempts    = "too_many_attempts"
 )
 
 // ErrorResponse is the single error envelope every endpoint returns.
