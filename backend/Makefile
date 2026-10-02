@@ -13,7 +13,7 @@ MIGRATIONS_DIR := db/migrations
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down migrate-up migrate-down migrate-new sqlc run seed test test-integration lint fmt require-db-url
+.PHONY: help up down migrate-up migrate-down migrate-new sqlc run seed demo-reset test test-integration lint fmt require-db-url
 
 # Recipes run under cmd.exe on Windows: no POSIX shell syntax.
 help:
@@ -25,6 +25,7 @@ help:
 	$(info sqlc           Regenerate db/sqlc from migrations and queries)
 	$(info run            Run the api)
 	$(info seed           Create dev accounts and sample stock (empty database only))
+	$(info demo-reset     Wipe the online demo database and refill it: make demo-reset DEMO_DATABASE_URL=...)
 	$(info test           Run unit tests (no database required))
 	$(info test-integration Run database tests, including the oversell race test)
 	$(info lint           Run golangci-lint, including the depguard gin rules)
@@ -51,6 +52,25 @@ sqlc:
 	sqlc generate
 
 seed: require-db-url
+	go run ./cmd/seed
+
+# The demo accounts are public on purpose: the README invites anyone to sign in.
+DEMO_OWNER_EMAIL    ?= owner@demo.shop
+DEMO_OWNER_PASSWORD ?= demo-owner-2026
+DEMO_STAFF_EMAIL    ?= staff@demo.shop
+DEMO_STAFF_PASSWORD ?= demo-staff-2026
+
+demo-reset: export DATABASE_URL = $(DEMO_DATABASE_URL)
+demo-reset: export APP_ENV = development
+demo-reset: export SEED_SAMPLE_DATA = true
+demo-reset: export SEED_OWNER_EMAIL = $(DEMO_OWNER_EMAIL)
+demo-reset: export SEED_OWNER_PASSWORD = $(DEMO_OWNER_PASSWORD)
+demo-reset: export SEED_STAFF_EMAIL = $(DEMO_STAFF_EMAIL)
+demo-reset: export SEED_STAFF_PASSWORD = $(DEMO_STAFF_PASSWORD)
+demo-reset:
+	$(if $(DEMO_DATABASE_URL),,$(error usage: make demo-reset DEMO_DATABASE_URL=<demo database url>, never the dev one))
+	migrate -path $(MIGRATIONS_DIR) -database "$(DEMO_DATABASE_URL)" down -all
+	migrate -path $(MIGRATIONS_DIR) -database "$(DEMO_DATABASE_URL)" up
 	go run ./cmd/seed
 
 run: require-db-url
