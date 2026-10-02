@@ -4,9 +4,6 @@ package counts_test
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,21 +13,15 @@ import (
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/counts"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
-	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/testdb"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/products"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
 )
 
 func TestCountCorrectsStockThroughTheLedger(t *testing.T) {
-	dsn := os.Getenv("TEST_DATABASE_URL")
-	require.NotEmpty(t, dsn, "integration tests need TEST_DATABASE_URL pointing at a migrated, disposable database")
-	pool, err := database.NewPool(t.Context(), dsn)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
+	pool := testdb.Pool(t)
 
-	suffix := make([]byte, 6)
-	_, _ = rand.Read(suffix)
-	tag := hex.EncodeToString(suffix)
+	tag := testdb.Unique("")
 
 	q := sqlc.New(pool)
 	userAs := func(role actor.Role) context.Context {
@@ -52,7 +43,7 @@ func TestCountCorrectsStockThroughTheLedger(t *testing.T) {
 	}
 	shirt, mug := newProduct("CNT-A", 10), newProduct("CNT-B", 6)
 
-	_, err = orders.NewService(orders.NewRepository(pool)).Create(owner, orders.NewOrder{
+	_, err := orders.NewService(orders.NewRepository(pool)).Create(owner, orders.NewOrder{
 		Items: []orders.ItemRequest{{ProductID: mug, Qty: 4}},
 	})
 	require.NoError(t, err)

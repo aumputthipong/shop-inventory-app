@@ -14,18 +14,10 @@ import (
 
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/http/httpxtest"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
 )
-
-type staticSessions struct{}
-
-func (staticSessions) ResolveSession(_ context.Context, token string) (actor.Actor, error) {
-	if token != "valid" {
-		return actor.Actor{}, actor.ErrNoSession
-	}
-	return actor.Actor{UserID: 1, Name: "staff", Role: actor.RoleStaff}, nil
-}
 
 type fakeManager struct {
 	orders.Manager
@@ -47,12 +39,12 @@ func serve(t *testing.T, m orders.Manager, method, path, body string, signedIn b
 		Logger:    slog.New(slog.DiscardHandler),
 		GinMode:   config.GinModeTest,
 		Protected: []httpx.Route{orders.NewHandler(m)},
-		Sessions:  staticSessions{},
+		Sessions:  httpxtest.RoleSessions{},
 	})
 	req := httptest.NewRequestWithContext(t.Context(), method, path, strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	if signedIn {
-		req.AddCookie(&http.Cookie{Name: httpx.SessionCookie, Value: "valid"})
+		req.AddCookie(&http.Cookie{Name: httpx.SessionCookie, Value: string(actor.RoleStaff)})
 	}
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)

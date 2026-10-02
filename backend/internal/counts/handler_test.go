@@ -1,7 +1,6 @@
 package counts_test
 
 import (
-	"context"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -13,14 +12,9 @@ import (
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/counts"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/http/httpxtest"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
 )
-
-type roleSessions struct{}
-
-func (roleSessions) ResolveSession(_ context.Context, token string) (actor.Actor, error) {
-	return actor.Actor{UserID: 1, Role: actor.Role(token)}, nil
-}
 
 func TestCountEndpoints(t *testing.T) {
 	tests := []struct {
@@ -44,7 +38,7 @@ func TestCountEndpoints(t *testing.T) {
 				Logger:    slog.New(slog.DiscardHandler),
 				GinMode:   config.GinModeTest,
 				Protected: []httpx.Route{counts.NewHandler(counts.NewService(&fakeRepo{}))},
-				Sessions:  roleSessions{},
+				Sessions:  httpxtest.RoleSessions{},
 			})
 			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, tt.path, strings.NewReader(tt.body))
 			req.Header.Set("Content-Type", "application/json")

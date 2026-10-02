@@ -12,15 +12,10 @@ import (
 
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/config"
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/http/httpxtest"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
 )
-
-type roleSessions struct{}
-
-func (roleSessions) ResolveSession(_ context.Context, token string) (actor.Actor, error) {
-	return actor.Actor{UserID: 1, Role: actor.Role(token)}, nil
-}
 
 type okOperator struct {
 	stock.Operator
@@ -66,7 +61,7 @@ func TestRolesOnStockEndpoints(t *testing.T) {
 				Logger:    slog.New(slog.DiscardHandler),
 				GinMode:   config.GinModeTest,
 				Protected: []httpx.Route{stock.NewHandler(okOperator{})},
-				Sessions:  roleSessions{},
+				Sessions:  httpxtest.RoleSessions{},
 			})
 			req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, tt.path, strings.NewReader(tt.body))
 			req.Header.Set("Content-Type", "application/json")
