@@ -20,6 +20,26 @@ An order **reserves** stock the moment it is placed, then either **ships** it
 released). `available` is never stored, and the database refuses any row where
 it would go negative.
 
+## What it looks like
+
+A customer in LINE puts the last hair dryer in the cart. While they type the
+address, someone else buys it. When they confirm, the order is refused and the
+cart is corrected, instead of the shop overselling and apologising later.
+
+| Cart in LINE | Delivery details | Someone was faster |
+|---|---|---|
+| ![LINE cart](docs/screenshots/line-cart.png) | ![LINE checkout](docs/screenshots/line-checkout.png) | ![Sold out while ordering](docs/screenshots/line-sold-out.png) |
+
+The back office, where staff see work from every channel in one place:
+
+![Today page](docs/screenshots/today.png)
+
+![Stock, with what is reserved for orders](docs/screenshots/stock.png)
+
+![A LINE order with where it ships](docs/screenshots/order-line.png)
+
+![Stock ledger](docs/screenshots/ledger.png)
+
 ## How an order is placed
 
 Every channel, whether it is a counter sale, a Shopee order typed in by staff
