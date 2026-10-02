@@ -5,7 +5,7 @@ import { useState } from 'react'
 
 import { ProductFormDialog } from '@/components/stock/product-form-dialog'
 import { ProductList } from '@/components/stock/product-list'
-import { ProductPanel } from '@/components/stock/product-panel'
+import { ProductPanel } from '@/components/stock/product-panel/product-panel'
 import { Button } from '@/components/ui/button'
 import { productsQueryOptions } from '@/lib/queries'
 import { useCurrentUser } from '@/lib/session'
