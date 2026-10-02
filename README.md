@@ -5,6 +5,25 @@ store counter, Shopee and LINE. Staff take orders from every channel, pack and
 ship them, receive deliveries and count the shelves; customers can also order
 themselves inside LINE.
 
+## Try it online
+
+**<https://turtle-shop.onrender.com>** (free hosting: if nobody has visited for
+a while, the first page takes about a minute to wake up)
+
+| Role | Email | Password |
+|---|---|---|
+| Owner | `owner@demo.shop` | `demo-owner-2026` |
+| Staff | `staff@demo.shop` | `demo-staff-2026` |
+
+Order as a customer from the shop's LINE Official Account:
+**<https://liff.line.me/2011822094-skUIRf13>** (open it on a phone with LINE).
+
+The data is a sample shop and is reset from time to time. To see the oversell
+protection with one LINE account: put the hair dryer (one left) in your LINE
+cart and fill in the address, sell it at the counter in the back office
+(ออเดอร์ > ขายหน้าร้าน), then confirm in LINE. The order is refused and the cart
+is corrected.
+
 ## The problem
 
 When three channels sell the same 5 units, two customers can buy "the last
@@ -93,7 +112,9 @@ postgres (`make test-integration`):
 
 ## A five-minute demo
 
-After `make seed` there is a hair dryer (SKU-0005) with exactly one unit left.
+Run locally (see Getting started). After `make seed` there is a hair dryer
+(SKU-0005) with exactly one unit left, and `/line` runs in dev mode without a
+LINE account.
 
 1. Sign in as the owner. The today page lists orders waiting to be packed.
 2. Open `/line?as=ploy` and `/line?as=nat` side by side (dev mode needs no LINE
