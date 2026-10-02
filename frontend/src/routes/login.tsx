@@ -3,6 +3,7 @@ import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { LogInIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
+import { DemoAccounts } from '@/components/auth/demo-accounts'
 import { BrandMark } from '@/components/brand-mark'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -107,6 +108,13 @@ function LoginPage() {
             {login.isPending ? 'กำลังเข้าสู่ระบบ...' : 'เข้าสู่ระบบ'}
           </Button>
         </form>
+
+        <DemoAccounts
+          onPick={(account) => {
+            setEmail(account.email)
+            setPassword(account.password)
+          }}
+        />
       </div>
     </main>
   )

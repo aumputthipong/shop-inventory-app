@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -38,6 +39,14 @@ type Config struct {
 	StaticDir    string
 	CookieSecure bool
 	Line         LineConfig
+	DemoAccounts []DemoAccount
+}
+
+// DemoAccount is a sign-in the login page shows to visitors of a public demo.
+type DemoAccount struct {
+	Role     string
+	Email    string
+	Password string
 }
 
 // LineConfig holds the LINE channels behind the customer order form.
@@ -94,6 +103,12 @@ func Load() (Config, error) {
 	}
 	cfg.Line = line
 
+	demo, err := parseDemoAccounts(os.Getenv("DEMO_ACCOUNTS"))
+	if err != nil {
+		return Config{}, err
+	}
+	cfg.DemoAccounts = demo
+
 	return cfg, nil
 }
 
@@ -123,6 +138,23 @@ func loadLine(appEnv string) (LineConfig, error) {
 		return LineConfig{}, fmt.Errorf("config: LINE_MODE %q must be one of off, dev, live", line.Mode)
 	}
 	return line, nil
+}
+
+// parseDemoAccounts reads "role:email:password;role:email:password".
+func parseDemoAccounts(raw string) ([]DemoAccount, error) {
+	if strings.TrimSpace(raw) == "" {
+		return nil, nil
+	}
+	var accounts []DemoAccount
+	for entry := range strings.SplitSeq(raw, ";") {
+		parts := strings.SplitN(strings.TrimSpace(entry), ":", 3)
+		if len(parts) != 3 || (parts[0] != "owner" && parts[0] != "staff") ||
+			!strings.Contains(parts[1], "@") || parts[2] == "" {
+			return nil, fmt.Errorf("config: DEMO_ACCOUNTS entry %q must be role:email:password with role owner or staff", entry)
+		}
+		accounts = append(accounts, DemoAccount{Role: parts[0], Email: parts[1], Password: parts[2]})
+	}
+	return accounts, nil
 }
 
 func (c Config) Addr() string {

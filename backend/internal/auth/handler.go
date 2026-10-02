@@ -21,15 +21,37 @@ type Authenticator interface {
 type Handler struct {
 	svc          Authenticator
 	secureCookie bool
+	demo         []DemoAccount
+}
+
+// DemoAccount is a public sign-in for a demo deployment; empty everywhere else.
+type DemoAccount struct {
+	Role     string `json:"role"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func NewHandler(svc Authenticator, secureCookie bool) *Handler {
 	return &Handler{svc: svc, secureCookie: secureCookie}
 }
 
+func (h *Handler) WithDemoAccounts(accounts []DemoAccount) *Handler {
+	h.demo = accounts
+	return h
+}
+
 func (h *Handler) Register(r gin.IRouter) {
 	r.POST("/api/auth/login", h.login)
 	r.POST("/api/auth/logout", h.logout)
+	r.GET("/api/auth/demo-accounts", h.demoAccounts)
+}
+
+func (h *Handler) demoAccounts(c *gin.Context) {
+	items := h.demo
+	if items == nil {
+		items = []DemoAccount{}
+	}
+	c.JSON(http.StatusOK, gin.H{"items": items})
 }
 
 // Protected is registered behind RequireAuth.

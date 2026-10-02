@@ -15,6 +15,12 @@ export interface User {
   role: Role
 }
 
+export interface DemoAccount {
+  role: Role
+  email: string
+  password: string
+}
+
 export interface TeamMember extends User {
   is_active: boolean
   created_at: string
@@ -389,6 +395,8 @@ export const api = {
     send<User>('POST', '/api/auth/login', { email, password }),
   logout: () => send<undefined>('POST', '/api/auth/logout'),
   me: (signal?: AbortSignal) => apiFetch<User>('/api/auth/me', { signal }),
+  demoAccounts: (signal?: AbortSignal) =>
+    apiFetch<{ items: DemoAccount[] }>('/api/auth/demo-accounts', { signal }).then((r) => r.items),
   changePassword: (input: { current_password: string; new_password: string }) =>
     send<undefined>('POST', '/api/auth/password', input),
 

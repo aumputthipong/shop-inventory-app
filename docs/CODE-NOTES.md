@@ -97,6 +97,11 @@ in the same PR as the behaviour it describes.
 - Services read the user from `actor.From(ctx)`. The middleware in `httpx` sets
   it, which keeps gin out of services.
 
+- The login page lists demo sign-ins only when `DEMO_ACCOUNTS` is set, which
+  only the public demo does. The endpoint is public by design and returns
+  passwords, so it must stay driven by config, never by a build flag or a
+  hostname check that a real deployment could trip.
+
 ## Backend: LINE orders
 
 - A LINE order is an ordinary order on the `line` channel. It goes through

@@ -10,8 +10,11 @@ ordering through a real LINE Official Account.
 | PostgreSQL | Neon, region Singapore | Free |
 | Customer ordering | LINE Official Account + LIFF, see [LINE-SETUP.md](LINE-SETUP.md) | Free |
 
-The demo accounts are public and listed in the README, so the data is
-throwaway. `make demo-reset` puts it back to the sample shop at any time.
+The demo accounts are public: the README lists them and the login page shows
+them with a button that fills the form, because `render.yaml` sets
+`DEMO_ACCOUNTS`. A real shop leaves that unset and the box never appears. The
+data is throwaway; `make demo-reset` puts it back to the sample shop at any
+time.
 
 ## 1. Database on Neon
 

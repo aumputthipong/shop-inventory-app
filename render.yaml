@@ -18,6 +18,8 @@ services:
         value: "true"
       - key: LINE_MODE
         value: live
+      - key: DEMO_ACCOUNTS
+        value: owner:owner@demo.shop:demo-owner-2026;staff:staff@demo.shop:demo-staff-2026
       - key: DATABASE_URL
         sync: false
       - key: LINE_LOGIN_CHANNEL_ID
