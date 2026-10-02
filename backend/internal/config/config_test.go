@@ -76,6 +76,28 @@ func TestLoad(t *testing.T) {
 			},
 		},
 		{
+			name: "demo accounts shown on the login page",
+			env: map[string]string{
+				"DATABASE_URL": testDSN, "DEMO_ACCOUNTS": "owner:owner@demo.shop:pw-1; staff:staff@demo.shop:pw:2",
+			},
+			want: config.Config{
+				DatabaseURL: testDSN,
+				HTTPPort:    8080,
+				AppEnv:      config.EnvDevelopment,
+				GinMode:     config.GinModeDebug,
+				Line:        config.LineConfig{Mode: config.LineModeDev},
+				DemoAccounts: []config.DemoAccount{
+					{Role: "owner", Email: "owner@demo.shop", Password: "pw-1"},
+					{Role: "staff", Email: "staff@demo.shop", Password: "pw:2"},
+				},
+			},
+		},
+		{
+			name:    "demo accounts need a known role",
+			env:     map[string]string{"DATABASE_URL": testDSN, "DEMO_ACCOUNTS": "admin:a@b.c:pw"},
+			wantErr: "DEMO_ACCOUNTS entry",
+		},
+		{
 			name:    "live LINE needs its channels",
 			env:     map[string]string{"DATABASE_URL": testDSN, "LINE_MODE": config.LineModeLive},
 			wantErr: "LINE_MODE live needs",
@@ -125,7 +147,7 @@ func TestLoad(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE", "STATIC_DIR", "COOKIE_SECURE",
-				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN"} {
+				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN", "DEMO_ACCOUNTS"} {
 				t.Setenv(key, "")
 			}
 			for key, value := range tt.env {

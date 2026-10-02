@@ -63,7 +63,11 @@ func run() error {
 	log.Info("database pool ready")
 
 	authService := auth.NewService(auth.NewRepository(pool))
-	authHandler := auth.NewHandler(authService, cfg.CookieSecure)
+	demoAccounts := make([]auth.DemoAccount, 0, len(cfg.DemoAccounts))
+	for _, a := range cfg.DemoAccounts {
+		demoAccounts = append(demoAccounts, auth.DemoAccount(a))
+	}
+	authHandler := auth.NewHandler(authService, cfg.CookieSecure).WithDemoAccounts(demoAccounts)
 
 	productService := products.NewService(products.NewRepository(pool))
 	verifier, messenger := lineChannels(cfg.Line, log)

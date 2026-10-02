@@ -128,6 +128,32 @@ paths:
         "204":
           description: Session deleted and cookie cleared.
 
+  /api/auth/demo-accounts:
+    get:
+      tags: [auth]
+      summary: Sign-ins a public demo shows on its login page
+      description: Empty unless the deployment sets DEMO_ACCOUNTS, which only the public demo does.
+      operationId: demoAccounts
+      security: []
+      responses:
+        "200":
+          description: Demo accounts, possibly none.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      required: [role, email, password]
+                      properties:
+                        role: { $ref: "#/components/schemas/Role" }
+                        email: { type: string }
+                        password: { type: string }
+
   /api/auth/me:
     get:
       tags: [auth]
