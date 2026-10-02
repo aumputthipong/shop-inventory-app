@@ -1,11 +1,11 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ReverseMovementButton } from '@/components/stock/reverse-movement'
 import { ApiError, api, type Movement } from '@/lib/api'
 import { canReverse } from '@/lib/movements'
+import { renderWithQuery } from '@/test/render'
 
 const now = new Date('2026-10-01T12:00:00Z').getTime()
 
@@ -49,12 +49,7 @@ describe('canReverse', () => {
 })
 
 function renderButton() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(
-    <QueryClientProvider client={client}>
-      <ReverseMovementButton movement={stockIn} />
-    </QueryClientProvider>,
-  )
+  return renderWithQuery(<ReverseMovementButton movement={stockIn} />)
 }
 
 describe('ReverseMovementButton', () => {

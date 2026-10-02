@@ -1,18 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { DemoAccounts } from '@/components/auth/demo-accounts'
 import { api } from '@/lib/api'
+import { renderWithQuery } from '@/test/render'
 
 function renderBox(onPick = vi.fn()) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  render(
-    <QueryClientProvider client={client}>
-      <DemoAccounts onPick={onPick} />
-    </QueryClientProvider>,
-  )
+  renderWithQuery(<DemoAccounts onPick={onPick} />)
   return onPick
 }
 

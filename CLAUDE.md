@@ -200,7 +200,8 @@ Budget and limits:
   middleware and routing are exercised too.
 - Frontend: Vitest + Testing Library. Test behaviour through roles and text,
   not implementation details. Stub the api at `api.*`, not at `fetch`, in
-  component tests.
+  component tests. Render with `src/test/render.tsx` and build data with
+  `src/test/fixtures.ts` instead of a local copy.
 - Integration tests carry the `integration` build tag and run against
   `TEST_DATABASE_URL` (`make test-integration`, CI job `backend integration`).
   They create their own rows; never point them at the dev database.

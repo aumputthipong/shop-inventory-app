@@ -1,37 +1,19 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { CountForm } from '@/components/counts/count-form'
-import { ApiError, api, type Product, type StockCount } from '@/lib/api'
+import { ApiError, api, type StockCount } from '@/lib/api'
+import { product } from '@/test/fixtures'
+import { renderWithQuery } from '@/test/render'
 
-function product(id: number, name: string, onHand: number, reserved = 0): Product {
-  return {
-    id,
-    sku: `SKU-000${id}`,
-    name,
-    price: '100.00',
-    low_stock_threshold: 5,
-    is_active: true,
-    on_hand: onHand,
-    reserved,
-    available: onHand - reserved,
-    stock_status: 'in_stock',
-    created_at: '2026-09-28T08:00:00Z',
-    updated_at: '2026-09-28T08:00:00Z',
-  }
-}
-
-const products = [product(1, 'เสื้อยืด', 10), product(2, 'แก้วน้ำ', 6, 4)]
+const products = [
+  product({ id: 1, name: 'เสื้อยืด', on_hand: 10 }),
+  product({ id: 2, name: 'แก้วน้ำ', on_hand: 6, reserved: 4 }),
+]
 
 function renderForm(isOwner: boolean, onSaved = vi.fn()) {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  render(
-    <QueryClientProvider client={client}>
-      <CountForm products={products} isOwner={isOwner} onSaved={onSaved} />
-    </QueryClientProvider>,
-  )
+  renderWithQuery(<CountForm products={products} isOwner={isOwner} onSaved={onSaved} />)
   return onSaved
 }
 
