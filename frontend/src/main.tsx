@@ -4,7 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { RouteError, RouteNotFound } from '@/components/route-states'
-import { ApiError } from '@/lib/api'
+import { isApiError } from '@/lib/api'
 
 import { routeTree } from './routeTree.gen'
 import './index.css'
@@ -13,7 +13,7 @@ const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       if (
-        error instanceof ApiError &&
+        isApiError(error) &&
         error.status === 401 &&
         router.state.location.pathname !== '/login' &&
         !router.state.location.pathname.startsWith('/line')
@@ -26,7 +26,7 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      retry: (count, error) => !(error instanceof ApiError && error.status < 500) && count < 1,
+      retry: (count, error) => !(isApiError(error) && error.status < 500) && count < 1,
     },
   },
 })

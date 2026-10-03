@@ -4,7 +4,7 @@ import { useState, type SubmitEvent } from 'react'
 import { NewPasswordFields } from '@/components/account/new-password-fields'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ApiError, api } from '@/lib/api'
+import { api, isApiError } from '@/lib/api'
 import { checkNewPassword } from '@/lib/password'
 import { useToast } from '@/lib/toast'
 
@@ -26,7 +26,7 @@ export function ChangePasswordForm() {
 
   const valid = current !== '' && checkNewPassword(next, confirm).ok
   const wrongCurrent =
-    save.error instanceof ApiError && save.error.fields.some((f) => f.field === 'current_password')
+    isApiError(save.error) && save.error.fields.some((f) => f.field === 'current_password')
 
   const onSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()

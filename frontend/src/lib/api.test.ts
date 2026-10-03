@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { ApiError, api, apiFetch, shortagesOf } from '@/lib/api'
+import { ApiError, api, apiFetch, isApiError, shortagesOf } from '@/lib/api'
 
 function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), {
@@ -71,5 +71,20 @@ describe('shortagesOf', () => {
   it('returns nothing for other errors', () => {
     expect(shortagesOf(new ApiError(500, undefined))).toEqual([])
     expect(shortagesOf(new Error('boom'))).toEqual([])
+  })
+})
+
+describe('isApiError', () => {
+  const conflict = new ApiError(409, { error: { code: 'insufficient_stock', message: 'short' } })
+
+  it('recognises api errors, optionally by code', () => {
+    expect(isApiError(conflict)).toBe(true)
+    expect(isApiError(conflict, 'insufficient_stock')).toBe(true)
+    expect(isApiError(conflict, 'invalid_state')).toBe(false)
+  })
+
+  it('rejects anything else', () => {
+    expect(isApiError(new Error('boom'))).toBe(false)
+    expect(isApiError(null)).toBe(false)
   })
 })

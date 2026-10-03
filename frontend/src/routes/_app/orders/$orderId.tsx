@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog'
-import { ApiError, api, type Order, type OrderAction } from '@/lib/api'
+import { api, isApiError, type Order, type OrderAction } from '@/lib/api'
 import { formatFullDateTime, formatMoney } from '@/lib/format'
 import { orderStatusChip } from '@/lib/labels'
 import { invalidateStock, orderQueryOptions } from '@/lib/queries'
@@ -34,7 +34,7 @@ export const Route = createFileRoute('/_app/orders/$orderId')({
     try {
       await context.queryClient.query({ ...orderQueryOptions(params.orderId), staleTime: 'static' })
     } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
+      if (isApiError(error) && error.status === 404) {
         // eslint-disable-next-line @typescript-eslint/only-throw-error -- router control flow
         throw notFound()
       }
@@ -82,12 +82,11 @@ function OrderPage() {
   const primary: OrderAction | null =
     order.status === 'reserved' ? 'pack' : order.status === 'packed' ? 'ship' : null
   const cancellable = order.status === 'reserved' || order.status === 'packed'
-  const staleError =
-    act.error instanceof ApiError && act.error.code === 'invalid_state'
-      ? 'สถานะออเดอร์เพิ่งเปลี่ยนจากเครื่องอื่น รีเฟรชหน้าเพื่อดูสถานะล่าสุด'
-      : act.error
-        ? 'ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง'
-        : null
+  const staleError = isApiError(act.error, 'invalid_state')
+    ? 'สถานะออเดอร์เพิ่งเปลี่ยนจากเครื่องอื่น รีเฟรชหน้าเพื่อดูสถานะล่าสุด'
+    : act.error
+      ? 'ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง'
+      : null
 
   return (
     <div className="flex flex-col gap-6">

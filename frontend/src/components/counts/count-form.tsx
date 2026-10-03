@@ -1,17 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from 'cn'
-import { AlertCircleIcon, CheckIcon, LightbulbIcon, SearchIcon } from 'lucide-react'
+import { AlertCircleIcon, CheckIcon, LightbulbIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { ProductAvatar } from '@/components/product-avatar'
+import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ApiError, api, shortagesOf, type Product, type StockCount } from '@/lib/api'
+import { api, isApiError, shortagesOf, type Product, type StockCount } from '@/lib/api'
 import { formatSigned } from '@/lib/format'
 import { parseCount } from '@/lib/qty'
 import { invalidateStock } from '@/lib/queries'
+import { useProductSearch } from '@/lib/use-product-search'
 
 export function CountForm({
   products,
@@ -23,14 +25,10 @@ export function CountForm({
   onSaved: (count: StockCount) => void | Promise<void>
 }) {
   const queryClient = useQueryClient()
-  const [query, setQuery] = useState('')
   const [counted, setCounted] = useState<Partial<Record<number, string>>>({})
   const [note, setNote] = useState('')
 
-  const q = query.trim().toLowerCase()
-  const shown = products.filter(
-    (p) => q === '' || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q),
-  )
+  const { query, setQuery, results: shown } = useProductSearch(products)
 
   const entered = products.flatMap((p) => {
     const raw = counted[p.id]?.trim() ?? ''
@@ -75,22 +73,14 @@ export function CountForm({
 
       <section aria-label="สินค้าที่จะนับ" className="panel overflow-x-auto">
         <div className="border-b border-line p-3">
-          <label className="relative flex items-center">
-            <SearchIcon
-              className="pointer-events-none absolute left-2.5 size-4 text-ink-3"
-              aria-hidden="true"
-            />
-            <Input
-              type="search"
-              aria-label="ค้นหาสินค้า"
-              placeholder="ค้นหาชื่อหรือ SKU"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-              }}
-              className="pl-8"
-            />
-          </label>
+          <SearchInput
+            aria-label="ค้นหาสินค้า"
+            placeholder="ค้นหาชื่อหรือ SKU"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+            }}
+          />
         </div>
 
         <div className="grid h-9 min-w-[720px] grid-cols-[36px_minmax(0,1fr)_90px_190px_90px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
@@ -213,7 +203,7 @@ export function CountForm({
             role="alert"
             className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
           >
-            {save.error instanceof ApiError && save.error.status === 422
+            {isApiError(save.error) && save.error.status === 422
               ? 'ข้อมูลที่นับไม่ถูกต้อง ตรวจตัวเลขอีกครั้ง'
               : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
           </p>

@@ -7,7 +7,7 @@ import { DemoAccounts } from '@/components/auth/demo-accounts'
 import { BrandMark } from '@/components/brand-mark'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ApiError, api } from '@/lib/api'
+import { api, isApiError } from '@/lib/api'
 import { meQueryOptions } from '@/lib/queries'
 
 interface LoginSearch {
@@ -48,14 +48,13 @@ function LoginPage() {
     login.mutate()
   }
 
-  const errorMessage =
-    login.error instanceof ApiError && login.error.code === 'invalid_credentials'
-      ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้ง'
-      : login.error instanceof ApiError && login.error.code === 'account_disabled'
-        ? 'บัญชีนี้ถูกปิดใช้งานแล้ว ติดต่อเจ้าของร้าน'
-        : login.error
-          ? 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง'
-          : null
+  const errorMessage = isApiError(login.error, 'invalid_credentials')
+    ? 'อีเมลหรือรหัสผ่านไม่ถูกต้อง ลองใหม่อีกครั้ง'
+    : isApiError(login.error, 'account_disabled')
+      ? 'บัญชีนี้ถูกปิดใช้งานแล้ว ติดต่อเจ้าของร้าน'
+      : login.error
+        ? 'เชื่อมต่อระบบไม่ได้ ลองใหม่อีกครั้ง'
+        : null
 
   return (
     <main className="flex min-h-svh items-center justify-center p-6">

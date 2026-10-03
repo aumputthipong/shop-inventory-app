@@ -1,22 +1,24 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { AlertCircleIcon, PlusIcon, SearchIcon, Trash2Icon } from 'lucide-react'
+import { AlertCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { ProductAvatar } from '@/components/product-avatar'
 import { QtyStepper } from '@/components/qty-stepper'
+import { SearchInput } from '@/components/search-input'
 import { Segmented } from '@/components/segmented'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ApiError, api, shortagesOf, type Channel, type Product } from '@/lib/api'
+import { api, isApiError, shortagesOf, type Channel, type Product } from '@/lib/api'
 import { formatMoney } from '@/lib/format'
 import { channelDot, channelLabel, stockStatusChip } from '@/lib/labels'
 import { parseQty } from '@/lib/qty'
 import { invalidateStock } from '@/lib/queries'
 import { useToast } from '@/lib/toast'
+import { useProductSearch } from '@/lib/use-product-search'
 
 interface Line {
   productId: number
@@ -30,7 +32,6 @@ export function NewOrderForm({ products }: { products: Product[] }) {
   const navigate = useNavigate()
   const toast = useToast()
 
-  const [query, setQuery] = useState('')
   const [lines, setLines] = useState<Line[]>([])
   const [channel, setChannel] = useState<Channel>('store')
   const [externalRef, setExternalRef] = useState('')
@@ -39,12 +40,11 @@ export function NewOrderForm({ products }: { products: Product[] }) {
   const handedOver = channel === 'store' && handover === 'now'
 
   const byId = new Map(products.map((p) => [p.id, p]))
-  const q = query.trim().toLowerCase()
-  const choices = products.filter(
-    (p) =>
-      p.is_active &&
-      (q === '' || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)),
-  )
+  const {
+    query,
+    setQuery,
+    results: choices,
+  } = useProductSearch(products.filter((p) => p.is_active))
 
   const submit = useMutation({
     mutationFn: () =>
@@ -65,7 +65,7 @@ export function NewOrderForm({ products }: { products: Product[] }) {
       await navigate({ to: '/orders/$orderId', params: { orderId: order.id } })
     },
     onError: async (error) => {
-      if (error instanceof ApiError && error.code === 'insufficient_stock') {
+      if (isApiError(error, 'insufficient_stock')) {
         await queryClient.invalidateQueries({ queryKey: ['products'] })
       }
     },
@@ -121,22 +121,14 @@ export function NewOrderForm({ products }: { products: Product[] }) {
     <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
       <section aria-label="เลือกสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
         <div className="border-b border-line p-3">
-          <label className="relative flex items-center">
-            <SearchIcon
-              className="pointer-events-none absolute left-2.5 size-4 text-ink-3"
-              aria-hidden="true"
-            />
-            <Input
-              type="search"
-              aria-label="ค้นหาสินค้า"
-              placeholder="ค้นหาชื่อหรือ SKU"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-              }}
-              className="pl-8"
-            />
-          </label>
+          <SearchInput
+            aria-label="ค้นหาสินค้า"
+            placeholder="ค้นหาชื่อหรือ SKU"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+            }}
+          />
         </div>
         {choices.length === 0 && (
           <EmptyState
@@ -328,7 +320,7 @@ export function NewOrderForm({ products }: { products: Product[] }) {
             role="alert"
             className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
           >
-            {submit.error instanceof ApiError && submit.error.code === 'conflict'
+            {isApiError(submit.error, 'conflict')
               ? `เลขออเดอร์นี้จาก ${channelLabel[channel]} บันทึกไว้แล้ว`
               : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
           </p>

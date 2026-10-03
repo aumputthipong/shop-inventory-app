@@ -3,11 +3,11 @@ import { RefreshCwIcon } from 'lucide-react'
 
 import { EmptyState } from '@/components/empty-state'
 import { Button } from '@/components/ui/button'
-import { ApiError } from '@/lib/api'
+import { isApiError } from '@/lib/api'
 
 export function RouteError({ error, reset }: ErrorComponentProps) {
   const router = useRouter()
-  const offline = !(error instanceof ApiError) || error.status >= 500
+  const offline = !isApiError(error) || error.status >= 500
 
   return (
     <div className="mx-auto max-w-lg py-16">

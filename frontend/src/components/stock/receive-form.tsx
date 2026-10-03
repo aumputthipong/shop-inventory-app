@@ -1,17 +1,19 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { CheckCircle2Icon, PlusIcon, SearchIcon, Trash2Icon } from 'lucide-react'
+import { CheckCircle2Icon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { ProductAvatar } from '@/components/product-avatar'
 import { QtyStepper } from '@/components/qty-stepper'
+import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { api, type Product, type Receipt } from '@/lib/api'
 import { parseQty } from '@/lib/qty'
 import { invalidateStock } from '@/lib/queries'
+import { useProductSearch } from '@/lib/use-product-search'
 
 interface Line {
   productId: number
@@ -20,17 +22,13 @@ interface Line {
 
 export function ReceiveForm({ products }: { products: Product[] }) {
   const queryClient = useQueryClient()
-  const [query, setQuery] = useState('')
   const [lines, setLines] = useState<Line[]>([])
   const [reference, setReference] = useState('')
   const [note, setNote] = useState('')
   const [done, setDone] = useState<Receipt | null>(null)
 
   const byId = new Map(products.map((p) => [p.id, p]))
-  const q = query.trim().toLowerCase()
-  const choices = products.filter(
-    (p) => q === '' || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q),
-  )
+  const { query, setQuery, results: choices } = useProductSearch(products)
   const rows = lines.flatMap((line) => {
     const product = byId.get(line.productId)
     return product ? [{ line, product, qty: parseQty(line.qty) }] : []
@@ -110,22 +108,14 @@ export function ReceiveForm({ products }: { products: Product[] }) {
     <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
       <section aria-label="เลือกสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
         <div className="border-b border-line p-3">
-          <label className="relative flex items-center">
-            <SearchIcon
-              className="pointer-events-none absolute left-2.5 size-4 text-ink-3"
-              aria-hidden="true"
-            />
-            <Input
-              type="search"
-              aria-label="ค้นหาสินค้า"
-              placeholder="ค้นหาชื่อหรือ SKU"
-              value={query}
-              onChange={(e) => {
-                setQuery(e.target.value)
-              }}
-              className="pl-8"
-            />
-          </label>
+          <SearchInput
+            aria-label="ค้นหาสินค้า"
+            placeholder="ค้นหาชื่อหรือ SKU"
+            value={query}
+            onChange={(e) => {
+              setQuery(e.target.value)
+            }}
+          />
         </div>
         {choices.length === 0 && (
           <EmptyState

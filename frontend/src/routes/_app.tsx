@@ -15,7 +15,7 @@ import {
 import { DropdownMenu } from 'radix-ui'
 
 import { BrandMark } from '@/components/brand-mark'
-import { ApiError, api } from '@/lib/api'
+import { api, isApiError } from '@/lib/api'
 import { productInitial } from '@/lib/avatar'
 import { roleLabel } from '@/lib/labels'
 import { meQueryOptions } from '@/lib/queries'
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_app')({
     const me = await context.queryClient
       .query({ ...meQueryOptions, staleTime: 'static' })
       .catch((error: unknown) => {
-        if (error instanceof ApiError && error.status === 401) return null
+        if (isApiError(error) && error.status === 401) return null
         throw error
       })
     if (!me) {

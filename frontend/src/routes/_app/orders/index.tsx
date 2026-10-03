@@ -1,18 +1,19 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { SearchIcon, StoreIcon } from 'lucide-react'
+import { StoreIcon } from 'lucide-react'
 
 import { ChannelChip, Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
 import { HelpNote } from '@/components/help-note'
 import { Pager } from '@/components/pager'
+import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import type { OrderStatus } from '@/lib/api'
 import { formatDateTime, formatMoney } from '@/lib/format'
 import { orderStatusChip } from '@/lib/labels'
 import { ordersQueryOptions } from '@/lib/queries'
+import { parseOffset } from '@/lib/search-params'
 
 const PAGE = 20
 const STATUSES: OrderStatus[] = ['reserved', 'packed', 'shipped', 'canceled']
@@ -29,7 +30,7 @@ export const Route = createFileRoute('/_app/orders/')({
       ? (search.status as OrderStatus)
       : undefined,
     q: typeof search.q === 'string' && search.q !== '' ? search.q : undefined,
-    offset: Number(search.offset) > 0 ? Number(search.offset) : undefined,
+    offset: parseOffset(search.offset),
   }),
   component: OrdersPage,
 })
@@ -96,22 +97,16 @@ function OrdersPage() {
               })),
             ]}
           />
-          <label className="relative mb-2 flex items-center">
-            <SearchIcon
-              className="pointer-events-none absolute left-2.5 size-4 text-ink-3"
-              aria-hidden="true"
-            />
-            <Input
-              type="search"
-              aria-label="ค้นหาเลขออเดอร์"
-              placeholder="ค้นหาเลขออเดอร์"
-              defaultValue={search.q ?? ''}
-              onChange={(e) => {
-                setSearch({ ...search, q: e.target.value || undefined, offset: undefined })
-              }}
-              className="h-8 w-60 pl-8"
-            />
-          </label>
+          <SearchInput
+            className="mb-2"
+            aria-label="ค้นหาเลขออเดอร์"
+            placeholder="ค้นหาเลขออเดอร์"
+            defaultValue={search.q ?? ''}
+            onChange={(e) => {
+              setSearch({ ...search, q: e.target.value || undefined, offset: undefined })
+            }}
+            inputClassName="h-8 w-60"
+          />
         </div>
 
         <div className="grid h-9 min-w-[920px] grid-cols-[170px_120px_90px_130px_120px_minmax(0,1fr)_120px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
