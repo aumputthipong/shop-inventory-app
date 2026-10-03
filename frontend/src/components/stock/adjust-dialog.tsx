@@ -1,13 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  AlertCircleIcon,
-  ClipboardCheckIcon,
-  MinusIcon,
-  PlusIcon,
-  SlidersHorizontalIcon,
-} from 'lucide-react'
+import { ClipboardCheckIcon, MinusIcon, PlusIcon, SlidersHorizontalIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
+import { ErrorAlert } from '@/components/error-alert'
 import { QtyStepper } from '@/components/qty-stepper'
 import { Segmented } from '@/components/segmented'
 import { StockPreview } from '@/components/stock/stock-preview'
@@ -19,6 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog'
+import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
 import { api, isApiError, type AdjustReason, type Product } from '@/lib/api'
 import { adjustReasonLabel } from '@/lib/labels'
@@ -194,8 +190,7 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
             <QtyStepper id="adjust-qty" value={qty} onChange={setQty} invalid={error !== null} />
           </div>
 
-          <label className="flex flex-col gap-2">
-            <span className="text-[13px] font-medium text-ink-2">เหตุผล</span>
+          <Field label="เหตุผล">
             <NativeSelect
               value={chosenReason}
               onChange={(e) => {
@@ -209,14 +204,11 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
                 </option>
               ))}
             </NativeSelect>
-          </label>
+          </Field>
         </>
       )}
 
-      <label className="flex flex-col gap-2">
-        <span className="text-[13px] font-medium text-ink-2">
-          {reason === 'other' ? 'เกิดอะไรขึ้น' : 'โน้ต (ไม่ใส่ก็ได้)'}
-        </span>
+      <Field label={<>{reason === 'other' ? 'เกิดอะไรขึ้น' : 'โน้ต (ไม่ใส่ก็ได้)'}</>}>
         <Input
           value={note}
           maxLength={500}
@@ -225,19 +217,11 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
             setNote(e.target.value)
           }}
         />
-      </label>
+      </Field>
 
       <StockPreview onHand={product.on_hand} reserved={product.reserved} delta={delta} />
 
-      {(error ?? serverError) && (
-        <p
-          role="alert"
-          className="flex gap-2.5 rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-[#9a2a1f]"
-        >
-          <AlertCircleIcon className="mt-0.5 size-[18px] shrink-0" aria-hidden="true" />
-          {error ?? serverError}
-        </p>
-      )}
+      {(error ?? serverError) && <ErrorAlert>{error ?? serverError}</ErrorAlert>}
 
       <DialogFooter>
         <span className="mr-auto text-sm text-ink-2">

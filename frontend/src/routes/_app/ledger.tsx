@@ -7,6 +7,7 @@ import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
 import { HelpNote } from '@/components/help-note'
+import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import { ReverseMovementButton } from '@/components/stock/reverse-movement'
 import type { MovementType } from '@/lib/api'
@@ -52,11 +53,10 @@ function LedgerPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-[22px] leading-[30px] font-semibold">ประวัติสต็อก</h1>
-        <p className="text-sm text-ink-2">
-          ทุกการเปลี่ยนแปลงของสต็อกถูกบันทึกที่นี่ ยอดคงเหลือทุกตัวอธิบายได้จากรายการเหล่านี้
-        </p>
+      <PageHeader
+        title="ประวัติสต็อก"
+        description="ทุกการเปลี่ยนแปลงของสต็อกถูกบันทึกที่นี่ ยอดคงเหลือทุกตัวอธิบายได้จากรายการเหล่านี้"
+      >
         <HelpNote question="อ่านประวัตินี้ยังไง" className="mt-2 max-w-2xl">
           <p>
             แต่ละแถวคือหนึ่งครั้งที่สต็อกเปลี่ยน ช่อง “ในคลัง” และ “จอง” บอกว่าเปลี่ยนไปกี่ชิ้น ช่อง
@@ -71,7 +71,7 @@ function LedgerPage() {
             ระบบจะลงรายการกลับให้และเก็บของเดิมไว้ให้ดู
           </p>
         </HelpNote>
-      </div>
+      </PageHeader>
 
       <section aria-label="ความเคลื่อนไหวของสต็อก" className="panel overflow-x-auto">
         <div className="flex min-w-[1160px] flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line px-4 pt-2">

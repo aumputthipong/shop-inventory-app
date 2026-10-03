@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
+import { PageHeader } from '@/components/page-header'
 import { TodayBoard } from '@/components/today/today-board'
 import { useCurrentUser } from '@/lib/session'
 
@@ -18,11 +19,11 @@ function TodayPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <p className="text-[13px] text-ink-2">{longDate.format(new Date())}</p>
-        <h1 className="text-[22px] leading-[30px] font-semibold">สวัสดี {me.name}</h1>
-        <p className="text-sm text-ink-2">งานที่ต้องทำวันนี้ เริ่มจากออเดอร์ที่ค้างอยู่ก่อน</p>
-      </div>
+      <PageHeader
+        eyebrow={longDate.format(new Date())}
+        title={<>สวัสดี {me.name}</>}
+        description="งานที่ต้องทำวันนี้ เริ่มจากออเดอร์ที่ค้างอยู่ก่อน"
+      />
       <TodayBoard isOwner={me.isOwner} />
     </div>
   )

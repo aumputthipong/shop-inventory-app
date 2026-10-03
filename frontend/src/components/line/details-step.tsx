@@ -1,9 +1,11 @@
 import { ArrowLeftIcon } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 
+import { ErrorAlert } from '@/components/error-alert'
 import type { CartLine } from '@/components/line/cart'
-import { BottomBar, Field, LineList, Shell } from '@/components/line/line-layout'
+import { BottomBar, LineList, Shell } from '@/components/line/line-layout'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input, Textarea } from '@/components/ui/input'
 
 export interface Delivery {
@@ -121,14 +123,7 @@ export function DetailsStep({
           />
         </Field>
 
-        {error && (
-          <p
-            role="alert"
-            className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-          >
-            {error}
-          </p>
-        )}
+        {error && <ErrorAlert>{error}</ErrorAlert>}
 
         <BottomBar units={units} total={total}>
           <Button type="submit" size="lg" disabled={pending || !complete}>

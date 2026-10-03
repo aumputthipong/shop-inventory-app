@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PackagePlusIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
+import { ErrorAlert } from '@/components/error-alert'
 import { QtyStepper } from '@/components/qty-stepper'
 import { StockPreview } from '@/components/stock/stock-preview'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, type Product } from '@/lib/api'
 import { parseQty } from '@/lib/qty'
@@ -82,8 +84,7 @@ function StockInForm({ product, onDone }: { product: Product; onDone: () => void
         )}
       </div>
 
-      <label className="flex flex-col gap-2">
-        <span className="text-[13px] font-medium text-ink-2">โน้ต (ไม่ใส่ก็ได้)</span>
+      <Field label="โน้ต (ไม่ใส่ก็ได้)">
         <Input
           value={note}
           maxLength={500}
@@ -92,15 +93,11 @@ function StockInForm({ product, onDone }: { product: Product; onDone: () => void
             setNote(e.target.value)
           }}
         />
-      </label>
+      </Field>
 
       <StockPreview onHand={product.on_hand} reserved={product.reserved} delta={n ?? 0} />
 
-      {save.isError && (
-        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
-          บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
-        </p>
-      )}
+      {save.isError && <ErrorAlert>บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง</ErrorAlert>}
 
       <DialogFooter>
         <DialogClose asChild>

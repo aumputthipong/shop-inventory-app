@@ -2,7 +2,9 @@ import { useMutation } from '@tanstack/react-query'
 import { useState, type SubmitEvent } from 'react'
 
 import { NewPasswordFields } from '@/components/account/new-password-fields'
+import { ErrorAlert } from '@/components/error-alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, isApiError } from '@/lib/api'
 import { checkNewPassword } from '@/lib/password'
@@ -35,8 +37,7 @@ export function ChangePasswordForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-      <label className="flex flex-col gap-2">
-        <span className="text-[13px] font-medium text-ink-2">รหัสผ่านปัจจุบัน</span>
+      <Field label="รหัสผ่านปัจจุบัน">
         <Input
           type="password"
           autoComplete="current-password"
@@ -46,12 +47,12 @@ export function ChangePasswordForm() {
             setCurrent(e.target.value)
           }}
         />
-      </label>
+      </Field>
       <NewPasswordFields next={next} confirm={confirm} onNext={setNext} onConfirm={setConfirm} />
       {save.isError && (
-        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
+        <ErrorAlert>
           {wrongCurrent ? 'รหัสผ่านปัจจุบันไม่ถูกต้อง' : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
-        </p>
+        </ErrorAlert>
       )}
       <div>
         <Button type="submit" size="lg" disabled={!valid || save.isPending}>

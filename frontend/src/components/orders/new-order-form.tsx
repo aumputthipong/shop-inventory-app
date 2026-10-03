@@ -1,16 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { AlertCircleIcon, PlusIcon, Trash2Icon } from 'lucide-react'
+import { PlusIcon, Trash2Icon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { ErrorAlert } from '@/components/error-alert'
 import { ProductAvatar } from '@/components/product-avatar'
 import { QtyStepper } from '@/components/qty-stepper'
 import { SearchInput } from '@/components/search-input'
 import { Segmented } from '@/components/segmented'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, isApiError, shortagesOf, type Channel, type Product } from '@/lib/api'
 import { formatMoney } from '@/lib/format'
@@ -220,10 +222,7 @@ export function NewOrderForm({ products }: { products: Product[] }) {
         )}
 
         {channel !== 'store' && (
-          <label className="flex flex-col gap-2">
-            <span className="text-[13px] font-medium text-ink-2">
-              เลขออเดอร์จาก {channelLabel[channel]} (ไม่ใส่ก็ได้)
-            </span>
+          <Field label={<>เลขออเดอร์จาก {channelLabel[channel]} (ไม่ใส่ก็ได้)</>}>
             <Input
               value={externalRef}
               maxLength={100}
@@ -231,18 +230,14 @@ export function NewOrderForm({ products }: { products: Product[] }) {
                 setExternalRef(e.target.value)
               }}
             />
-          </label>
+          </Field>
         )}
 
         {stillShort > 0 && (
-          <p
-            role="alert"
-            className="flex gap-2 rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-          >
-            <AlertCircleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+          <ErrorAlert>
             สต็อกเปลี่ยนระหว่างนี้ มี {stillShort} รายการที่ของไม่พอแล้ว ปรับจำนวนแล้วบันทึกอีกครั้ง
             ยังไม่มีการจองของ
-          </p>
+          </ErrorAlert>
         )}
 
         {rows.length === 0 ? (
@@ -298,8 +293,7 @@ export function NewOrderForm({ products }: { products: Product[] }) {
           </ul>
         )}
 
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink-2">โน้ต (ไม่ใส่ก็ได้)</span>
+        <Field label="โน้ต (ไม่ใส่ก็ได้)">
           <Input
             value={note}
             maxLength={500}
@@ -308,7 +302,7 @@ export function NewOrderForm({ products }: { products: Product[] }) {
               setNote(e.target.value)
             }}
           />
-        </label>
+        </Field>
 
         <div className="flex items-center justify-between border-t border-line pt-4">
           <span className="text-ink-2">ยอดรวม</span>
@@ -316,14 +310,11 @@ export function NewOrderForm({ products }: { products: Product[] }) {
         </div>
 
         {submit.isError && shortages.size === 0 && (
-          <p
-            role="alert"
-            className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-          >
+          <ErrorAlert>
             {isApiError(submit.error, 'conflict')
               ? `เลขออเดอร์นี้จาก ${channelLabel[channel]} บันทึกไว้แล้ว`
               : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
-          </p>
+          </ErrorAlert>
         )}
 
         <Button type="submit" size="lg" disabled={!canSubmit}>

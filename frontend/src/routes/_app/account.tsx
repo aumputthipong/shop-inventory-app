@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 
 import { ChangePasswordForm } from '@/components/account/change-password-form'
 import { Chip } from '@/components/chip'
+import { PageHeader } from '@/components/page-header'
 import { productInitial } from '@/lib/avatar'
 import { roleLabel } from '@/lib/labels'
 import { useCurrentUser } from '@/lib/session'
@@ -17,10 +18,7 @@ function AccountPage() {
 
   return (
     <div className="flex max-w-[720px] flex-col gap-6">
-      <div>
-        <h1 className="text-[22px] leading-[30px] font-semibold">บัญชีของฉัน</h1>
-        <p className="text-sm text-ink-2">ข้อมูลที่ใช้เข้าสู่ระบบ และรหัสผ่านของคุณ</p>
-      </div>
+      <PageHeader title="บัญชีของฉัน" description="ข้อมูลที่ใช้เข้าสู่ระบบ และรหัสผ่านของคุณ" />
 
       <Card icon={<UserRoundIcon className="size-5" />} title="ข้อมูลบัญชี">
         <div className="flex items-center gap-4">

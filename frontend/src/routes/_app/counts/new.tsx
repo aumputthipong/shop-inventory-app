@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { ArrowLeftIcon } from 'lucide-react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { CountForm } from '@/components/counts/count-form'
+import { PageHeader } from '@/components/page-header'
 import { productsQueryOptions } from '@/lib/queries'
 import { useCurrentUser } from '@/lib/session'
 import { useToast } from '@/lib/toast'
@@ -21,17 +21,11 @@ function NewCountPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <Link
-          to="/counts"
-          className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink"
-        >
-          <ArrowLeftIcon className="size-4" aria-hidden="true" />
-          กลับไปหน้าตรวจนับ
-        </Link>
-        <h1 className="text-[22px] leading-[30px] font-semibold">นับสต็อก</h1>
-        <p className="text-sm text-ink-2">ใส่จำนวนที่นับได้จริง ระบบจะเทียบกับตัวเลขในระบบให้</p>
-      </div>
+      <PageHeader
+        back={{ to: '/counts', label: 'กลับไปหน้าตรวจนับ' }}
+        title="นับสต็อก"
+        description="ใส่จำนวนที่นับได้จริง ระบบจะเทียบกับตัวเลขในระบบให้"
+      />
       <CountForm
         products={products}
         isOwner={me.isOwner}

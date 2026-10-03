@@ -1,11 +1,13 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { ArrowLeftIcon, CheckIcon, PackageCheckIcon, TruckIcon, XCircleIcon } from 'lucide-react'
+import { CheckIcon, PackageCheckIcon, TruckIcon, XCircleIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { ChannelChip, Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { ErrorAlert } from '@/components/error-alert'
+import { BackLink } from '@/components/page-header'
 import { ProductAvatar } from '@/components/product-avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -91,13 +93,7 @@ function OrderPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link
-          to="/orders"
-          className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink"
-        >
-          <ArrowLeftIcon className="size-4" aria-hidden="true" />
-          กลับไปหน้าออเดอร์
-        </Link>
+        <BackLink to="/orders">กลับไปหน้าออเดอร์</BackLink>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="code text-[22px] leading-[30px] font-semibold">{order.order_no}</h1>
@@ -140,11 +136,7 @@ function OrderPage() {
         )}
       </div>
 
-      {staleError && (
-        <p role="alert" className="rounded-lg bg-chip-bad px-4 py-3 text-chip-bad-fg">
-          {staleError}
-        </p>
-      )}
+      {staleError && <ErrorAlert>{staleError}</ErrorAlert>}
 
       <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start">
         <section aria-label="รายการสินค้า" className="min-w-0 flex-1 panel p-5">

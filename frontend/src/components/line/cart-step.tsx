@@ -1,5 +1,6 @@
-import { AlertCircleIcon, MinusIcon, PlusIcon } from 'lucide-react'
+import { MinusIcon, PlusIcon } from 'lucide-react'
 
+import { ErrorAlert } from '@/components/error-alert'
 import { capFor, type Cart } from '@/components/line/cart'
 import { BottomBar, Shell } from '@/components/line/line-layout'
 import { ProductAvatar } from '@/components/product-avatar'
@@ -41,22 +42,16 @@ export function CartStep({
         <p className="text-sm text-ink-2">เลือกสินค้าแล้วกดถัดไปเพื่อใส่ที่อยู่จัดส่ง</p>
 
         {shortages.length > 0 && (
-          <div
-            role="alert"
-            className="mt-4 flex gap-2 rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-          >
-            <AlertCircleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <div>
-              <p>มีคนสั่งตัดหน้าไประหว่างนี้ ปรับจำนวนให้แล้ว ตรวจตะกร้าอีกครั้ง</p>
-              <ul className="mt-1 list-disc pl-4">
-                {shortages.map((s) => (
-                  <li key={s.product_id}>
-                    {s.name} {s.available <= 0 ? 'หมดแล้ว' : `เหลือ ${s.available} ชิ้น`}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <ErrorAlert className="mt-4">
+            <p>มีคนสั่งตัดหน้าไประหว่างนี้ ปรับจำนวนให้แล้ว ตรวจตะกร้าอีกครั้ง</p>
+            <ul className="mt-1 list-disc pl-4">
+              {shortages.map((s) => (
+                <li key={s.product_id}>
+                  {s.name} {s.available <= 0 ? 'หมดแล้ว' : `เหลือ ${s.available} ชิ้น`}
+                </li>
+              ))}
+            </ul>
+          </ErrorAlert>
         )}
 
         {loading && <p className="py-10 text-center text-sm text-ink-2">กำลังโหลดสินค้า...</p>}

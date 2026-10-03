@@ -1,7 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PackageIcon, PencilIcon } from 'lucide-react'
-import { useState, type ChangeEvent, type ReactNode, type SubmitEvent } from 'react'
+import { useState, type ChangeEvent, type SubmitEvent } from 'react'
 
+import { ErrorAlert } from '@/components/error-alert'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -10,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, isApiError, type Product, type ProductDetail, type ProductInput } from '@/lib/api'
 import { invalidateStock } from '@/lib/queries'
@@ -141,24 +143,24 @@ function ProductForm({
         }
       />
 
-      <FormField label="ชื่อสินค้า" error={errorFor('name')}>
+      <Field label="ชื่อสินค้า" error={errorFor('name')}>
         <Input
           value={form.name}
           maxLength={200}
           onChange={set('name')}
           aria-invalid={!!errorFor('name')}
         />
-      </FormField>
+      </Field>
       <div className="grid grid-cols-2 gap-3">
-        <FormField label="SKU" error={errorFor('sku')}>
+        <Field label="SKU" error={errorFor('sku')}>
           <Input
             value={form.sku}
             maxLength={40}
             onChange={set('sku')}
             aria-invalid={!!errorFor('sku')}
           />
-        </FormField>
-        <FormField label="ราคา (บาท)" error={errorFor('price')}>
+        </Field>
+        <Field label="ราคา (บาท)" error={errorFor('price')}>
           <Input
             value={form.price}
             inputMode="decimal"
@@ -166,11 +168,11 @@ function ProductForm({
             onChange={set('price')}
             aria-invalid={!!errorFor('price')}
           />
-        </FormField>
+        </Field>
       </div>
       <div className={product ? undefined : 'grid grid-cols-2 gap-3'}>
         {!product && (
-          <FormField
+          <Field
             label="จำนวนที่มีตอนนี้ (ชิ้น)"
             hint="ไม่ใส่ก็ได้ รับของเข้าภายหลังได้"
             error={errorFor('initial_qty')}
@@ -182,9 +184,9 @@ function ProductForm({
               onChange={set('initial_qty')}
               aria-invalid={!!errorFor('initial_qty')}
             />
-          </FormField>
+          </Field>
         )}
-        <FormField
+        <Field
           label="แจ้งเตือนเมื่อขายได้เหลือไม่เกิน (ชิ้น)"
           hint="ระบบจะขึ้นป้าย ใกล้หมด ให้"
           error={errorFor('low_stock_threshold')}
@@ -195,13 +197,11 @@ function ProductForm({
             onChange={set('low_stock_threshold')}
             aria-invalid={!!errorFor('low_stock_threshold')}
           />
-        </FormField>
+        </Field>
       </div>
 
       {save.isError && serverField.size === 0 && (
-        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
-          บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
-        </p>
+        <ErrorAlert>บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง</ErrorAlert>
       )}
 
       <DialogFooter>
@@ -215,31 +215,5 @@ function ProductForm({
         </Button>
       </DialogFooter>
     </form>
-  )
-}
-
-function FormField({
-  label,
-  hint,
-  error,
-  children,
-}: {
-  label: string
-  hint?: string
-  error?: string
-  children: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label className="flex flex-col gap-1.5">
-        <span className="text-[13px] font-medium text-ink-2">{label}</span>
-        {children}
-      </label>
-      {error ? (
-        <span className="text-xs text-destructive">{error}</span>
-      ) : (
-        hint && <span className="text-xs text-ink-3">{hint}</span>
-      )}
-    </div>
   )
 }

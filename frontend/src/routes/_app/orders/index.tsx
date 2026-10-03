@@ -6,6 +6,7 @@ import { ChannelChip, Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
 import { HelpNote } from '@/components/help-note'
+import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
@@ -49,37 +50,36 @@ function OrdersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-end justify-between gap-6">
-        <div>
-          <h1 className="text-[22px] leading-[30px] font-semibold">ออเดอร์</h1>
-          <p className="text-sm text-ink-2">
-            ทุกช่องทางใช้สต็อกกองเดียวกัน ออเดอร์จองของไว้จนกว่าจะส่งหรือยกเลิก
+      <PageHeader
+        title="ออเดอร์"
+        description="ทุกช่องทางใช้สต็อกกองเดียวกัน ออเดอร์จองของไว้จนกว่าจะส่งหรือยกเลิก"
+        actions={
+          <Button asChild>
+            <Link to="/orders/new">
+              <StoreIcon aria-hidden="true" />
+              ขายหน้าร้าน
+            </Link>
+          </Button>
+        }
+      >
+        <HelpNote question="สถานะออเดอร์แต่ละแบบหมายถึงอะไร" className="mt-2 max-w-2xl">
+          <p>
+            <span className="font-medium text-ink">จองแล้ว</span> บันทึกออเดอร์แล้ว
+            ของถูกกันไว้ให้ลูกค้าคนนี้ ยังอยู่ในคลัง
           </p>
-          <HelpNote question="สถานะออเดอร์แต่ละแบบหมายถึงอะไร" className="mt-2 max-w-2xl">
-            <p>
-              <span className="font-medium text-ink">จองแล้ว</span> บันทึกออเดอร์แล้ว
-              ของถูกกันไว้ให้ลูกค้าคนนี้ ยังอยู่ในคลัง
-            </p>
-            <p>
-              <span className="font-medium text-ink">แพ็กแล้ว</span> ห่อของเสร็จ รอส่ง
-              ของยังนับว่าอยู่ในคลัง
-            </p>
-            <p>
-              <span className="font-medium text-ink">ส่งแล้ว</span> ของออกจากร้าน
-              ระบบตัดออกจากคลังให้ ขายหน้าร้านที่ลูกค้ารับของไปเลยจะเป็นสถานะนี้ทันที
-            </p>
-            <p>
-              <span className="font-medium text-ink">ยกเลิก</span> คืนของที่จองไว้กลับมาขายได้ทันที
-            </p>
-          </HelpNote>
-        </div>
-        <Button asChild>
-          <Link to="/orders/new">
-            <StoreIcon aria-hidden="true" />
-            ขายหน้าร้าน
-          </Link>
-        </Button>
-      </div>
+          <p>
+            <span className="font-medium text-ink">แพ็กแล้ว</span> ห่อของเสร็จ รอส่ง
+            ของยังนับว่าอยู่ในคลัง
+          </p>
+          <p>
+            <span className="font-medium text-ink">ส่งแล้ว</span> ของออกจากร้าน ระบบตัดออกจากคลังให้
+            ขายหน้าร้านที่ลูกค้ารับของไปเลยจะเป็นสถานะนี้ทันที
+          </p>
+          <p>
+            <span className="font-medium text-ink">ยกเลิก</span> คืนของที่จองไว้กลับมาขายได้ทันที
+          </p>
+        </HelpNote>
+      </PageHeader>
 
       <section aria-label="รายการออเดอร์" className="panel overflow-x-auto">
         <div className="flex min-w-[920px] flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line px-4 pt-2">
