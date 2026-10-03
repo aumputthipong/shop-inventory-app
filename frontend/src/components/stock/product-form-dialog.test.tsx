@@ -1,18 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ProductFormDialog } from '@/components/stock/product-form-dialog'
 import { api, type ProductDetail } from '@/lib/api'
+import { renderWithQuery } from '@/test/render'
 
 function renderNewProduct() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(
-    <QueryClientProvider client={client}>
-      <ProductFormDialog open onOpenChange={() => undefined} />
-    </QueryClientProvider>,
-  )
+  return renderWithQuery(<ProductFormDialog open onOpenChange={() => undefined} />)
 }
 
 describe('ProductFormDialog', () => {

@@ -1,33 +1,23 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { AdjustDialog } from '@/components/stock/adjust-dialog'
-import { api, type Product } from '@/lib/api'
+import { api } from '@/lib/api'
+import { product } from '@/test/fixtures'
+import { renderWithQuery } from '@/test/render'
 
-const jeans: Product = {
+const jeans = product({
   id: 2,
-  sku: 'SKU-0002',
   name: 'กางเกงยีนส์ขายาว 32',
   price: '600.00',
-  low_stock_threshold: 5,
-  is_active: true,
   on_hand: 8,
   reserved: 5,
-  available: 3,
   stock_status: 'low',
-  created_at: '2026-09-28T08:00:00Z',
-  updated_at: '2026-09-28T08:00:00Z',
-}
+})
 
 function renderDialog() {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
-    <QueryClientProvider client={client}>
-      <AdjustDialog product={jeans} open onOpenChange={() => undefined} />
-    </QueryClientProvider>,
-  )
+  return renderWithQuery(<AdjustDialog product={jeans} open onOpenChange={() => undefined} />)
 }
 
 describe('AdjustDialog', () => {

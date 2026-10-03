@@ -1,18 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ChangePasswordForm } from '@/components/account/change-password-form'
 import { ApiError, api } from '@/lib/api'
+import { renderWithQuery } from '@/test/render'
 
 function renderForm() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  return render(
-    <QueryClientProvider client={client}>
-      <ChangePasswordForm />
-    </QueryClientProvider>,
-  )
+  return renderWithQuery(<ChangePasswordForm />)
 }
 
 async function fill(current: string, next: string, confirm: string) {

@@ -1,58 +1,13 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  RouterProvider,
-  createMemoryHistory,
-  createRootRoute,
-  createRouter,
-} from '@tanstack/react-router'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TodayBoard } from '@/components/today/today-board'
-import { api, type OrderSummary, type Product } from '@/lib/api'
-
-function order(id: number, status: OrderSummary['status']): OrderSummary {
-  return {
-    id,
-    order_no: `ORD-2026-0000${id}`,
-    channel: 'shopee',
-    external_ref: null,
-    status,
-    total: '100.00',
-    item_count: 2,
-    created_by_name: 'พลอย',
-    created_at: '2026-09-30T08:00:00Z',
-  }
-}
-
-function product(id: number, name: string, available: number, status: Product['stock_status']) {
-  return {
-    id,
-    sku: `SKU-000${id}`,
-    name,
-    price: '100.00',
-    low_stock_threshold: 5,
-    is_active: true,
-    on_hand: available,
-    reserved: 0,
-    available,
-    stock_status: status,
-    created_at: '2026-09-28T08:00:00Z',
-    updated_at: '2026-09-28T08:00:00Z',
-  } satisfies Product
-}
+import { api } from '@/lib/api'
+import { orderSummary, product } from '@/test/fixtures'
+import { renderWithRouter } from '@/test/render'
 
 function renderBoard(isOwner: boolean) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  const router = createRouter({
-    routeTree: createRootRoute({ component: () => <TodayBoard isOwner={isOwner} /> }),
-    history: createMemoryHistory({ initialEntries: ['/'] }),
-  })
-  return render(
-    <QueryClientProvider client={client}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
-  )
+  return renderWithRouter(<TodayBoard isOwner={isOwner} />)
 }
 
 describe('TodayBoard', () => {
@@ -61,14 +16,20 @@ describe('TodayBoard', () => {
     vi.spyOn(api, 'listOrders').mockImplementation((query) =>
       Promise.resolve(
         query.status === 'reserved'
-          ? { items: [order(1, 'reserved'), order(2, 'reserved')], total: 2 }
+          ? {
+              items: [
+                orderSummary({ id: 1, status: 'reserved' }),
+                orderSummary({ id: 2, status: 'reserved' }),
+              ],
+              total: 2,
+            }
           : { items: [], total: 0 },
       ),
     )
     vi.spyOn(api, 'listProducts').mockResolvedValue([
-      product(1, 'เสื้อยืด', 20, 'in_stock'),
-      product(2, 'แก้วน้ำ', 0, 'out_of_stock'),
-      product(3, 'หมวก', 2, 'low'),
+      product({ id: 1, name: 'เสื้อยืด', on_hand: 20, stock_status: 'in_stock' }),
+      product({ id: 2, name: 'แก้วน้ำ', on_hand: 0, stock_status: 'out_of_stock' }),
+      product({ id: 3, name: 'หมวก', on_hand: 2, stock_status: 'low' }),
     ])
   })
 

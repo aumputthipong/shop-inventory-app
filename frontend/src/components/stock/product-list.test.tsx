@@ -3,28 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ProductList } from '@/components/stock/product-list'
-import type { Product } from '@/lib/api'
-
-function product(overrides: Partial<Product>): Product {
-  return {
-    id: 1,
-    sku: 'SKU-0001',
-    name: 'เสื้อยืดคอกลม สีขาว M',
-    price: '290.00',
-    low_stock_threshold: 5,
-    is_active: true,
-    on_hand: 24,
-    reserved: 6,
-    available: 18,
-    stock_status: 'in_stock',
-    created_at: '2026-09-28T08:00:00Z',
-    updated_at: '2026-09-28T08:00:00Z',
-    ...overrides,
-  }
-}
+import { product } from '@/test/fixtures'
 
 const products = [
-  product({}),
+  product({ name: 'เสื้อยืดคอกลม สีขาว M', price: '290.00', on_hand: 24, reserved: 6 }),
   product({
     id: 2,
     sku: 'SKU-0002',

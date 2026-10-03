@@ -1,48 +1,20 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import {
-  RouterProvider,
-  createMemoryHistory,
-  createRootRoute,
-  createRouter,
-} from '@tanstack/react-router'
-import { render, screen } from '@testing-library/react'
+import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi } from 'vitest'
 
 import { ReceiveForm } from '@/components/stock/receive-form'
-import { api, type Product } from '@/lib/api'
-
-function product(id: number, name: string, onHand: number): Product {
-  return {
-    id,
-    sku: `SKU-000${id}`,
-    name,
-    price: '100.00',
-    low_stock_threshold: 5,
-    is_active: true,
-    on_hand: onHand,
-    reserved: 0,
-    available: onHand,
-    stock_status: 'in_stock',
-    created_at: '2026-09-28T08:00:00Z',
-    updated_at: '2026-09-28T08:00:00Z',
-  }
-}
+import { api } from '@/lib/api'
+import { product } from '@/test/fixtures'
+import { renderWithRouter } from '@/test/render'
 
 function renderForm() {
-  const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
-  const router = createRouter({
-    routeTree: createRootRoute({
-      component: () => (
-        <ReceiveForm products={[product(1, 'เสื้อยืด', 4), product(2, 'แก้วน้ำ', 0)]} />
-      ),
-    }),
-    history: createMemoryHistory({ initialEntries: ['/'] }),
-  })
-  return render(
-    <QueryClientProvider client={client}>
-      <RouterProvider router={router} />
-    </QueryClientProvider>,
+  return renderWithRouter(
+    <ReceiveForm
+      products={[
+        product({ id: 1, name: 'เสื้อยืด', on_hand: 4 }),
+        product({ id: 2, name: 'แก้วน้ำ', on_hand: 0 }),
+      ]}
+    />,
   )
 }
 
