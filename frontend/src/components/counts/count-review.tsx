@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog'
-import { ApiError, api, shortagesOf, type StockCount } from '@/lib/api'
+import { api, isApiError, shortagesOf, type StockCount } from '@/lib/api'
 import { varianceTotals } from '@/lib/counts'
 import { formatSigned } from '@/lib/format'
 import { countQueryOptions, invalidateStock } from '@/lib/queries'
@@ -94,7 +94,7 @@ export function CountDecision({ count }: { count: StockCount }) {
   const shortages = shortagesOf(decide.error)
 
   let error: string | null = null
-  if (decide.error instanceof ApiError && decide.error.code === 'invalid_state') {
+  if (isApiError(decide.error, 'invalid_state')) {
     error = 'ผลนับนี้เพิ่งถูกตัดสินจากเครื่องอื่น รีเฟรชหน้าเพื่อดูสถานะล่าสุด'
   } else if (decide.error && shortages.length === 0) {
     error = 'ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง'

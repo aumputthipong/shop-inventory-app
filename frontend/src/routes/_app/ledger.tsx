@@ -14,6 +14,7 @@ import { formatDateTime, formatSigned } from '@/lib/format'
 import { channelLabel, movementChip, movementReason } from '@/lib/labels'
 import { canReverse } from '@/lib/movements'
 import { movementsQueryOptions, productsQueryOptions } from '@/lib/queries'
+import { parseOffset } from '@/lib/search-params'
 import { useCurrentUser } from '@/lib/session'
 
 const PAGE = 25
@@ -29,7 +30,7 @@ export const Route = createFileRoute('/_app/ledger')({
   validateSearch: (search: Record<string, unknown>): LedgerSearch => ({
     product: Number(search.product) > 0 ? Number(search.product) : undefined,
     type: TYPES.includes(search.type as MovementType) ? (search.type as MovementType) : undefined,
-    offset: Number(search.offset) > 0 ? Number(search.offset) : undefined,
+    offset: parseOffset(search.offset),
   }),
   component: LedgerPage,
 })

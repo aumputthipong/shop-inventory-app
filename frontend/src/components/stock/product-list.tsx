@@ -1,16 +1,16 @@
 import { cn } from 'cn'
-import { SearchIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
 import { ProductAvatar } from '@/components/product-avatar'
+import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { UnitStrip } from '@/components/unit-strip'
 import type { Product, StockStatus } from '@/lib/api'
 import { stockStatusChip } from '@/lib/labels'
+import { useProductSearch } from '@/lib/use-product-search'
 
 type Filter = 'all' | 'low' | 'out_of_stock'
 
@@ -32,7 +32,6 @@ export function ProductList({
   onAdd?: () => void
 }) {
   const [filter, setFilter] = useState<Filter>('all')
-  const [query, setQuery] = useState('')
 
   const count = (status: StockStatus) => products.filter((p) => p.stock_status === status).length
   const counts: Record<Filter, number> = {
@@ -41,12 +40,11 @@ export function ProductList({
     out_of_stock: count('out_of_stock'),
   }
 
-  const q = query.trim().toLowerCase()
-  const visible = products.filter(
-    (p) =>
-      (filter === 'all' || p.stock_status === filter) &&
-      (q === '' || p.name.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)),
-  )
+  const {
+    query,
+    setQuery,
+    results: visible,
+  } = useProductSearch(products.filter((p) => filter === 'all' || p.stock_status === filter))
 
   return (
     <section aria-label="รายการสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
@@ -57,22 +55,16 @@ export function ProductList({
           onChange={setFilter}
           options={TABS.map((tab) => ({ ...tab, count: counts[tab.value] }))}
         />
-        <label className="relative mb-2 flex items-center">
-          <SearchIcon
-            className="pointer-events-none absolute left-2.5 size-4 text-ink-3"
-            aria-hidden="true"
-          />
-          <Input
-            type="search"
-            aria-label="ค้นหาชื่อหรือ SKU"
-            placeholder="ค้นหาชื่อหรือ SKU"
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value)
-            }}
-            className="h-8 w-56 pl-8"
-          />
-        </label>
+        <SearchInput
+          className="mb-2"
+          aria-label="ค้นหาชื่อหรือ SKU"
+          placeholder="ค้นหาชื่อหรือ SKU"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+          }}
+          inputClassName="h-8 w-56"
+        />
       </div>
 
       <div className="grid h-9 grid-cols-[36px_minmax(0,1fr)_200px_80px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">

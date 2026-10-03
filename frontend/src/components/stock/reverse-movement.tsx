@@ -10,7 +10,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog'
-import { ApiError, api, type Movement } from '@/lib/api'
+import { api, isApiError, type Movement } from '@/lib/api'
 import { formatDateTime, formatSigned } from '@/lib/format'
 import { movementChip } from '@/lib/labels'
 import { invalidateStock } from '@/lib/queries'
@@ -61,7 +61,7 @@ function ReverseForm({ movement: m, onDone }: { movement: Movement; onDone: () =
   })
 
   let error: string | null = null
-  if (reverse.error instanceof ApiError) {
+  if (isApiError(reverse.error)) {
     const reason = (reverse.error.details as { reason?: string } | undefined)?.reason
     if (reverse.error.code === 'insufficient_stock') {
       const available = (reverse.error.details as { available?: number } | undefined)?.available

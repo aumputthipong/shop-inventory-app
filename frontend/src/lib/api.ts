@@ -307,8 +307,12 @@ export class ApiError extends Error {
   }
 }
 
+export function isApiError(error: unknown, code?: string): error is ApiError {
+  return error instanceof ApiError && (code === undefined || error.code === code)
+}
+
 export function shortagesOf(error: unknown): Shortage[] {
-  if (!(error instanceof ApiError) || error.code !== 'insufficient_stock') {
+  if (!isApiError(error, 'insufficient_stock')) {
     return []
   }
   const details = error.details as { items?: Shortage[] } | undefined

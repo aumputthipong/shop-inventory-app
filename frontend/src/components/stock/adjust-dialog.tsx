@@ -20,7 +20,7 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog'
 import { Input, NativeSelect } from '@/components/ui/input'
-import { ApiError, api, type AdjustReason, type Product } from '@/lib/api'
+import { api, isApiError, type AdjustReason, type Product } from '@/lib/api'
 import { adjustReasonLabel } from '@/lib/labels'
 import { parseCount, parseQty } from '@/lib/qty'
 import { invalidateStock } from '@/lib/queries'
@@ -104,12 +104,11 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
     },
   })
 
-  const serverError =
-    save.error instanceof ApiError && save.error.code === 'insufficient_stock'
-      ? 'สต็อกเพิ่งเปลี่ยน จำนวนที่ลดได้ไม่พอแล้ว ปิดแล้วเปิดใหม่เพื่อดูยอดล่าสุด'
-      : save.error
-        ? 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'
-        : null
+  const serverError = isApiError(save.error, 'insufficient_stock')
+    ? 'สต็อกเพิ่งเปลี่ยน จำนวนที่ลดได้ไม่พอแล้ว ปิดแล้วเปิดใหม่เพื่อดูยอดล่าสุด'
+    : save.error
+      ? 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'
+      : null
 
   const onSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()

@@ -15,7 +15,7 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog'
 import { Input, NativeSelect } from '@/components/ui/input'
-import { ApiError, api, type Role, type TeamMember } from '@/lib/api'
+import { api, isApiError, type Role, type TeamMember } from '@/lib/api'
 import { productInitial } from '@/lib/avatar'
 import { formatFullDateTime } from '@/lib/format'
 import { requireOwner } from '@/lib/guards'
@@ -53,7 +53,7 @@ function TeamPage() {
     },
   })
   const lastOwner =
-    setActive.error instanceof ApiError &&
+    isApiError(setActive.error) &&
     (setActive.error.details as { reason?: string } | undefined)?.reason === 'last_owner'
 
   return (
@@ -234,14 +234,13 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
     },
   })
 
-  const serverError =
-    save.error instanceof ApiError
-      ? save.error.code === 'conflict'
-        ? 'อีเมลนี้มีบัญชีอยู่แล้ว'
-        : save.error.fields.some((f) => f.field === 'email')
-          ? 'อีเมลไม่ถูกต้อง'
-          : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'
-      : null
+  const serverError = isApiError(save.error)
+    ? save.error.code === 'conflict'
+      ? 'อีเมลนี้มีบัญชีอยู่แล้ว'
+      : save.error.fields.some((f) => f.field === 'email')
+        ? 'อีเมลไม่ถูกต้อง'
+        : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'
+    : null
 
   const passwordShort = password.length > 0 && password.length < 8
   const valid = name.trim() !== '' && email.includes('@') && password.length >= 8

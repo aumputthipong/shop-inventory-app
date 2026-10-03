@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PackageIcon, PencilIcon } from 'lucide-react'
-import { useState, type ChangeEvent, type SubmitEvent, type ReactNode } from 'react'
+import { useState, type ChangeEvent, type ReactNode, type SubmitEvent } from 'react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -11,7 +11,7 @@ import {
   DialogHeader,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { ApiError, api, type Product, type ProductDetail, type ProductInput } from '@/lib/api'
+import { api, isApiError, type Product, type ProductDetail, type ProductInput } from '@/lib/api'
 import { invalidateStock } from '@/lib/queries'
 import { useToast } from '@/lib/toast'
 
@@ -111,7 +111,7 @@ function ProductForm({
   })
 
   const serverField = new Map<string, string>()
-  if (save.error instanceof ApiError) {
+  if (isApiError(save.error)) {
     for (const f of save.error.fields) {
       serverField.set(f.field, fieldMessage[f.field as Field])
     }

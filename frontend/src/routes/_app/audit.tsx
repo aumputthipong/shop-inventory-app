@@ -9,12 +9,13 @@ import { formatDateTime } from '@/lib/format'
 import { requireOwner } from '@/lib/guards'
 import { auditActionLabel, type ChipTone } from '@/lib/labels'
 import { auditQueryOptions } from '@/lib/queries'
+import { parseOffset } from '@/lib/search-params'
 
 const PAGE = 30
 
 export const Route = createFileRoute('/_app/audit')({
   validateSearch: (search: Record<string, unknown>): { offset?: number } => ({
-    offset: Number(search.offset) > 0 ? Number(search.offset) : undefined,
+    offset: parseOffset(search.offset),
   }),
   beforeLoad: ({ context }) => {
     requireOwner(context.me)

@@ -5,7 +5,7 @@ import { capFor, cartLines, type Cart } from '@/components/line/cart'
 import { CartStep } from '@/components/line/cart-step'
 import { DetailsStep, type Delivery, type DeliveryField } from '@/components/line/details-step'
 import { ReceiptStep } from '@/components/line/receipt-step'
-import { ApiError, api, shortagesOf, type LineCatalogItem, type LineReceipt } from '@/lib/api'
+import { api, isApiError, shortagesOf, type LineCatalogItem, type LineReceipt } from '@/lib/api'
 import type { LineIdentity } from '@/lib/line-identity'
 
 const catalogKey = ['line', 'catalog']
@@ -47,7 +47,7 @@ export function LineShop({ identity, devMode }: { identity: LineIdentity; devMod
       setCart({})
     },
     onError: async (error) => {
-      if (error instanceof ApiError && error.code === 'insufficient_stock') {
+      if (isApiError(error, 'insufficient_stock')) {
         const short = new Map(shortagesOf(error).map((s) => [s.product_id, s.available]))
         setCart((current) => {
           const next = { ...current }
@@ -61,7 +61,7 @@ export function LineShop({ identity, devMode }: { identity: LineIdentity; devMod
     },
   })
   const shortages = shortagesOf(place.error)
-  const fieldErrors = place.error instanceof ApiError ? place.error.fields : []
+  const fieldErrors = isApiError(place.error) ? place.error.fields : []
   const badField = deliveryFields.find((f) => fieldErrors.some((e) => e.field === f))
 
   const setQty = (item: LineCatalogItem, qty: number) => {
@@ -88,7 +88,7 @@ export function LineShop({ identity, devMode }: { identity: LineIdentity; devMod
     let error: string | null = null
     if (place.isError && shortages.length === 0 && !badField) {
       error =
-        place.error instanceof ApiError && place.error.status === 401
+        isApiError(place.error) && place.error.status === 401
           ? 'การเข้าสู่ระบบ LINE หมดอายุ ปิดหน้านี้แล้วเปิดใหม่อีกครั้ง'
           : 'สั่งซื้อไม่สำเร็จ ลองใหม่อีกครั้ง'
     }

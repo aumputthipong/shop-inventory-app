@@ -6,7 +6,7 @@ import { Chip } from '@/components/chip'
 import { CountDecision, CountLines } from '@/components/counts/count-review'
 import { EmptyState } from '@/components/empty-state'
 import { Button } from '@/components/ui/button'
-import { ApiError } from '@/lib/api'
+import { isApiError } from '@/lib/api'
 import { varianceTotals } from '@/lib/counts'
 import { formatFullDateTime, formatSigned } from '@/lib/format'
 import { countStatusChip } from '@/lib/labels'
@@ -26,7 +26,7 @@ export const Route = createFileRoute('/_app/counts/$countId')({
     try {
       await context.queryClient.query({ ...countQueryOptions(params.countId), staleTime: 'static' })
     } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
+      if (isApiError(error) && error.status === 404) {
         // eslint-disable-next-line @typescript-eslint/only-throw-error -- router control flow
         throw notFound()
       }

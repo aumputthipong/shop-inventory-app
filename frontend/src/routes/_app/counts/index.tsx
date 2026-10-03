@@ -11,6 +11,7 @@ import type { CountStatus } from '@/lib/api'
 import { formatDateTime } from '@/lib/format'
 import { countStatusChip } from '@/lib/labels'
 import { countsQueryOptions } from '@/lib/queries'
+import { parseOffset } from '@/lib/search-params'
 
 const PAGE = 20
 const STATUSES: CountStatus[] = ['submitted', 'approved', 'rejected']
@@ -25,7 +26,7 @@ export const Route = createFileRoute('/_app/counts/')({
     status: STATUSES.includes(search.status as CountStatus)
       ? (search.status as CountStatus)
       : undefined,
-    offset: Number(search.offset) > 0 ? Number(search.offset) : undefined,
+    offset: parseOffset(search.offset),
   }),
   component: CountsPage,
 })
