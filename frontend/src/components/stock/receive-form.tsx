@@ -5,10 +5,12 @@ import { useState, type SubmitEvent } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { ErrorAlert } from '@/components/error-alert'
 import { ProductAvatar } from '@/components/product-avatar'
 import { QtyStepper } from '@/components/qty-stepper'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, type Product, type Receipt } from '@/lib/api'
 import { parseQty } from '@/lib/qty'
@@ -170,8 +172,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
       >
         <h2 className="text-base font-semibold">ของในใบส่งของนี้</h2>
 
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink-2">เลขที่ใบส่งของ (ไม่ใส่ก็ได้)</span>
+        <Field label="เลขที่ใบส่งของ (ไม่ใส่ก็ได้)">
           <Input
             value={reference}
             maxLength={100}
@@ -180,7 +181,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
               setReference(e.target.value)
             }}
           />
-        </label>
+        </Field>
 
         {rows.length === 0 ? (
           <p className="rounded-md border border-dashed border-line-strong px-4 py-8 text-center text-[13px] text-ink-2">
@@ -233,8 +234,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
           </ul>
         )}
 
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink-2">โน้ต (ไม่ใส่ก็ได้)</span>
+        <Field label="โน้ต (ไม่ใส่ก็ได้)">
           <Input
             value={note}
             maxLength={500}
@@ -243,15 +243,10 @@ export function ReceiveForm({ products }: { products: Product[] }) {
               setNote(e.target.value)
             }}
           />
-        </label>
+        </Field>
 
         {save.isError && (
-          <p
-            role="alert"
-            className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-          >
-            บันทึกไม่สำเร็จ ยังไม่มีของเข้าสต็อก ลองใหม่อีกครั้ง
-          </p>
+          <ErrorAlert>บันทึกไม่สำเร็จ ยังไม่มีของเข้าสต็อก ลองใหม่อีกครั้ง</ErrorAlert>
         )}
 
         <Button type="submit" size="lg" disabled={rows.length === 0 || invalid || save.isPending}>

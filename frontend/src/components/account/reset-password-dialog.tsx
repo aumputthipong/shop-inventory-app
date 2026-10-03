@@ -3,6 +3,7 @@ import { KeyRoundIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { NewPasswordFields } from '@/components/account/new-password-fields'
+import { ErrorAlert } from '@/components/error-alert'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -61,11 +62,7 @@ function ResetForm({ member, onDone }: { member: TeamMember; onDone: () => void 
         description="บอกรหัสใหม่ให้เจ้าตัว เครื่องที่ล็อกอินอยู่จะถูกออกจากระบบ"
       />
       <NewPasswordFields next={next} confirm={confirm} onNext={setNext} onConfirm={setConfirm} />
-      {save.isError && (
-        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
-          บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
-        </p>
-      )}
+      {save.isError && <ErrorAlert>บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง</ErrorAlert>}
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="outline" size="lg">

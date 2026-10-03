@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Undo2Icon } from 'lucide-react'
 import { useState } from 'react'
 
+import { ErrorAlert } from '@/components/error-alert'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -96,11 +97,7 @@ function ReverseForm({ movement: m, onDone }: { movement: Movement; onDone: () =
         <dt className="text-ink-2">หลังยกเลิก</dt>
         <dd className="font-medium">มีในคลัง {formatSigned(-m.qty_change)} ชิ้น</dd>
       </dl>
-      {error && (
-        <p role="alert" className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg">
-          {error}
-        </p>
-      )}
+      {error && <ErrorAlert>{error}</ErrorAlert>}
       <DialogFooter>
         <DialogClose asChild>
           <Button variant="outline" size="lg">

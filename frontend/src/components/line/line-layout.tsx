@@ -44,24 +44,6 @@ export function BottomBar({
   )
 }
 
-export function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string
-  error?: string
-  children: ReactNode
-}) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-medium text-ink-2">{label}</span>
-      {children}
-      {error && <span className="text-xs text-destructive">{error}</span>}
-    </label>
-  )
-}
-
 export function LineList({
   rows,
   className,

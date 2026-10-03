@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import type { AuditLog } from '@/lib/api'
 import { formatDateTime } from '@/lib/format'
@@ -66,12 +67,10 @@ function AuditPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-[22px] leading-[30px] font-semibold">บันทึกการใช้งาน</h1>
-        <p className="text-sm text-ink-2">
-          ใครทำอะไรเมื่อไร รวมถึงออเดอร์ที่ระบบปฏิเสธเพราะของไม่พอ
-        </p>
-      </div>
+      <PageHeader
+        title="บันทึกการใช้งาน"
+        description="ใครทำอะไรเมื่อไร รวมถึงออเดอร์ที่ระบบปฏิเสธเพราะของไม่พอ"
+      />
 
       <section aria-label="บันทึกการใช้งาน" className="overflow-x-auto panel p-3">
         <div className="grid h-9 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 px-4 text-[13px] font-medium text-ink-2">

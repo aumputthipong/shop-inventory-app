@@ -5,6 +5,7 @@ import { ClipboardCheckIcon } from 'lucide-react'
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
+import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import { Button } from '@/components/ui/button'
 import type { CountStatus } from '@/lib/api'
@@ -53,15 +54,11 @@ function CountsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-end justify-between gap-6">
-        <div>
-          <h1 className="text-[22px] leading-[30px] font-semibold">ตรวจนับสต็อก</h1>
-          <p className="text-sm text-ink-2">
-            นับของจริงเทียบกับตัวเลขในระบบ จะได้รู้ว่าของหายหรือกรอกผิดตรงไหน
-          </p>
-        </div>
-        {start}
-      </div>
+      <PageHeader
+        title="ตรวจนับสต็อก"
+        description="นับของจริงเทียบกับตัวเลขในระบบ จะได้รู้ว่าของหายหรือกรอกผิดตรงไหน"
+        actions={<>{start}</>}
+      />
 
       <section aria-label="รายการตรวจนับ" className="panel overflow-x-auto">
         <div className="min-w-[760px] border-b border-line px-4 pt-2">

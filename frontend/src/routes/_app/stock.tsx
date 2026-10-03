@@ -3,6 +3,7 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { PackagePlusIcon, PlusIcon } from 'lucide-react'
 import { useState } from 'react'
 
+import { PageHeader } from '@/components/page-header'
 import { ProductFormDialog } from '@/components/stock/product-form-dialog'
 import { ProductList } from '@/components/stock/product-list'
 import { ProductPanel } from '@/components/stock/product-panel/product-panel'
@@ -43,39 +44,39 @@ function StockPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-end justify-between gap-6">
-        <div>
-          <h1 className="text-[22px] leading-[30px] font-semibold">สต็อกสินค้า</h1>
-          <p className="text-sm text-ink-2">
-            {products.length === 0
-              ? 'เริ่มจากเพิ่มสินค้าชิ้นแรกของร้าน'
-              : restock === 0
-                ? 'ทุกรายการยังมีของเพียงพอ'
-                : `มี ${restock} รายการที่ควรเติมของเร็วๆ นี้`}
-          </p>
-        </div>
-        <div className="flex flex-wrap justify-end gap-2.5">
-          {products.length > 0 && (
-            <Button asChild variant="outline">
-              <Link to="/receive">
-                <PackagePlusIcon aria-hidden="true" />
-                รับของจากใบส่งของ
-              </Link>
-            </Button>
-          )}
-          {me.isOwner && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setAdding(true)
-              }}
-            >
-              <PlusIcon aria-hidden="true" />
-              เพิ่มสินค้า
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="สต็อกสินค้า"
+        description={
+          products.length === 0
+            ? 'เริ่มจากเพิ่มสินค้าชิ้นแรกของร้าน'
+            : restock === 0
+              ? 'ทุกรายการยังมีของเพียงพอ'
+              : `มี ${restock} รายการที่ควรเติมของเร็วๆ นี้`
+        }
+        actions={
+          <div className="flex flex-wrap justify-end gap-2.5">
+            {products.length > 0 && (
+              <Button asChild variant="outline">
+                <Link to="/receive">
+                  <PackagePlusIcon aria-hidden="true" />
+                  รับของจากใบส่งของ
+                </Link>
+              </Button>
+            )}
+            {me.isOwner && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAdding(true)
+                }}
+              >
+                <PlusIcon aria-hidden="true" />
+                เพิ่มสินค้า
+              </Button>
+            )}
+          </div>
+        }
+      />
 
       <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
         <ProductList

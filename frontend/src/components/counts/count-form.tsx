@@ -1,13 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from 'cn'
-import { AlertCircleIcon, CheckIcon, LightbulbIcon } from 'lucide-react'
+import { CheckIcon, LightbulbIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
+import { ErrorAlert } from '@/components/error-alert'
 import { ProductAvatar } from '@/components/product-avatar'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, isApiError, shortagesOf, type Product, type StockCount } from '@/lib/api'
 import { formatSigned } from '@/lib/format'
@@ -167,8 +169,7 @@ export function CountForm({
       </section>
 
       <div className="flex flex-col gap-4 panel p-5">
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink-2">โน้ต (ไม่ใส่ก็ได้)</span>
+        <Field label="โน้ต (ไม่ใส่ก็ได้)">
           <Input
             value={note}
             maxLength={500}
@@ -177,36 +178,27 @@ export function CountForm({
               setNote(e.target.value)
             }}
           />
-        </label>
+        </Field>
 
         {shortages.length > 0 && (
-          <div
-            role="alert"
-            className="flex gap-2 rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-          >
-            <AlertCircleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-            <div>
-              <p>ยังไม่ได้บันทึก สินค้าต่อไปนี้นับได้น้อยกว่าของที่ออเดอร์จองไว้</p>
-              <ul className="mt-1 list-disc pl-4">
-                {shortages.map((s) => (
-                  <li key={s.product_id}>
-                    {s.name} ลดได้อีกไม่เกิน {Math.max(s.available, 0)} ชิ้น
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-1">ลองนับของที่แพ็กรอส่งด้วย หรือยกเลิกออเดอร์ที่ไม่มีของจริง</p>
-            </div>
-          </div>
+          <ErrorAlert>
+            <p>ยังไม่ได้บันทึก สินค้าต่อไปนี้นับได้น้อยกว่าของที่ออเดอร์จองไว้</p>
+            <ul className="mt-1 list-disc pl-4">
+              {shortages.map((s) => (
+                <li key={s.product_id}>
+                  {s.name} ลดได้อีกไม่เกิน {Math.max(s.available, 0)} ชิ้น
+                </li>
+              ))}
+            </ul>
+            <p className="mt-1">ลองนับของที่แพ็กรอส่งด้วย หรือยกเลิกออเดอร์ที่ไม่มีของจริง</p>
+          </ErrorAlert>
         )}
         {save.isError && shortages.length === 0 && (
-          <p
-            role="alert"
-            className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-          >
+          <ErrorAlert>
             {isApiError(save.error) && save.error.status === 422
               ? 'ข้อมูลที่นับไม่ถูกต้อง ตรวจตัวเลขอีกครั้ง'
               : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
-          </p>
+          </ErrorAlert>
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-4">

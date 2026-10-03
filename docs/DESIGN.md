@@ -91,6 +91,14 @@ never colour whole rows.
 - **Product tile**: the product's first letter on a warm tint, radius 6.
 - **Empty states**: the open kraft box with a petrol magnifier, one sentence
   of help and at most one action.
+- **Page header**: `PageHeader` (title, one line of description, actions on
+  the right, optional back link). Detail pages that need chips beside the
+  title use `BackLink` and their own title row.
+- **Form fields**: `Field` from `components/ui/field.tsx`: 13px label above the
+  control, a muted hint or a red error below.
+- **Errors**: `ErrorAlert`: `chip-bad` fill, radius 6, alert icon, 13px text.
+  One style everywhere, in dialogs and on pages.
+- **Search**: `SearchInput`, the input with a magnifier inside on the left.
 
 ## Voice
 

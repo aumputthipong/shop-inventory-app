@@ -6,6 +6,8 @@ import { useState, type SubmitEvent } from 'react'
 
 import { ResetPasswordDialog } from '@/components/account/reset-password-dialog'
 import { Chip } from '@/components/chip'
+import { ErrorAlert } from '@/components/error-alert'
+import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,6 +16,7 @@ import {
   DialogFooter,
   DialogHeader,
 } from '@/components/ui/dialog'
+import { Field } from '@/components/ui/field'
 import { Input, NativeSelect } from '@/components/ui/input'
 import { api, isApiError, type Role, type TeamMember } from '@/lib/api'
 import { productInitial } from '@/lib/avatar'
@@ -58,23 +61,20 @@ function TeamPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <h1 className="text-[22px] leading-[30px] font-semibold">ทีม</h1>
-          <p className="text-sm text-ink-2">
-            พนักงานรับของเข้า ขาย แพ็ก และส่งได้ ส่วนการปรับยอด แก้สินค้า
-            และดูบันทึกการใช้งานเป็นของเจ้าของร้าน
-          </p>
-        </div>
-        <Button
-          onClick={() => {
-            setAdding(true)
-          }}
-        >
-          <UserPlusIcon aria-hidden="true" />
-          เพิ่มสมาชิก
-        </Button>
-      </div>
+      <PageHeader
+        title="ทีม"
+        description="พนักงานรับของเข้า ขาย แพ็ก และส่งได้ ส่วนการปรับยอด แก้สินค้า และดูบันทึกการใช้งานเป็นของเจ้าของร้าน"
+        actions={
+          <Button
+            onClick={() => {
+              setAdding(true)
+            }}
+          >
+            <UserPlusIcon aria-hidden="true" />
+            เพิ่มสมาชิก
+          </Button>
+        }
+      />
 
       <section aria-label="สมาชิกในทีม" className="max-w-[1000px] overflow-x-auto panel p-3">
         {isPending && <p className="px-4 py-8 text-ink-2">กำลังโหลด...</p>}
@@ -185,14 +185,10 @@ function TeamPage() {
             description="เจ้าตัวจะถูกออกจากระบบทันทีและล็อกอินไม่ได้ ประวัติที่เคยทำยังอยู่ครบ เปิดกลับได้ภายหลัง"
           />
           {lastOwner && (
-            <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
-              ปิดไม่ได้ ร้านต้องมีเจ้าของร้านที่ใช้งานได้อย่างน้อย 1 คน
-            </p>
+            <ErrorAlert>ปิดไม่ได้ ร้านต้องมีเจ้าของร้านที่ใช้งานได้อย่างน้อย 1 คน</ErrorAlert>
           )}
           {setActive.isError && !lastOwner && (
-            <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
-              บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง
-            </p>
+            <ErrorAlert>บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง</ErrorAlert>
           )}
           <DialogFooter>
             <DialogClose asChild>
@@ -257,8 +253,7 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
         title="เพิ่มสมาชิก"
         description="แจ้งอีเมลกับรหัสผ่านให้สมาชิกใหม่ใช้เข้าสู่ระบบ"
       />
-      <label className="flex flex-col gap-2">
-        <span className="text-[13px] font-medium text-ink-2">ชื่อ</span>
+      <Field label="ชื่อ">
         <Input
           value={name}
           maxLength={100}
@@ -266,9 +261,8 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
             setName(e.target.value)
           }}
         />
-      </label>
-      <label className="flex flex-col gap-2">
-        <span className="text-[13px] font-medium text-ink-2">อีเมล</span>
+      </Field>
+      <Field label="อีเมล">
         <Input
           type="email"
           value={email}
@@ -276,10 +270,9 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
             setEmail(e.target.value)
           }}
         />
-      </label>
+      </Field>
       <div className="grid grid-cols-2 gap-3">
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink-2">บทบาท</span>
+        <Field label="บทบาท">
           <NativeSelect
             value={role}
             onChange={(e) => {
@@ -289,9 +282,8 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
             <option value="staff">{roleLabel.staff}</option>
             <option value="owner">{roleLabel.owner}</option>
           </NativeSelect>
-        </label>
-        <label className="flex flex-col gap-2">
-          <span className="text-[13px] font-medium text-ink-2">รหัสผ่าน</span>
+        </Field>
+        <Field label="รหัสผ่าน">
           <Input
             type="password"
             autoComplete="new-password"
@@ -302,13 +294,9 @@ function AddMemberForm({ onDone }: { onDone: () => void }) {
             }}
           />
           {passwordShort && <span className="text-sm text-destructive">อย่างน้อย 8 ตัวอักษร</span>}
-        </label>
+        </Field>
       </div>
-      {serverError && (
-        <p role="alert" className="rounded-lg bg-chip-bad px-3.5 py-3 text-sm text-chip-bad-fg">
-          {serverError}
-        </p>
-      )}
+      {serverError && <ErrorAlert>{serverError}</ErrorAlert>}
       <DialogFooter>
         <DialogClose asChild>
           <Button type="button" variant="outline" size="lg">

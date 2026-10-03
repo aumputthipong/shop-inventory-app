@@ -5,7 +5,9 @@ import { useState, type SubmitEvent } from 'react'
 
 import { DemoAccounts } from '@/components/auth/demo-accounts'
 import { BrandMark } from '@/components/brand-mark'
+import { ErrorAlert } from '@/components/error-alert'
 import { Button } from '@/components/ui/button'
+import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, isApiError } from '@/lib/api'
 import { meQueryOptions } from '@/lib/queries'
@@ -68,8 +70,7 @@ function LoginPage() {
         </div>
 
         <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
-          <label className="flex flex-col gap-2">
-            <span className="text-[13px] font-medium text-ink-2">อีเมล</span>
+          <Field label="อีเมล">
             <Input
               type="email"
               autoComplete="username"
@@ -79,9 +80,8 @@ function LoginPage() {
                 setEmail(e.target.value)
               }}
             />
-          </label>
-          <label className="flex flex-col gap-2">
-            <span className="text-[13px] font-medium text-ink-2">รหัสผ่าน</span>
+          </Field>
+          <Field label="รหัสผ่าน">
             <Input
               type="password"
               autoComplete="current-password"
@@ -91,16 +91,9 @@ function LoginPage() {
                 setPassword(e.target.value)
               }}
             />
-          </label>
+          </Field>
 
-          {errorMessage && (
-            <p
-              role="alert"
-              className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-            >
-              {errorMessage}
-            </p>
-          )}
+          {errorMessage && <ErrorAlert>{errorMessage}</ErrorAlert>}
 
           <Button type="submit" size="lg" disabled={login.isPending || !email || !password}>
             <LogInIcon aria-hidden="true" />

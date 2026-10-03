@@ -1,8 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { cn } from 'cn'
-import { AlertCircleIcon, ClipboardCheckIcon } from 'lucide-react'
+import { ClipboardCheckIcon } from 'lucide-react'
 import { useState } from 'react'
 
+import { ErrorAlert } from '@/components/error-alert'
 import { ProductAvatar } from '@/components/product-avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -103,29 +104,19 @@ export function CountDecision({ count }: { count: StockCount }) {
   return (
     <div className="flex flex-col gap-3">
       {shortages.length > 0 && (
-        <div
-          role="alert"
-          className="flex gap-2 rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg"
-        >
-          <AlertCircleIcon className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          <div>
-            <p>ปรับไม่ได้ ของบางส่วนถูกออเดอร์จองไว้</p>
-            <ul className="mt-1 list-disc pl-4">
-              {shortages.map((s) => (
-                <li key={s.product_id}>
-                  {s.name} ลดได้อีกไม่เกิน {Math.max(s.available, 0)} ชิ้น
-                </li>
-              ))}
-            </ul>
-            <p className="mt-1">ให้นับใหม่โดยรวมของที่แพ็กรอส่ง หรือยกเลิกออเดอร์ที่ไม่มีของจริง</p>
-          </div>
-        </div>
+        <ErrorAlert>
+          <p>ปรับไม่ได้ ของบางส่วนถูกออเดอร์จองไว้</p>
+          <ul className="mt-1 list-disc pl-4">
+            {shortages.map((s) => (
+              <li key={s.product_id}>
+                {s.name} ลดได้อีกไม่เกิน {Math.max(s.available, 0)} ชิ้น
+              </li>
+            ))}
+          </ul>
+          <p className="mt-1">ให้นับใหม่โดยรวมของที่แพ็กรอส่ง หรือยกเลิกออเดอร์ที่ไม่มีของจริง</p>
+        </ErrorAlert>
       )}
-      {error && (
-        <p role="alert" className="rounded-md bg-chip-bad px-3 py-2.5 text-[13px] text-chip-bad-fg">
-          {error}
-        </p>
-      )}
+      {error && <ErrorAlert>{error}</ErrorAlert>}
       <div className="flex flex-wrap gap-2.5">
         <Button
           variant="outline"

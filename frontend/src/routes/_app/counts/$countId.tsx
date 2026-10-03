@@ -1,10 +1,10 @@
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
-import { ArrowLeftIcon } from 'lucide-react'
 
 import { Chip } from '@/components/chip'
 import { CountDecision, CountLines } from '@/components/counts/count-review'
 import { EmptyState } from '@/components/empty-state'
+import { BackLink } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { isApiError } from '@/lib/api'
 import { varianceTotals } from '@/lib/counts'
@@ -57,13 +57,7 @@ function CountPage() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link
-          to="/counts"
-          className="mb-2 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-2 hover:text-ink"
-        >
-          <ArrowLeftIcon className="size-4" aria-hidden="true" />
-          กลับไปหน้าตรวจนับ
-        </Link>
+        <BackLink to="/counts">กลับไปหน้าตรวจนับ</BackLink>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="text-[22px] leading-[30px] font-semibold">ตรวจนับ #{count.id}</h1>
           <Chip tone={chip.tone}>{chip.label}</Chip>
