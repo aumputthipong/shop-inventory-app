@@ -3,30 +3,21 @@
 package stock_test
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/testdb"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/products"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
 )
 
 func TestReceiveADeliveryAllOrNothing(t *testing.T) {
-	dsn := os.Getenv("TEST_DATABASE_URL")
-	require.NotEmpty(t, dsn, "integration tests need TEST_DATABASE_URL pointing at a migrated, disposable database")
-	pool, err := database.NewPool(t.Context(), dsn)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
+	pool := testdb.Pool(t)
 	ctx := t.Context()
 
-	suffix := make([]byte, 6)
-	_, _ = rand.Read(suffix)
-	tag := hex.EncodeToString(suffix)
+	tag := testdb.Unique("")
 	productSvc := products.NewService(products.NewRepository(pool))
 	newProduct := func(sku string) int64 {
 		p, err := productSvc.Create(ctx, products.Input{SKU: sku + "-" + tag, Name: sku, Price: "1.00", IsActive: true, InitialQty: 2})

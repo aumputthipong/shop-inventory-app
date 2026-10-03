@@ -196,6 +196,8 @@ Budget and limits:
 - Every step must build, lint and test clean before it is committed.
 - Go: table-driven tests with testify. Unit tests must not need a database;
   depend on small interfaces declared by the consumer (see `health.Pinger`).
+  Integration tests open the database with `testdb.Pool` and name rows with
+  `testdb.Unique`; handler tests sign in through `httpxtest.RoleSessions`.
 - HTTP handlers are tested through `httpx.NewRouter` with `httptest`, so
   middleware and routing are exercised too.
 - Frontend: Vitest + Testing Library. Test behaviour through roles and text,

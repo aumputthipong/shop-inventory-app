@@ -3,32 +3,23 @@
 package stock_test
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
-	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/testdb"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/products"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
 )
 
 func TestReverseAMistypedStockIn(t *testing.T) {
-	dsn := os.Getenv("TEST_DATABASE_URL")
-	require.NotEmpty(t, dsn, "integration tests need TEST_DATABASE_URL pointing at a migrated, disposable database")
-	pool, err := database.NewPool(t.Context(), dsn)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
+	pool := testdb.Pool(t)
 	ctx := t.Context()
 
-	suffix := make([]byte, 6)
-	_, _ = rand.Read(suffix)
 	p, err := products.NewService(products.NewRepository(pool)).Create(ctx, products.Input{
-		SKU: "REV-" + hex.EncodeToString(suffix), Name: "reverse", Price: "1.00", IsActive: true, InitialQty: 5,
+		SKU: testdb.Unique("REV-"), Name: "reverse", Price: "1.00", IsActive: true, InitialQty: 5,
 	})
 	require.NoError(t, err)
 

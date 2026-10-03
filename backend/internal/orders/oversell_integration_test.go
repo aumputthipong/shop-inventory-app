@@ -4,10 +4,7 @@ package orders_test
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
-	"os"
 	"sync"
 	"testing"
 
@@ -16,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/orders"
-	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/database"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/testdb"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/products"
 	"github.com/aumputthipong/shop-inventory-app/backend/internal/stock"
 )
@@ -30,12 +27,7 @@ type env struct {
 
 func newEnv(t *testing.T) env {
 	t.Helper()
-	dsn := os.Getenv("TEST_DATABASE_URL")
-	require.NotEmpty(t, dsn, "integration tests need TEST_DATABASE_URL pointing at a migrated, disposable database")
-
-	pool, err := database.NewPool(t.Context(), dsn)
-	require.NoError(t, err)
-	t.Cleanup(pool.Close)
+	pool := testdb.Pool(t)
 
 	return env{
 		pool:     pool,
@@ -47,11 +39,8 @@ func newEnv(t *testing.T) env {
 
 func (e env) product(t *testing.T, onHand int32) int64 {
 	t.Helper()
-	suffix := make([]byte, 6)
-	_, _ = rand.Read(suffix)
-
 	p, err := e.products.Create(t.Context(), products.Input{
-		SKU: "IT-" + hex.EncodeToString(suffix), Name: "race test item", Price: "10.00", IsActive: true,
+		SKU: testdb.Unique("IT-"), Name: "race test item", Price: "10.00", IsActive: true,
 	})
 	require.NoError(t, err)
 	_, err = e.stock.StockIn(t.Context(), stock.ReceiptInput{ProductID: p.ID, Qty: onHand})
