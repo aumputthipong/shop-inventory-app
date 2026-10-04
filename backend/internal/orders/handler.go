@@ -41,11 +41,18 @@ type itemRequest struct {
 }
 
 type createRequest struct {
-	Channel     string        `json:"channel" binding:"omitempty,oneof=store shopee line"`
-	ExternalRef string        `json:"external_ref" binding:"max=100"`
-	Note        string        `json:"note" binding:"max=500"`
-	Items       []itemRequest `json:"items" binding:"required,min=1,max=50,dive"`
-	HandedOver  bool          `json:"handed_over"`
+	Channel     string           `json:"channel" binding:"omitempty,oneof=store shopee line"`
+	ExternalRef string           `json:"external_ref" binding:"max=100"`
+	Note        string           `json:"note" binding:"max=500"`
+	Items       []itemRequest    `json:"items" binding:"required,min=1,max=50,dive"`
+	HandedOver  bool             `json:"handed_over"`
+	Customer    *customerRequest `json:"customer"`
+}
+
+type customerRequest struct {
+	Name    string `json:"name" binding:"max=100"`
+	Phone   string `json:"phone" binding:"max=20"`
+	Address string `json:"address" binding:"max=500"`
 }
 
 type itemResponse struct {
@@ -180,10 +187,14 @@ func (h *Handler) create(c *gin.Context) {
 	for _, it := range req.Items {
 		items = append(items, ItemRequest(it))
 	}
-	o, err := h.svc.Create(c.Request.Context(), NewOrder{
+	in := NewOrder{
 		Channel: Channel(req.Channel), ExternalRef: req.ExternalRef, Note: req.Note, Items: items,
 		HandedOver: req.HandedOver,
-	})
+	}
+	if cr := req.Customer; cr != nil {
+		in.Customer = &Customer{Name: cr.Name, Phone: cr.Phone, Address: cr.Address}
+	}
+	o, err := h.svc.Create(c.Request.Context(), in)
 	respond(c, http.StatusCreated, o, err)
 }
 
@@ -216,6 +227,10 @@ func respond(c *gin.Context, status int, o Order, err error) {
 		httpx.RespondError(c, http.StatusNotFound, httpx.CodeNotFound, "order not found")
 	case errors.Is(err, ErrExternalRefTaken):
 		httpx.RespondError(c, http.StatusConflict, httpx.CodeConflict, "this channel order was already recorded")
+	case errors.Is(err, ErrExternalRefMissing):
+		httpx.RespondFieldError(c, "external_ref", err.Error())
+	case errors.Is(err, ErrCustomerMissing):
+		httpx.RespondFieldError(c, "customer", err.Error())
 	case errors.Is(err, ErrProductUnavailable):
 		httpx.RespondFieldError(c, "items", err.Error())
 	case errors.Is(err, ErrInvalidOrder):

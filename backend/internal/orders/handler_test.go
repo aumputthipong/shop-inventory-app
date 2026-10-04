@@ -81,6 +81,7 @@ func TestCreateOrderResponses(t *testing.T) {
 		{"created", `{"items":[{"product_id":2,"qty":1}]}`, nil, http.StatusCreated, ""},
 		{"empty items", `{"items":[]}`, nil, http.StatusUnprocessableEntity, httpx.CodeValidation},
 		{"unknown channel", `{"channel":"tiktok","items":[{"product_id":2,"qty":1}]}`, nil, http.StatusUnprocessableEntity, httpx.CodeValidation},
+		{"customer name too long", `{"items":[{"product_id":2,"qty":1}],"customer":{"name":"` + strings.Repeat("a", 101) + `"}}`, nil, http.StatusUnprocessableEntity, httpx.CodeValidation},
 		{"not enough stock", `{"items":[{"product_id":2,"qty":4}]}`, shortage, http.StatusConflict, httpx.CodeInsufficientStock},
 		{"duplicate external ref", `{"items":[{"product_id":2,"qty":1}]}`, orders.ErrExternalRefTaken, http.StatusConflict, httpx.CodeConflict},
 	}
@@ -94,6 +95,45 @@ func TestCreateOrderResponses(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMissingDetailsPointAtTheirField(t *testing.T) {
+	tests := []struct {
+		err   error
+		field string
+	}{
+		{orders.ErrExternalRefMissing, "external_ref"},
+		{orders.ErrCustomerMissing, "customer"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.field, func(t *testing.T) {
+			rec := serve(t, fakeManager{createErr: tt.err}, http.MethodPost, "/api/orders", `{"items":[{"product_id":2,"qty":1}]}`, true)
+			require.Equal(t, http.StatusUnprocessableEntity, rec.Code)
+			fields := decodeError(t, rec).Fields
+			require.Len(t, fields, 1)
+			assert.Equal(t, tt.field, fields[0].Field)
+		})
+	}
+}
+
+type capturingManager struct {
+	orders.Manager
+	got *orders.NewOrder
+}
+
+func (m capturingManager) Create(_ context.Context, in orders.NewOrder) (orders.Order, error) {
+	*m.got = in
+	return orders.Order{ID: 1}, nil
+}
+
+func TestCreateOrderPassesTheCustomerOn(t *testing.T) {
+	var got orders.NewOrder
+	rec := serve(t, capturingManager{got: &got}, http.MethodPost, "/api/orders",
+		`{"items":[{"product_id":2,"qty":1}],"customer":{"name":"Ann","phone":"0812345678"}}`, true)
+
+	require.Equal(t, http.StatusCreated, rec.Code, rec.Body.String())
+	require.NotNil(t, got.Customer)
+	assert.Equal(t, orders.Customer{Name: "Ann", Phone: "0812345678"}, *got.Customer)
 }
 
 func TestInsufficientStockCarriesEveryShortLine(t *testing.T) {

@@ -44,7 +44,8 @@ func TestCountCorrectsStockThroughTheLedger(t *testing.T) {
 	shirt, mug := newProduct("CNT-A", 10), newProduct("CNT-B", 6)
 
 	_, err := orders.NewService(orders.NewRepository(pool)).Create(owner, orders.NewOrder{
-		Items: []orders.ItemRequest{{ProductID: mug, Qty: 4}},
+		Items:    []orders.ItemRequest{{ProductID: mug, Qty: 4}},
+		Customer: &orders.Customer{Name: "Ann"},
 	})
 	require.NoError(t, err)
 

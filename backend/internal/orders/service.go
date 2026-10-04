@@ -57,6 +57,8 @@ var (
 	ErrExternalRefTaken   = errors.New("external ref already used on this channel")
 	ErrInvalidOrder       = errors.New("invalid order")
 	ErrProductUnavailable = errors.New("product cannot be ordered")
+	ErrExternalRefMissing = errors.New("a Shopee order needs its Shopee order number")
+	ErrCustomerMissing    = errors.New("order needs the customer")
 )
 
 type ItemRequest struct {
@@ -370,5 +372,26 @@ func validate(in NewOrder) (NewOrder, error) {
 		}
 		seen[item.ProductID] = true
 	}
+	if err := requireDetails(in); err != nil {
+		return NewOrder{}, err
+	}
 	return in, nil
+}
+
+// requireDetails asks for what staff need to find the order again: the Shopee
+// number, the LINE customer's name, or who comes back for a held store sale.
+func requireDetails(in NewOrder) error {
+	var name, phone string
+	if in.Customer != nil {
+		name, phone = in.Customer.Name, in.Customer.Phone
+	}
+	switch {
+	case in.Channel == ChannelShopee && in.ExternalRef == "":
+		return ErrExternalRefMissing
+	case in.Channel == ChannelLine && name == "":
+		return fmt.Errorf("%w: a LINE order needs the customer's name", ErrCustomerMissing)
+	case in.Channel == ChannelStore && !in.HandedOver && name == "" && phone == "":
+		return fmt.Errorf("%w: a store order picked up later needs the customer's name or phone", ErrCustomerMissing)
+	}
+	return nil
 }
