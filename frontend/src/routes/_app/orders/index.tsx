@@ -64,7 +64,7 @@ function OrdersPage() {
       >
         <HelpNote question="สถานะออเดอร์แต่ละแบบหมายถึงอะไร" className="mt-2 max-w-2xl">
           <p>
-            <span className="font-medium text-ink">จองแล้ว</span> บันทึกออเดอร์แล้ว
+            <span className="font-medium text-ink">รอดำเนินการ</span> บันทึกออเดอร์แล้ว
             ของถูกกันไว้ให้ลูกค้าคนนี้ ยังอยู่ในคลัง
           </p>
           <p>

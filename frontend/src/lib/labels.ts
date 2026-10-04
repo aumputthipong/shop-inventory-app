@@ -17,7 +17,7 @@ export const stockStatusChip: Record<StockStatus, { label: string; tone: ChipTon
 }
 
 export const orderStatusChip: Record<OrderStatus, { label: string; tone: ChipTone }> = {
-  reserved: { label: 'จองแล้ว', tone: 'warn' },
+  reserved: { label: 'รอดำเนินการ', tone: 'warn' },
   packed: { label: 'แพ็กแล้ว', tone: 'info' },
   shipped: { label: 'ส่งแล้ว', tone: 'ok' },
   canceled: { label: 'ยกเลิก', tone: 'neutral' },

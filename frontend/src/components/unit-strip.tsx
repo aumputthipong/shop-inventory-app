@@ -41,7 +41,7 @@ export function UnitStrip({
     { kind: 'held', count: held },
   ]
   const total = segments.reduce((sum, s) => sum + s.count, 0)
-  const label = `ขายได้ ${Math.max(available, 0)} ชิ้น จองแล้ว ${held} ชิ้น`
+  const label = `ขายได้ ${Math.max(available, 0)} ชิ้น รอดำเนินการ ${held} ชิ้น`
 
   if (total === 0) {
     return (
@@ -102,7 +102,7 @@ export function UnitLegend() {
       </span>
       <span className="flex items-center gap-1.5">
         <span aria-hidden="true" className="h-4 w-3 rounded bg-hatch" />
-        จองแล้ว
+        รอดำเนินการ
       </span>
     </div>
   )
