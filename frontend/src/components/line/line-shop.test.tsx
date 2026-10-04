@@ -16,6 +16,7 @@ const catalog: LineCatalogItem[] = [
 const identity: LineIdentity = {
   idToken: 'dev:พลอย',
   displayName: 'พลอย',
+  pictureUrl: '',
   inClient: false,
   close: () => undefined,
 }
@@ -43,6 +44,36 @@ describe('LineShop', () => {
 
     expect(await screen.findByText(/เหลือ 2 ชิ้น/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'เพิ่ม หมวก' })).toBeDisabled()
+  })
+
+  it('lists sold-out items last and marks the first step', async () => {
+    const catalogFirstSoldOut = [catalog[2], catalog[0], catalog[1]]
+    vi.spyOn(api, 'lineCatalog').mockResolvedValue(catalogFirstSoldOut)
+    renderShop()
+
+    await screen.findByRole('button', { name: 'เพิ่ม หมวก' })
+    const adds = screen.getAllByRole('button', { name: /^เพิ่ม / }).map((b) => b.ariaLabel)
+    expect(adds).toEqual(['เพิ่ม เสื้อยืด', 'เพิ่ม กางเกง', 'เพิ่ม หมวก'])
+    expect(screen.getByRole('listitem', { current: 'step' })).toHaveTextContent('เลือกสินค้า')
+  })
+
+  it('moves the step marker along to the receipt', async () => {
+    vi.spyOn(api, 'placeLineOrder').mockResolvedValue({
+      order_no: 'ORD-2026-00042',
+      status: 'reserved',
+      total: '580.00',
+      items: [{ name: 'เสื้อยืด', qty: 2, unit_price: '290.00' }],
+    })
+    const user = userEvent.setup()
+    renderShop()
+
+    await fillCartAndAddress(user)
+    expect(screen.getByRole('listitem', { current: 'step' })).toHaveTextContent('ที่อยู่จัดส่ง')
+    await user.click(screen.getByRole('button', { name: 'ยืนยันสั่งซื้อ' }))
+
+    expect(await screen.findByText('ORD-2026-00042')).toBeInTheDocument()
+    expect(screen.getByRole('listitem', { current: 'step' })).toHaveTextContent('เสร็จแล้ว')
+    expect(screen.getByRole('list', { name: 'ขั้นตอนต่อไป' })).toHaveTextContent('แพ็กของ')
   })
 
   it('will not add more than is left', async () => {
