@@ -90,6 +90,10 @@ Restart the api. The api refuses to start in `live` mode if a value is missing.
 In LINE Official Account Manager, add a rich menu button or a greeting message
 that links to `https://liff.line.me/<LINE_LIFF_ID>`.
 
+To show a "chat with the shop" button on the login and today pages, set
+`LINE_OA_ID` to the account's basic ID (the `@` name shown in Official Account
+Manager, for example `@123abcde`). It works in every `LINE_MODE`.
+
 ## Troubleshooting
 
 | Symptom | Likely cause |

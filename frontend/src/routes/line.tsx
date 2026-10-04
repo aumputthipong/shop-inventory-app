@@ -2,19 +2,15 @@ import { useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 
 import { LineShop } from '@/components/line/line-shop'
-import { api } from '@/lib/api'
 import { signInWithLine } from '@/lib/line-identity'
+import { lineSettingsQueryOptions } from '@/lib/queries'
 
 export const Route = createFileRoute('/line')({
   component: LineOrderPage,
 })
 
 function LineOrderPage() {
-  const settings = useQuery({
-    queryKey: ['line', 'settings'],
-    queryFn: ({ signal }) => api.lineSettings(signal),
-    staleTime: Infinity,
-  })
+  const settings = useQuery(lineSettingsQueryOptions)
   const mode = settings.data?.mode
   const identity = useQuery({
     queryKey: ['line', 'identity', mode],

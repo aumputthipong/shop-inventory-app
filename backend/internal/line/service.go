@@ -46,6 +46,7 @@ type ProductLister interface {
 type Settings struct {
 	Mode   string
 	LIFFID string
+	OAURL  string
 }
 
 type CatalogItem struct {

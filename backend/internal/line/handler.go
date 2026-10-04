@@ -36,6 +36,7 @@ func (h *Handler) Register(r gin.IRouter) {
 type settingsResponse struct {
 	Mode   string `json:"mode"`
 	LIFFID string `json:"liff_id"`
+	OAURL  string `json:"oa_url"`
 }
 
 type catalogItemResponse struct {

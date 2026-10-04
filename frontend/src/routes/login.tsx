@@ -4,6 +4,7 @@ import { LogInIcon } from 'lucide-react'
 import { useState, type SubmitEvent } from 'react'
 
 import { DemoAccounts } from '@/components/auth/demo-accounts'
+import { LineChatButton } from '@/components/line-chat-button'
 import { BrandMark } from '@/components/brand-mark'
 import { ErrorAlert } from '@/components/error-alert'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { api, isApiError } from '@/lib/api'
 import { meQueryOptions } from '@/lib/queries'
+import { useLineChatUrl } from '@/lib/use-line-chat-url'
 
 interface LoginSearch {
   redirect?: string
@@ -36,6 +38,7 @@ function LoginPage() {
   const queryClient = useQueryClient()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const lineChatUrl = useLineChatUrl()
 
   const login = useMutation({
     mutationFn: () => api.login(email, password),
@@ -107,6 +110,21 @@ function LoginPage() {
             setPassword(account.password)
           }}
         />
+
+        {lineChatUrl && (
+          <section
+            aria-label="ลองสั่งแบบลูกค้า"
+            className="mt-6 flex flex-col gap-3 border-t border-line pt-5"
+          >
+            <div>
+              <h2 className="text-sm font-semibold">ลองสั่งแบบลูกค้า</h2>
+              <p className="text-xs text-ink-2">
+                เพิ่มเพื่อน LINE ของร้าน ลองสั่งซื้อแบบลูกค้า แล้วดูออเดอร์เด้งเข้ามาในหลังร้าน
+              </p>
+            </div>
+            <LineChatButton url={lineChatUrl} />
+          </section>
+        )}
       </div>
     </main>
   )

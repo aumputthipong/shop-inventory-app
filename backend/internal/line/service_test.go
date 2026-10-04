@@ -39,7 +39,7 @@ func newService(mode string, o *fakeOrders) *line.Service {
 		{ID: 2, Name: "กางเกง", Price: "600.00", IsActive: true, OnHand: 8, Reserved: 5, LowStockThreshold: 5},
 		{ID: 3, Name: "หมวกเลิกขาย", Price: "250.00", IsActive: false, OnHand: 4},
 	}
-	return line.NewService(line.Settings{Mode: mode}, line.DevVerifier{}, o, catalog)
+	return line.NewService(line.Settings{Mode: mode, OAURL: "https://line.me/R/ti/p/@shop"}, line.DevVerifier{}, o, catalog)
 }
 
 func validInput() line.OrderInput {

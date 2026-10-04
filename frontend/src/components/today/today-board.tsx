@@ -14,11 +14,13 @@ import {
 import type { ReactNode } from 'react'
 
 import { ChannelChip, Chip } from '@/components/chip'
+import { LineChatButton } from '@/components/line-chat-button'
 import { Button } from '@/components/ui/button'
 import type { OrderStatus, OrderSummary } from '@/lib/api'
 import { formatDateTime } from '@/lib/format'
 import { stockStatusChip } from '@/lib/labels'
 import { countsQueryOptions, ordersQueryOptions, productsQueryOptions } from '@/lib/queries'
+import { useLineChatUrl } from '@/lib/use-line-chat-url'
 
 const PREVIEW = 5
 
@@ -26,6 +28,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
   const toPack = useQuery(ordersQueryOptions({ status: 'reserved', limit: PREVIEW }))
   const toShip = useQuery(ordersQueryOptions({ status: 'packed', limit: PREVIEW }))
   const products = useQuery(productsQueryOptions)
+  const lineChatUrl = useLineChatUrl()
   const counts = useQuery({
     ...countsQueryOptions({ status: 'submitted', limit: PREVIEW }),
     enabled: isOwner,
@@ -69,6 +72,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
             นับสต็อก
           </Link>
         </Button>
+        {lineChatUrl && <LineChatButton url={lineChatUrl} />}
       </nav>
 
       {nothingToDo && (

@@ -15,6 +15,13 @@ export const meQueryOptions = queryOptions({
   retry: false,
 })
 
+export const lineSettingsQueryOptions = queryOptions({
+  queryKey: ['line', 'settings'],
+  queryFn: ({ signal }) => api.lineSettings(signal),
+  staleTime: Infinity,
+  retry: false,
+})
+
 export const productsQueryOptions = queryOptions({
   queryKey: ['products'],
   queryFn: ({ signal }) => api.listProducts(signal),

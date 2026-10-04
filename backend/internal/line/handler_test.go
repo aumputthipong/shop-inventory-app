@@ -30,6 +30,7 @@ func TestLineEndpoints(t *testing.T) {
 		wantBody   string
 	}{
 		{"settings tell the form which mode it is in", line.ModeDev, nil, http.MethodGet, "/api/line/settings", "", http.StatusOK, `"mode":"dev"`},
+		{"settings carry the official account link", line.ModeOff, nil, http.MethodGet, "/api/line/settings", "", http.StatusOK, `"oa_url":"https://line.me/R/ti/p/@shop"`},
 		{"catalog needs no staff session", line.ModeDev, nil, http.MethodGet, "/api/line/catalog", "", http.StatusOK, `"stock_status":"in_stock"`},
 		{"an order needs no staff session", line.ModeDev, nil, http.MethodPost, "/api/line/orders", order, http.StatusCreated, `"order_no":"ORD-2026-00042"`},
 		{"a forged token is unauthorized", line.ModeDev, nil, http.MethodPost, "/api/line/orders", strings.Replace(order, "dev:ploy", "forged", 1), http.StatusUnauthorized, "unauthorized"},
