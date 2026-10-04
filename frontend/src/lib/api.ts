@@ -186,6 +186,7 @@ export interface NewOrder {
   note?: string
   items: { product_id: number; qty: number }[]
   handed_over?: boolean
+  customer?: { name?: string; phone?: string; address?: string }
 }
 
 export interface Shortage {

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
-import { StoreIcon } from 'lucide-react'
+import { InboxIcon, StoreIcon } from 'lucide-react'
 
 import { ChannelChip, Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
@@ -54,12 +54,20 @@ function OrdersPage() {
         title="ออเดอร์"
         description="ทุกช่องทางใช้สต็อกกองเดียวกัน ออเดอร์จองของไว้จนกว่าจะส่งหรือยกเลิก"
         actions={
-          <Button asChild>
-            <Link to="/orders/new">
-              <StoreIcon aria-hidden="true" />
-              ขายหน้าร้าน
-            </Link>
-          </Button>
+          <div className="flex flex-wrap justify-end gap-2.5">
+            <Button asChild variant="outline">
+              <Link to="/orders/online">
+                <InboxIcon aria-hidden="true" />
+                คีย์ออเดอร์ออนไลน์
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/orders/new">
+                <StoreIcon aria-hidden="true" />
+                ขายหน้าร้าน
+              </Link>
+            </Button>
+          </div>
         }
       >
         <HelpNote question="สถานะออเดอร์แต่ละแบบหมายถึงอะไร" className="mt-2 max-w-2xl">

@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router'
 import {
   ArrowRightIcon,
   ClipboardCheckIcon,
+  InboxIcon,
   PackageCheckIcon,
   PackagePlusIcon,
   StoreIcon,
@@ -48,6 +49,12 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
           <Link to="/orders/new">
             <StoreIcon aria-hidden="true" />
             ขายหน้าร้าน
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to="/orders/online">
+            <InboxIcon aria-hidden="true" />
+            คีย์ออเดอร์ออนไลน์
           </Link>
         </Button>
         <Button asChild variant="outline">
