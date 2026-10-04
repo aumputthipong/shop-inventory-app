@@ -756,10 +756,11 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [mode, liff_id]
+                required: [mode, liff_id, oa_url]
                 properties:
                   mode: { type: string, enum: ["off", dev, live] }
                   liff_id: { type: string }
+                  oa_url: { type: string, description: Link to the shop's LINE Official Account; empty when LINE_OA_ID is unset. }
 
   /api/line/catalog:
     get:

@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -55,6 +56,15 @@ type LineConfig struct {
 	LoginChannelID string
 	LIFFID         string
 	AccessToken    string
+	OAID           string
+}
+
+// OAURL opens the shop's LINE Official Account, or is empty when LINE_OA_ID is unset.
+func (l LineConfig) OAURL() string {
+	if l.OAID == "" {
+		return ""
+	}
+	return "https://line.me/R/ti/p/" + url.PathEscape(l.OAID)
 }
 
 func Load() (Config, error) {
@@ -122,6 +132,10 @@ func loadLine(appEnv string) (LineConfig, error) {
 		LoginChannelID: os.Getenv("LINE_LOGIN_CHANNEL_ID"),
 		LIFFID:         os.Getenv("LINE_LIFF_ID"),
 		AccessToken:    os.Getenv("LINE_CHANNEL_ACCESS_TOKEN"),
+		OAID:           strings.TrimSpace(os.Getenv("LINE_OA_ID")),
+	}
+	if line.OAID != "" && !strings.HasPrefix(line.OAID, "@") {
+		return LineConfig{}, fmt.Errorf("config: LINE_OA_ID %q must be the basic ID, starting with @", line.OAID)
 	}
 
 	switch line.Mode {

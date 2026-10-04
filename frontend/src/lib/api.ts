@@ -154,6 +154,7 @@ export type LineMode = 'off' | 'dev' | 'live'
 export interface LineSettings {
   mode: LineMode
   liff_id: string
+  oa_url: string
 }
 
 export interface LineCatalogItem {

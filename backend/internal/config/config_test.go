@@ -108,6 +108,22 @@ func TestLoad(t *testing.T) {
 			wantErr: "not allowed in production",
 		},
 		{
+			name: "LINE official account link is optional",
+			env:  map[string]string{"DATABASE_URL": testDSN, "LINE_OA_ID": " @123abcde "},
+			want: config.Config{
+				DatabaseURL: testDSN,
+				HTTPPort:    8080,
+				AppEnv:      config.EnvDevelopment,
+				GinMode:     config.GinModeDebug,
+				Line:        config.LineConfig{Mode: config.LineModeDev, OAID: "@123abcde"},
+			},
+		},
+		{
+			name:    "LINE official account needs its basic ID",
+			env:     map[string]string{"DATABASE_URL": testDSN, "LINE_OA_ID": "123abcde"},
+			wantErr: "LINE_OA_ID",
+		},
+		{
 			name:    "unknown LINE mode is rejected",
 			env:     map[string]string{"DATABASE_URL": testDSN, "LINE_MODE": "maybe"},
 			wantErr: `LINE_MODE "maybe"`,
@@ -147,7 +163,7 @@ func TestLoad(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE", "STATIC_DIR", "COOKIE_SECURE",
-				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN", "DEMO_ACCOUNTS"} {
+				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN", "LINE_OA_ID", "DEMO_ACCOUNTS"} {
 				t.Setenv(key, "")
 			}
 			for key, value := range tt.env {
@@ -176,4 +192,9 @@ func TestConfigAddr(t *testing.T) {
 func TestConfigIsDevelopment(t *testing.T) {
 	assert.True(t, config.Config{AppEnv: config.EnvDevelopment}.IsDevelopment())
 	assert.False(t, config.Config{AppEnv: config.EnvProduction}.IsDevelopment())
+}
+
+func TestLineOAURL(t *testing.T) {
+	assert.Empty(t, config.LineConfig{}.OAURL())
+	assert.Equal(t, "https://line.me/R/ti/p/@123abcde", config.LineConfig{OAID: "@123abcde"}.OAURL())
 }
