@@ -5,6 +5,7 @@ package orders_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"testing"
 
@@ -94,10 +95,11 @@ func TestConcurrentOrdersNeverOversell(t *testing.T) {
 	const stockOnHand, buyers = 5, 40
 	productID := e.product(t, stockOnHand)
 
-	errs := race(buyers, func(int) error {
+	errs := race(buyers, func(i int) error {
 		_, err := e.orders.Create(context.Background(), orders.NewOrder{
-			Channel: orders.ChannelShopee,
-			Items:   []orders.ItemRequest{{ProductID: productID, Qty: 1}},
+			Channel:     orders.ChannelShopee,
+			ExternalRef: fmt.Sprintf("RACE-%d-%d", productID, i),
+			Items:       []orders.ItemRequest{{ProductID: productID, Qty: 1}},
 		})
 		return err
 	})
@@ -138,7 +140,7 @@ func TestMultiItemOrdersAreAllOrNothingUnderContention(t *testing.T) {
 	var mu sync.Mutex
 	var placed []orders.Order
 	errs := race(30, func(i int) error {
-		o, err := e.orders.Create(context.Background(), orders.NewOrder{Items: shapes[i%len(shapes)]})
+		o, err := e.orders.Create(context.Background(), orders.NewOrder{Items: shapes[i%len(shapes)], Customer: pickupLater})
 		if err == nil {
 			mu.Lock()
 			placed = append(placed, o)
@@ -173,7 +175,7 @@ func TestShipAndCancelKeepLedgerAndBalanceInStep(t *testing.T) {
 	productID := e.product(t, 10)
 
 	create := func(qty int32) orders.Order {
-		o, err := e.orders.Create(ctx, orders.NewOrder{Items: []orders.ItemRequest{{ProductID: productID, Qty: qty}}})
+		o, err := e.orders.Create(ctx, orders.NewOrder{Items: []orders.ItemRequest{{ProductID: productID, Qty: qty}}, Customer: pickupLater})
 		require.NoError(t, err)
 		return o
 	}
@@ -272,7 +274,7 @@ func TestAdjustCannotTakeReservedUnits(t *testing.T) {
 	e := newEnv(t)
 	ctx := t.Context()
 	productID := e.product(t, 8)
-	_, err := e.orders.Create(ctx, orders.NewOrder{Items: []orders.ItemRequest{{ProductID: productID, Qty: 5}}})
+	_, err := e.orders.Create(ctx, orders.NewOrder{Items: []orders.ItemRequest{{ProductID: productID, Qty: 5}}, Customer: pickupLater})
 	require.NoError(t, err)
 
 	_, err = e.stock.Adjust(ctx, stock.AdjustInput{ProductID: productID, QtyChange: -4, Reason: stock.ReasonDamaged})

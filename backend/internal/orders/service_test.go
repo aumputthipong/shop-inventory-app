@@ -20,6 +20,8 @@ func locked(rows ...stock.LockedRow) map[int64]stock.LockedRow {
 	return m
 }
 
+var pickupLater = &orders.Customer{Name: "Ann"}
+
 func row(id int64, onHand, reserved int32) stock.LockedRow {
 	return stock.LockedRow{
 		ProductID: id, SKU: "SKU", Name: "item", Price: "100.00", IsActive: true,
@@ -175,11 +177,11 @@ func TestNotifierHearsCommittedChangesOnly(t *testing.T) {
 	n := &countingNotifier{}
 	svc := orders.NewService(&fakeRepo{}).WithNotifier(n)
 
-	_, err := svc.Create(t.Context(), orders.NewOrder{Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}}})
+	_, err := svc.Create(t.Context(), orders.NewOrder{Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}}, Customer: pickupLater})
 	require.NoError(t, err)
 	_, err = svc.Apply(t.Context(), 7, orders.ActionPack)
 	require.NoError(t, err)
-	_, err = svc.Create(t.Context(), orders.NewOrder{Items: []orders.ItemRequest{{ProductID: 1, Qty: 5}}})
+	_, err = svc.Create(t.Context(), orders.NewOrder{Items: []orders.ItemRequest{{ProductID: 1, Qty: 5}}, Customer: pickupLater})
 	require.Error(t, err)
 
 	assert.Equal(t, []int64{7, 7}, n.seen, "a rejected order sends nothing")
@@ -213,6 +215,36 @@ func TestCreateValidatesBeforeTouchingStock(t *testing.T) {
 	}
 }
 
+func TestCreateRequiresWhatStaffNeedToFindTheOrder(t *testing.T) {
+	one := []orders.ItemRequest{{ProductID: 1, Qty: 1}}
+	tests := []struct {
+		name string
+		in   orders.NewOrder
+		want error
+	}{
+		{"shopee without its number", orders.NewOrder{Channel: orders.ChannelShopee, Items: one}, orders.ErrExternalRefMissing},
+		{"shopee number of spaces", orders.NewOrder{Channel: orders.ChannelShopee, ExternalRef: "  ", Items: one}, orders.ErrExternalRefMissing},
+		{"shopee with its number", orders.NewOrder{Channel: orders.ChannelShopee, ExternalRef: "2410040ABC", Items: one}, nil},
+		{"line without a name", orders.NewOrder{Channel: orders.ChannelLine, Items: one, Customer: &orders.Customer{Phone: "0812345678"}}, orders.ErrCustomerMissing},
+		{"line with a name", orders.NewOrder{Channel: orders.ChannelLine, Items: one, Customer: &orders.Customer{Name: "Ann"}}, nil},
+		{"store pickup without anyone", orders.NewOrder{Items: one, Customer: &orders.Customer{Name: " "}}, orders.ErrCustomerMissing},
+		{"store pickup with a phone", orders.NewOrder{Items: one, Customer: &orders.Customer{Phone: "0812345678"}}, nil},
+		{"store sale handed over", orders.NewOrder{Items: one, HandedOver: true}, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := &fakeRepo{}
+			_, err := orders.NewService(repo).Create(t.Context(), tt.in)
+			if tt.want == nil {
+				require.NoError(t, err)
+				return
+			}
+			require.ErrorIs(t, err, tt.want)
+			assert.Empty(t, repo.created.Items)
+		})
+	}
+}
+
 func TestOnlyStoreSalesAreHandedOverAtOnce(t *testing.T) {
 	repo := &fakeRepo{}
 	_, err := orders.NewService(repo).Create(t.Context(), orders.NewOrder{
@@ -225,7 +257,7 @@ func TestOnlyStoreSalesAreHandedOverAtOnce(t *testing.T) {
 func TestCreateDefaultsToStoreChannel(t *testing.T) {
 	repo := &fakeRepo{}
 	o, err := orders.NewService(repo).Create(t.Context(), orders.NewOrder{
-		Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}},
+		Items: []orders.ItemRequest{{ProductID: 1, Qty: 1}}, Customer: pickupLater,
 	})
 	require.NoError(t, err)
 	assert.Equal(t, int64(7), o.ID)
@@ -235,7 +267,7 @@ func TestCreateDefaultsToStoreChannel(t *testing.T) {
 func TestCreateRecordsRejectedAttempts(t *testing.T) {
 	repo := &fakeRepo{}
 	_, err := orders.NewService(repo).Create(t.Context(), orders.NewOrder{
-		Items: []orders.ItemRequest{{ProductID: 1, Qty: 2}},
+		Items: []orders.ItemRequest{{ProductID: 1, Qty: 2}}, Customer: pickupLater,
 	})
 	require.ErrorIs(t, err, stock.ErrInsufficientStock)
 	require.NotNil(t, repo.rejected)

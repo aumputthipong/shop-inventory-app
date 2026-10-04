@@ -81,6 +81,12 @@ in the same PR as the behaviour it describes.
   bare stock-out. It takes the same lock and oversell check as every other
   order, and the ledger reads the same way for every channel. Only the store
   channel may do this; online orders always wait to be packed.
+- Orders keyed in by hand must carry what staff need to find them again: a
+  Shopee order needs its Shopee number (so the unique index can catch the
+  same order keyed twice), a LINE order needs the customer's name, and a store
+  order picked up later needs a name or phone. These live in Go only: a
+  handed-over sale is inserted as `reserved` before it ships, so a row check
+  cannot tell it from a pickup, and older rows were saved without them.
 - Money is `numeric(12,2)` in postgres and a decimal string everywhere else
   (sqlc override to `string`, JSON `"600.00"`). Totals are summed in SQL, so no
   float ever touches a price.

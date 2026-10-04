@@ -38,7 +38,11 @@ func seedSampleShop(ctx context.Context, pool *pgxpool.Pool) error {
 		for sku, qty := range s.items {
 			items = append(items, orders.ItemRequest{ProductID: ids[sku], Qty: qty})
 		}
-		o, err := orderSvc.Create(ctx, orders.NewOrder{Channel: s.channel, ExternalRef: s.externalRef, Items: items})
+		in := orders.NewOrder{Channel: s.channel, ExternalRef: s.externalRef, Items: items}
+		if s.customer != "" {
+			in.Customer = &orders.Customer{Name: s.customer}
+		}
+		o, err := orderSvc.Create(ctx, in)
 		if errors.Is(err, stock.ErrInsufficientStock) {
 			slog.Info("sample order rejected as expected", slog.String("external_ref", s.externalRef))
 			continue

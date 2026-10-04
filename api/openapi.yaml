@@ -503,8 +503,15 @@ paths:
               required: [items]
               properties:
                 channel: { $ref: "#/components/schemas/Channel" }
-                external_ref: { type: string, maxLength: 100, description: Order id on the channel; unique per channel. }
+                external_ref: { type: string, maxLength: 100, description: Order id on the channel; unique per channel. Required for shopee. }
                 note: { type: string, maxLength: 500 }
+                customer:
+                  type: object
+                  description: Required for line (name) and for a store order not handed over (name or phone).
+                  properties:
+                    name: { type: string, maxLength: 100 }
+                    phone: { type: string, maxLength: 20 }
+                    address: { type: string, maxLength: 500 }
                 handed_over:
                   type: boolean
                   default: false
@@ -542,7 +549,13 @@ paths:
                       details:
                         items:
                           - { product_id: 2, sku: SKU-0002, name: กางเกงยีนส์ขายาว 32, requested: 3, available: 2 }
-        "422": { $ref: "#/components/responses/Validation" }
+        "422":
+          description: |
+            Validation failed. A missing Shopee number names the field
+            external_ref; a missing customer names the field customer.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
 
   /api/orders/{id}:
     parameters:

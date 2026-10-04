@@ -16,6 +16,7 @@ type sampleProduct struct {
 type sampleOrder struct {
 	channel     orders.Channel
 	externalRef string
+	customer    string
 	items       map[string]int32
 	pack        bool
 }
@@ -31,9 +32,9 @@ var sampleCatalog = []sampleProduct{
 
 // The last order is meant to be refused, so the audit log has a rejected attempt to show.
 var sampleOrders = []sampleOrder{
-	{orders.ChannelShopee, "SHP-2409-0101", map[string]int32{"SKU-0001": 1, "SKU-0002": 1}, false},
-	{orders.ChannelLine, "", map[string]int32{"SKU-0001": 5, "SKU-0002": 4}, true},
-	{orders.ChannelShopee, "SHP-2409-0102", map[string]int32{"SKU-0003": 2}, false},
-	{orders.ChannelLine, "", map[string]int32{"SKU-0003": 2, "SKU-0004": 2}, false},
-	{orders.ChannelShopee, "SHP-2409-0103", map[string]int32{"SKU-0003": 1}, false},
+	{orders.ChannelShopee, "SHP-2409-0101", "", map[string]int32{"SKU-0001": 1, "SKU-0002": 1}, false},
+	{orders.ChannelLine, "", "คุณมะลิ", map[string]int32{"SKU-0001": 5, "SKU-0002": 4}, true},
+	{orders.ChannelShopee, "SHP-2409-0102", "", map[string]int32{"SKU-0003": 2}, false},
+	{orders.ChannelLine, "", "คุณต้นกล้า", map[string]int32{"SKU-0003": 2, "SKU-0004": 2}, false},
+	{orders.ChannelShopee, "SHP-2409-0103", "", map[string]int32{"SKU-0003": 1}, false},
 }

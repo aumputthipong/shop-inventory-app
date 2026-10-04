@@ -27,7 +27,8 @@ func TestReverseAMistypedStockIn(t *testing.T) {
 	_, err = svc.StockIn(ctx, stock.ReceiptInput{ProductID: p.ID, Qty: 50})
 	require.NoError(t, err)
 	_, err = orders.NewService(orders.NewRepository(pool)).Create(ctx, orders.NewOrder{
-		Items: []orders.ItemRequest{{ProductID: p.ID, Qty: 3}},
+		Items:    []orders.ItemRequest{{ProductID: p.ID, Qty: 3}},
+		Customer: &orders.Customer{Name: "Ann"},
 	})
 	require.NoError(t, err)
 
