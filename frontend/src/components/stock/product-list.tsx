@@ -143,7 +143,7 @@ function ProductRow({
         <UnitStrip available={p.available} held={p.reserved} />
         <span className="flex gap-3 text-xs text-ink-3">
           <span>มี {p.on_hand}</span>
-          <span>จองแล้ว {p.reserved}</span>
+          <span>รอดำเนินการ {p.reserved}</span>
         </span>
       </span>
       <span className="flex flex-col items-end">

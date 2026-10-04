@@ -51,17 +51,17 @@ export function Availability({
       <span className="text-[13px] text-ink-2">{summary}</span>
       <UnitStrip size="lg" available={product.available} held={product.reserved} />
       <UnitLegend />
-      <HelpNote question="ขายได้ มีในคลัง จองแล้ว ต่างกันยังไง">
+      <HelpNote question="ขายได้ มีในคลัง รอดำเนินการ ต่างกันยังไง">
         <p>
           <span className="font-medium text-ink">มีในคลัง</span> คือของที่อยู่ในร้านจริง
           รวมของที่แพ็กแล้วแต่ยังไม่ได้ส่ง
         </p>
         <p>
-          <span className="font-medium text-ink">จองแล้ว</span> คือของที่มีออเดอร์สั่งไว้
+          <span className="font-medium text-ink">รอดำเนินการ</span> คือของที่ออเดอร์สั่งไว้
           แต่ยังไม่ได้ส่ง ช่องทางอื่นจะขายชิ้นนี้ซ้ำไม่ได้
         </p>
         <p>
-          <span className="font-medium text-ink">ขายได้</span> = มีในคลัง − จองแล้ว
+          <span className="font-medium text-ink">ขายได้</span> = มีในคลัง − รอดำเนินการ
           คือจำนวนที่ยังรับออเดอร์ใหม่ได้ เมื่อกดส่งของ ชิ้นนั้นจะออกจากคลัง
         </p>
       </HelpNote>
