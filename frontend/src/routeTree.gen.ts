@@ -25,6 +25,7 @@ import { Route as AppCountsNewRouteImport } from './routes/_app/counts/new'
 import { Route as AppOrdersIndexRouteImport } from './routes/_app/orders/index'
 import { Route as AppOrdersOrderIdRouteImport } from './routes/_app/orders/$orderId'
 import { Route as AppOrdersNewRouteImport } from './routes/_app/orders/new'
+import { Route as AppOrdersOnlineRouteImport } from './routes/_app/orders/online'
 
 const AppRoute = AppRouteImport.update({
   id: '/_app',
@@ -105,6 +106,11 @@ const AppOrdersNewRoute = AppOrdersNewRouteImport.update({
   path: '/orders/new',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOrdersOnlineRoute = AppOrdersOnlineRouteImport.update({
+  id: '/orders/online',
+  path: '/orders/online',
+  getParentRoute: () => AppRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AppIndexRoute
@@ -120,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/counts/new': typeof AppCountsNewRoute
   '/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/orders/new': typeof AppOrdersNewRoute
+  '/orders/online': typeof AppOrdersOnlineRoute
   '/counts/': typeof AppCountsIndexRoute
   '/orders/': typeof AppOrdersIndexRoute
 }
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/counts/new': typeof AppCountsNewRoute
   '/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/orders/new': typeof AppOrdersNewRoute
+  '/orders/online': typeof AppOrdersOnlineRoute
   '/counts': typeof AppCountsIndexRoute
   '/orders': typeof AppOrdersIndexRoute
 }
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/_app/counts/new': typeof AppCountsNewRoute
   '/_app/orders/$orderId': typeof AppOrdersOrderIdRoute
   '/_app/orders/new': typeof AppOrdersNewRoute
+  '/_app/orders/online': typeof AppOrdersOnlineRoute
   '/_app/counts/': typeof AppCountsIndexRoute
   '/_app/orders/': typeof AppOrdersIndexRoute
 }
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/counts/new'
     | '/orders/$orderId'
     | '/orders/new'
+    | '/orders/online'
     | '/counts/'
     | '/orders/'
   fileRoutesByTo: FileRoutesByTo
@@ -192,6 +202,7 @@ export interface FileRouteTypes {
     | '/counts/new'
     | '/orders/$orderId'
     | '/orders/new'
+    | '/orders/online'
     | '/counts'
     | '/orders'
   id:
@@ -210,6 +221,7 @@ export interface FileRouteTypes {
     | '/_app/counts/new'
     | '/_app/orders/$orderId'
     | '/_app/orders/new'
+    | '/_app/orders/online'
     | '/_app/counts/'
     | '/_app/orders/'
   fileRoutesById: FileRoutesById
@@ -334,6 +346,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrdersNewRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/orders/online': {
+      id: '/_app/orders/online'
+      path: '/orders/online'
+      fullPath: '/orders/online'
+      preLoaderRoute: typeof AppOrdersOnlineRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
@@ -349,6 +368,7 @@ interface AppRouteChildren {
   AppCountsNewRoute: typeof AppCountsNewRoute
   AppOrdersOrderIdRoute: typeof AppOrdersOrderIdRoute
   AppOrdersNewRoute: typeof AppOrdersNewRoute
+  AppOrdersOnlineRoute: typeof AppOrdersOnlineRoute
   AppCountsIndexRoute: typeof AppCountsIndexRoute
   AppOrdersIndexRoute: typeof AppOrdersIndexRoute
 }
@@ -365,6 +385,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCountsNewRoute: AppCountsNewRoute,
   AppOrdersOrderIdRoute: AppOrdersOrderIdRoute,
   AppOrdersNewRoute: AppOrdersNewRoute,
+  AppOrdersOnlineRoute: AppOrdersOnlineRoute,
   AppCountsIndexRoute: AppCountsIndexRoute,
   AppOrdersIndexRoute: AppOrdersIndexRoute,
 }

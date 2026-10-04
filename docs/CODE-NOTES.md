@@ -179,6 +179,13 @@ in the same PR as the behaviour it describes.
 - The new-order page keeps the server's shortage list after a 409 and marks
   each short line with what is left, because the counter staff did nothing
   wrong: another channel sold the stock first.
+- Staff key orders in from two pages, a store sale (`/orders/new`) and an
+  online order (`/orders/online`), sharing one form. Each page asks only for
+  what its case needs, and the online page has no default channel, so a
+  Shopee order cannot slip in as a store sale by a missed click. The Shopee
+  number is checked against the order search when the field loses focus, so a
+  duplicate is caught before the cart is filled; the unique index still has
+  the final word.
 
 ## Tooling
 
