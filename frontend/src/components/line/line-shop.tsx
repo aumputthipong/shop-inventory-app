@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { capFor, cartLines, type Cart } from '@/components/line/cart'
 import { CartStep } from '@/components/line/cart-step'
 import { DetailsStep, type Delivery, type DeliveryField } from '@/components/line/details-step'
+import type { Customer } from '@/components/line/line-layout'
 import { ReceiptStep } from '@/components/line/receipt-step'
 import { api, isApiError, shortagesOf, type LineCatalogItem, type LineReceipt } from '@/lib/api'
 import type { LineIdentity } from '@/lib/line-identity'
@@ -26,6 +27,7 @@ export function LineShop({ identity, devMode }: { identity: LineIdentity; devMod
     note: '',
   })
   const [receipt, setReceipt] = useState<LineReceipt | null>(null)
+  const customer: Customer = { name: identity.displayName, pictureUrl: identity.pictureUrl }
 
   const items = catalog.data ?? []
   const lines = cartLines(items, cart)
@@ -72,6 +74,7 @@ export function LineShop({ identity, devMode }: { identity: LineIdentity; devMod
     return (
       <ReceiptStep
         devMode={devMode}
+        customer={customer}
         receipt={receipt}
         inClient={identity.inClient}
         onClose={identity.close}
@@ -95,6 +98,7 @@ export function LineShop({ identity, devMode }: { identity: LineIdentity; devMod
     return (
       <DetailsStep
         devMode={devMode}
+        customer={customer}
         lines={lines}
         units={units}
         total={total}
@@ -118,7 +122,7 @@ export function LineShop({ identity, devMode }: { identity: LineIdentity; devMod
   return (
     <CartStep
       devMode={devMode}
-      displayName={identity.displayName}
+      customer={customer}
       items={items}
       loading={catalog.isPending}
       failed={catalog.isError}

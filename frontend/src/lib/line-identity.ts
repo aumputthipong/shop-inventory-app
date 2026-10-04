@@ -3,6 +3,7 @@ import type { LineSettings } from '@/lib/api'
 export interface LineIdentity {
   idToken: string
   displayName: string
+  pictureUrl: string
   inClient: boolean
   close: () => void
 }
@@ -20,6 +21,7 @@ export async function signInWithLine(
     return {
       idToken: `dev:${name}`,
       displayName: name,
+      pictureUrl: '',
       inClient: false,
       close: () => undefined,
     }
@@ -35,9 +37,11 @@ export async function signInWithLine(
   if (!idToken) {
     throw new Error('LINE returned no ID token; turn on the openid scope for the LIFF app')
   }
+  const profile = liff.getDecodedIDToken()
   return {
     idToken,
-    displayName: liff.getDecodedIDToken()?.name ?? '',
+    displayName: profile?.name ?? '',
+    pictureUrl: profile?.picture ?? '',
     inClient: liff.isInClient(),
     close: () => {
       liff.closeWindow()
