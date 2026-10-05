@@ -383,8 +383,17 @@ export interface MovementQuery {
 export interface OrderQuery {
   status?: OrderStatus
   q?: string
+  sort?: 'newest' | 'oldest'
   limit?: number
   offset?: number
+}
+
+export interface DaySales {
+  date: string
+  orders: number
+  revenue: string
+  shipped: number
+  channels: { channel: Channel; orders: number; revenue: string }[]
 }
 
 export interface CountQuery {
@@ -429,6 +438,7 @@ export const api = {
   createOrder: (input: NewOrder) => send<Order>('POST', '/api/orders', input),
   orderAction: (id: number, action: OrderAction) =>
     send<Order>('POST', `/api/orders/${id}/${action}`),
+  getTodaySales: (signal?: AbortSignal) => apiFetch<DaySales>('/api/sales/today', { signal }),
 
   listCounts: (query: CountQuery, signal?: AbortSignal) =>
     apiFetch<Page<CountSummary>>(withQuery('/api/counts', { ...query }), { signal }),

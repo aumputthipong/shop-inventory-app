@@ -167,10 +167,26 @@ in the same PR as the behaviour it describes.
 - Route files and shadcn/ui components have `react-refresh/only-export-components`
   off: the router's autoCodeSplitting moves route components into their own
   module, and shadcn exports cva variant helpers by design.
-- Product tiles show the first letter of the name on a colour picked from the
-  SKU. A fixed icon set cannot cover every kind of product a shop sells; photo
-  upload can replace the tile later. Thai leading vowels (เ แ โ ใ ไ) are skipped
-  so the tile shows a consonant.
+- Product tiles show the first letter of the name on one kraft tone, like a
+  marked carton. A colour per SKU encoded nothing and read as decoration. A fixed
+  icon set cannot cover every kind of product a shop sells; photo upload can
+  replace the tile later. Thai leading vowels (เ แ โ ใ ไ) are skipped so the
+  tile shows a consonant.
+- The stock list moves the unit strip under the product name below the `sm`
+  breakpoint. A fixed 200px strip column left no room for the name on a phone.
+- Today shows how long each queued order has waited instead of its timestamp
+  (kept in the hover title); 48 hours or more becomes a warning chip, a default
+  close to the marketplaces' ship-within-two-days rule. The queues ask the
+  orders list for `sort=oldest`, so the five shown are the ones waiting longest;
+  newest first would hide exactly the orders most at risk.
+- Today's sales (`GET /api/sales/today`, owner only) count orders placed today
+  that are not canceled, with their totals, plus orders shipped today whenever
+  they were placed. "Today" is the calendar day in `SHOP_TIMEZONE`, computed in
+  Go and passed to SQL as a half-open range, so the database session's time
+  zone never matters. `time/tzdata` is embedded so the zone loads on any host.
+- The sales integration test writes its orders inside one transaction that it
+  rolls back. Every row shares that transaction's `now()`, so a one-microsecond
+  day holds only its own orders while other packages write to the same database.
 - The unit strip draws one cell per unit up to 24 (list) or 40 (panel) and
   becomes a proportional bar beyond that, where individual cells stop being
   readable.

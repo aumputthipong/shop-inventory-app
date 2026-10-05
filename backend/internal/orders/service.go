@@ -179,10 +179,39 @@ type Summary struct {
 }
 
 type Filter struct {
-	Status *Status
-	Search *string
-	Limit  int32
-	Offset int32
+	Status      *Status
+	Search      *string
+	OldestFirst bool
+	Limit       int32
+	Offset      int32
+}
+
+// Day is one calendar day in the shop's time zone, as the half-open range [Start, End).
+type Day struct {
+	Date  string
+	Start time.Time
+	End   time.Time
+}
+
+func DayOf(t time.Time, zone *time.Location) Day {
+	local := t.In(zone)
+	start := time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, zone)
+	return Day{Date: start.Format(time.DateOnly), Start: start, End: start.AddDate(0, 0, 1)}
+}
+
+type ChannelSales struct {
+	Channel Channel
+	Orders  int32
+	Revenue string
+}
+
+// Sales counts the orders placed on a day, leaving out canceled ones, and the orders shipped that day.
+type Sales struct {
+	Date     string
+	Orders   int32
+	Revenue  string
+	Shipped  int32
+	Channels []ChannelSales
 }
 
 type ReservationPlanner func(locked map[int64]stock.LockedRow) ([]Line, error)
@@ -195,6 +224,7 @@ type Repository interface {
 	Transition(ctx context.Context, id int64, action Action, plan TransitionPlanner) error
 	Get(ctx context.Context, id int64) (Order, error)
 	List(ctx context.Context, f Filter) ([]Summary, int64, error)
+	Sales(ctx context.Context, day Day) (Sales, error)
 }
 
 // Notifier hears about every order created or moved, after its transaction commits.
@@ -205,14 +235,27 @@ type Notifier interface {
 type Service struct {
 	repo     Repository
 	notifier Notifier
+	zone     *time.Location
+	now      func() time.Time
 }
 
 func NewService(repo Repository) *Service {
-	return &Service{repo: repo}
+	return &Service{repo: repo, zone: time.UTC, now: time.Now}
 }
 
 func (s *Service) WithNotifier(n Notifier) *Service {
 	s.notifier = n
+	return s
+}
+
+// WithZone sets the time zone that decides where the shop's day starts and ends.
+func (s *Service) WithZone(zone *time.Location) *Service {
+	s.zone = zone
+	return s
+}
+
+func (s *Service) WithClock(now func() time.Time) *Service {
+	s.now = now
 	return s
 }
 
@@ -289,6 +332,33 @@ func (s *Service) List(ctx context.Context, f Filter) ([]Summary, int64, error) 
 		return nil, 0, fmt.Errorf("list orders: %w", err)
 	}
 	return items, total, nil
+}
+
+func (s *Service) Today(ctx context.Context) (Sales, error) {
+	day := DayOf(s.now(), s.zone)
+	sales, err := s.repo.Sales(ctx, day)
+	if err != nil {
+		return Sales{}, fmt.Errorf("sales on %s: %w", day.Date, err)
+	}
+	sales.Date = day.Date
+	sales.Channels = everyChannel(sales.Channels)
+	return sales, nil
+}
+
+var channels = []Channel{ChannelStore, ChannelShopee, ChannelLine}
+
+func everyChannel(found []ChannelSales) []ChannelSales {
+	out := make([]ChannelSales, 0, len(channels))
+	for _, ch := range channels {
+		cs := ChannelSales{Channel: ch, Revenue: "0.00"}
+		for _, f := range found {
+			if f.Channel == ch {
+				cs = f
+			}
+		}
+		out = append(out, cs)
+	}
+	return out
 }
 
 // PlanReservation is all or nothing: one short line rejects the whole order.

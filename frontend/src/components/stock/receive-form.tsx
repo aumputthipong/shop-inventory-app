@@ -70,10 +70,10 @@ export function ReceiveForm({ products }: { products: Product[] }) {
       <section aria-label="รับของเข้าแล้ว" className="panel flex max-w-2xl flex-col gap-4 p-5">
         <div className="flex items-center gap-3">
           <CheckCircle2Icon className="size-6 text-chip-ok-fg" aria-hidden="true" />
-          <h2 className="text-base font-semibold">
+          <h2 className="flex flex-wrap items-baseline gap-x-3 text-base font-semibold">
             รับของเข้าแล้ว {done.lines.length} รายการ
             {done.reference && (
-              <span className="font-normal text-ink-2"> · ใบส่งของ {done.reference}</span>
+              <span className="text-sm font-normal text-ink-2">ใบส่งของ {done.reference}</span>
             )}
           </h2>
         </div>
@@ -84,8 +84,10 @@ export function ReceiveForm({ products }: { products: Product[] }) {
               className="flex items-center justify-between gap-3 border-b border-line py-2.5 last:border-b-0"
             >
               <span className="truncate font-medium">{l.name}</span>
-              <span className="text-sm text-ink-2">
-                +{l.qty} · มีในคลัง {l.on_hand} · ขายได้ {l.available}
+              <span className="flex shrink-0 gap-3 text-sm text-ink-2">
+                <span className="font-medium text-ink">+{l.qty}</span>
+                <span>มีในคลัง {l.on_hand}</span>
+                <span>ขายได้ {l.available}</span>
               </span>
             </li>
           ))}
@@ -137,7 +139,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
                 key={p.id}
                 className="grid min-h-14 grid-cols-[36px_minmax(0,1fr)_90px_110px] items-center gap-4 border-b border-line px-4 py-2.5 last:border-b-0"
               >
-                <ProductAvatar name={p.name} sku={p.sku} />
+                <ProductAvatar name={p.name} />
                 <span className="flex min-w-0 flex-col">
                   <span className="flex items-center gap-2">
                     <span className="truncate font-medium">{p.name}</span>

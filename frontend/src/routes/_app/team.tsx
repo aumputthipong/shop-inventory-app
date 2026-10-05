@@ -98,8 +98,9 @@ function TeamPage() {
                   {u.name}
                   {!u.is_active && <Chip tone="neutral">ปิดใช้งาน</Chip>}
                 </span>
-                <span className="truncate text-[13px] text-ink-2">
-                  {u.email} · เข้าร่วม {formatFullDateTime(u.created_at)}
+                <span className="flex flex-wrap gap-x-3 text-[13px] text-ink-2">
+                  <span className="truncate">{u.email}</span>
+                  <span>เข้าร่วม {formatFullDateTime(u.created_at)}</span>
                 </span>
               </span>
               <span>

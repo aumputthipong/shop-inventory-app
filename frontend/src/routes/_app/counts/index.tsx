@@ -77,7 +77,7 @@ function CountsPage() {
             ]}
           />
         </div>
-        <div className="grid h-9 min-w-[760px] grid-cols-[90px_150px_100px_100px_minmax(0,1fr)_120px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
+        <div className="grid h-9 min-w-[760px] grid-cols-[90px_150px_100px_100px_minmax(0,1fr)_120px] items-center gap-4 border-b border-line px-4 text-[13px] text-ink-2">
           <span>เลขที่</span>
           <span>สถานะ</span>
           <span className="text-right">นับ</span>

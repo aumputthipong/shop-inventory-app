@@ -34,13 +34,8 @@ export function Availability({
       <div className="flex items-start justify-between gap-3">
         <div className="flex flex-col">
           <span className="text-[13px] text-ink-2">ขายได้อีก</span>
-          <span className="flex items-baseline gap-1.5">
-            <span
-              className={cn(
-                'text-5xl leading-[52px] font-semibold tracking-tight',
-                product.available <= 0 && 'text-destructive',
-              )}
-            >
+          <span className="mt-1 flex items-baseline gap-2">
+            <span className={cn('count text-[64px]', product.available <= 0 && 'text-destructive')}>
               {Math.max(product.available, 0)}
             </span>
             <span className="text-base text-ink-2">ชิ้น</span>
@@ -65,17 +60,15 @@ export function Availability({
           คือจำนวนที่ยังรับออเดอร์ใหม่ได้ เมื่อกดส่งของ ชิ้นนั้นจะออกจากคลัง
         </p>
       </HelpNote>
-      <div
-        className={cn(
-          'flex items-center gap-2 text-[13px]',
-          product.stock_status === 'out_of_stock'
-            ? 'text-destructive'
-            : product.stock_status === 'low'
-              ? 'text-chip-warn-fg'
-              : 'text-ink-2',
-        )}
-      >
-        <BellIcon className="size-4 shrink-0" aria-hidden="true" />
+      <div className="flex items-center gap-2 text-[13px] text-ink-2">
+        <BellIcon
+          className={cn(
+            'size-4 shrink-0',
+            product.stock_status === 'out_of_stock' && 'text-destructive',
+            product.stock_status === 'low' && 'text-chip-warn-fg',
+          )}
+          aria-hidden="true"
+        />
         <span>{status}</span>
         {isOwner && (
           <button

@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	httpx "github.com/aumputthipong/shop-inventory-app/backend/internal/http"
+	"github.com/aumputthipong/shop-inventory-app/backend/internal/platform/actor"
 )
 
 type Manager interface {
@@ -16,6 +17,7 @@ type Manager interface {
 	Apply(ctx context.Context, id int64, action Action) (Order, error)
 	Get(ctx context.Context, id int64) (Order, error)
 	List(ctx context.Context, f Filter) ([]Summary, int64, error)
+	Today(ctx context.Context) (Sales, error)
 }
 
 type Handler struct {
@@ -33,6 +35,7 @@ func (h *Handler) Register(r gin.IRouter) {
 	r.POST("/api/orders/:id/pack", h.transition(ActionPack))
 	r.POST("/api/orders/:id/ship", h.transition(ActionShip))
 	r.POST("/api/orders/:id/cancel", h.transition(ActionCancel))
+	r.GET("/api/sales/today", httpx.RequireRole(actor.RoleOwner), h.today)
 }
 
 type itemRequest struct {
@@ -105,6 +108,20 @@ type listResponse struct {
 	Total int64             `json:"total"`
 }
 
+type channelSalesResponse struct {
+	Channel string `json:"channel"`
+	Orders  int32  `json:"orders"`
+	Revenue string `json:"revenue"`
+}
+
+type salesResponse struct {
+	Date     string                 `json:"date"`
+	Orders   int32                  `json:"orders"`
+	Revenue  string                 `json:"revenue"`
+	Shipped  int32                  `json:"shipped"`
+	Channels []channelSalesResponse `json:"channels"`
+}
+
 type shortageResponse struct {
 	ProductID int64  `json:"product_id"`
 	SKU       string `json:"sku"`
@@ -150,6 +167,14 @@ func (h *Handler) list(c *gin.Context) {
 		s := Status(raw)
 		f.Status = &s
 	}
+	switch c.Query("sort") {
+	case "", "newest":
+	case "oldest":
+		f.OldestFirst = true
+	default:
+		httpx.RespondFieldError(c, "sort", "sort must be newest or oldest")
+		return
+	}
 
 	items, total, err := h.svc.List(c.Request.Context(), f)
 	if err != nil {
@@ -165,6 +190,21 @@ func (h *Handler) list(c *gin.Context) {
 		})
 	}
 	c.JSON(http.StatusOK, listResponse{Items: out, Total: total})
+}
+
+func (h *Handler) today(c *gin.Context) {
+	s, err := h.svc.Today(c.Request.Context())
+	if err != nil {
+		httpx.RespondInternal(c, err)
+		return
+	}
+	chans := make([]channelSalesResponse, 0, len(s.Channels))
+	for _, cs := range s.Channels {
+		chans = append(chans, channelSalesResponse{Channel: string(cs.Channel), Orders: cs.Orders, Revenue: cs.Revenue})
+	}
+	c.JSON(http.StatusOK, salesResponse{
+		Date: s.Date, Orders: s.Orders, Revenue: s.Revenue, Shipped: s.Shipped, Channels: chans,
+	})
 }
 
 func (h *Handler) get(c *gin.Context) {

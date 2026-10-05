@@ -5,14 +5,13 @@
 @import '@fontsource/ibm-plex-sans-thai/500.css';
 @import '@fontsource/ibm-plex-sans-thai/600.css';
 @import '@fontsource/ibm-plex-sans-thai/700.css';
-@import '@fontsource/ibm-plex-mono/400.css';
-@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/barlow-condensed/700.css';
 
 /* Tokens are documented in docs/DESIGN.md. */
 @theme inline {
   --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif;
   --font-heading: var(--font-sans);
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-count: 'Barlow Condensed', 'IBM Plex Sans Thai', sans-serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -45,6 +44,7 @@
   --color-surface-2: #faf8f5;
   --color-line: #e7e2da;
   --color-line-strong: #d5cec3;
+  --color-edge: #e2dcd2;
   --color-ink: #26221e;
   --color-ink-2: #5f584f;
   --color-ink-3: #7a7267;
@@ -123,15 +123,26 @@
 }
 
 @utility panel {
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-edge);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
 }
 
+@utility page-title {
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 600;
+}
+
 @utility code {
-  font-family: var(--font-mono);
-  font-size: 0.93em;
-  letter-spacing: 0;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+@utility count {
+  font-family: var(--font-count);
+  font-weight: 700;
+  line-height: 1;
 }
 
 @utility bg-hatch {

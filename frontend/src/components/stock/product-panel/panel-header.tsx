@@ -34,10 +34,10 @@ export function PanelHeader({
 
   return (
     <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-      <ProductAvatar name={product.name} sku={product.sku} size="lg" />
+      <ProductAvatar name={product.name} size="lg" />
       <div className="flex min-w-0 flex-1 flex-col">
         <h2 className="truncate text-base leading-6 font-semibold">{product.name}</h2>
-        <div className="flex gap-3 text-[13px] text-ink-2">
+        <div className="flex gap-3 text-[13px] whitespace-nowrap text-ink-2">
           <span className="code">{product.sku}</span>
           <span>{formatMoney(product.price)}</span>
         </div>

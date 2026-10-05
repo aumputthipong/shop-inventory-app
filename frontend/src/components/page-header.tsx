@@ -16,15 +16,15 @@ export function BackLink({ to, children }: { to: LinkProps['to']; children: Reac
 
 export function PageHeader({
   back,
-  eyebrow,
   title,
+  aside,
   description,
   actions,
   children,
 }: {
   back?: { to: LinkProps['to']; label: string }
-  eyebrow?: ReactNode
   title: ReactNode
+  aside?: ReactNode
   description?: ReactNode
   actions?: ReactNode
   children?: ReactNode
@@ -32,10 +32,12 @@ export function PageHeader({
   return (
     <div>
       {back && <BackLink to={back.to}>{back.label}</BackLink>}
-      <div className="flex flex-wrap items-end justify-between gap-6">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div>
-          {eyebrow && <p className="text-[13px] text-ink-2">{eyebrow}</p>}
-          <h1 className="text-[22px] leading-[30px] font-semibold">{title}</h1>
+          <div className="flex flex-wrap items-baseline gap-x-3">
+            <h1 className="page-title">{title}</h1>
+            {aside && <p className="text-sm text-ink-2">{aside}</p>}
+          </div>
           {description && <p className="text-sm text-ink-2">{description}</p>}
           {children}
         </div>

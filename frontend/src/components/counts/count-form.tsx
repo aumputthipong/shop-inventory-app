@@ -85,7 +85,7 @@ export function CountForm({
           />
         </div>
 
-        <div className="grid h-9 min-w-[720px] grid-cols-[36px_minmax(0,1fr)_90px_190px_90px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
+        <div className="grid h-9 min-w-[720px] grid-cols-[36px_minmax(0,1fr)_90px_190px_90px] items-center gap-4 border-b border-line px-4 text-[13px] text-ink-2">
           <span />
           <span>สินค้า</span>
           <span className="text-right">ในระบบ</span>
@@ -111,7 +111,7 @@ export function CountForm({
                 key={p.id}
                 className="grid min-h-14 min-w-[720px] grid-cols-[36px_minmax(0,1fr)_90px_190px_90px] items-center gap-4 border-b border-line px-4 py-2 last:border-b-0"
               >
-                <ProductAvatar name={p.name} sku={p.sku} />
+                <ProductAvatar name={p.name} />
                 <span className="flex min-w-0 flex-col">
                   <span className="flex items-center gap-2">
                     <span className="truncate font-medium">{p.name}</span>
@@ -202,9 +202,13 @@ export function CountForm({
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <p className="text-sm text-ink-2">
-            นับแล้ว <span className="font-semibold text-ink">{entered.length}</span> รายการ · ไม่ตรง{' '}
-            <span className="font-semibold text-ink">{differ}</span> รายการ
+          <p className="flex flex-wrap gap-x-4 text-sm text-ink-2">
+            <span>
+              นับแล้ว <span className="font-semibold text-ink">{entered.length}</span> รายการ
+            </span>
+            <span>
+              ไม่ตรง <span className="font-semibold text-ink">{differ}</span> รายการ
+            </span>
           </p>
           <Button
             type="submit"

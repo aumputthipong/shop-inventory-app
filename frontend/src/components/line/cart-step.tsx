@@ -126,7 +126,7 @@ function CatalogRow({
         out && 'opacity-60',
       )}
     >
-      <ProductAvatar name={item.name} sku={String(item.id)} size="lg" />
+      <ProductAvatar name={item.name} size="lg" />
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="line-clamp-2 leading-5 font-medium">{item.name}</span>
         <span className="flex flex-wrap items-center gap-2">

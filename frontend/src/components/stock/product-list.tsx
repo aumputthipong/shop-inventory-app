@@ -67,10 +67,10 @@ export function ProductList({
         />
       </div>
 
-      <div className="grid h-9 grid-cols-[36px_minmax(0,1fr)_200px_80px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
+      <div className="grid h-9 grid-cols-[36px_minmax(0,1fr)_56px] items-center gap-x-4 border-b border-line px-4 text-[13px] text-ink-2 sm:grid-cols-[36px_minmax(0,1fr)_200px_80px]">
         <span />
         <span>สินค้า</span>
-        <span>ของในคลัง</span>
+        <span className="hidden sm:block">ของในคลัง</span>
         <span className="text-right">ขายได้</span>
       </div>
 
@@ -124,13 +124,13 @@ function ProductRow({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        'grid min-h-16 w-full cursor-pointer grid-cols-[36px_minmax(0,1fr)_200px_80px] items-center gap-4 px-4 py-3 text-left',
+        'grid min-h-16 w-full cursor-pointer grid-cols-[36px_minmax(0,1fr)_56px] items-center gap-x-4 gap-y-2 px-4 py-3 text-left sm:grid-cols-[36px_minmax(0,1fr)_200px_80px]',
         selected
           ? 'bg-petrol-50 shadow-[inset_2px_0_0_var(--color-petrol-600)]'
           : 'hover:bg-surface-2',
       )}
     >
-      <ProductAvatar name={p.name} sku={p.sku} />
+      <ProductAvatar name={p.name} />
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="truncate text-sm font-medium">{p.name}</span>
         <span className="flex items-center gap-2">
@@ -139,20 +139,20 @@ function ProductRow({
           {!p.is_active && <Chip tone="neutral">ปิดขาย</Chip>}
         </span>
       </span>
-      <span className="flex flex-col gap-1.5">
+      <span className="col-start-2 row-start-2 flex flex-col gap-1.5 sm:col-start-auto sm:row-start-auto">
         <UnitStrip available={p.available} held={p.reserved} />
         <span className="flex gap-3 text-xs text-ink-3">
           <span>มี {p.on_hand}</span>
           <span>รอดำเนินการ {p.reserved}</span>
         </span>
       </span>
-      <span className="flex flex-col items-end">
-        <span
-          className={cn('text-xl leading-7 font-semibold', p.available <= 0 && 'text-destructive')}
-        >
-          {Math.max(p.available, 0)}
-        </span>
-        <span className="text-xs text-ink-3">ชิ้น</span>
+      <span
+        className={cn(
+          'count col-start-3 row-span-2 row-start-1 text-right text-[30px] sm:col-start-auto sm:row-span-1 sm:row-start-auto',
+          p.available <= 0 && 'text-destructive',
+        )}
+      >
+        {Math.max(p.available, 0)}
       </span>
     </button>
   )

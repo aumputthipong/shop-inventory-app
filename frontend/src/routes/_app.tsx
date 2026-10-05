@@ -1,17 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import {
-  ClipboardCheckIcon,
-  ClipboardListIcon,
-  HistoryIcon,
-  HouseIcon,
-  LogOutIcon,
-  PackageIcon,
-  ReceiptTextIcon,
-  UserRoundCogIcon,
-  UsersIcon,
-  type LucideIcon,
-} from 'lucide-react'
+import { LogOutIcon, UserRoundCogIcon } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 
 import { BrandMark } from '@/components/brand-mark'
@@ -41,18 +30,17 @@ export const Route = createFileRoute('/_app')({
 interface NavItem {
   to: '/' | '/orders' | '/stock' | '/counts' | '/ledger' | '/audit' | '/team'
   label: string
-  icon: LucideIcon
   ownerOnly?: boolean
 }
 
 const NAV: NavItem[] = [
-  { to: '/', label: 'วันนี้', icon: HouseIcon },
-  { to: '/orders', label: 'ออเดอร์', icon: ReceiptTextIcon },
-  { to: '/stock', label: 'สต็อก', icon: PackageIcon },
-  { to: '/counts', label: 'ตรวจนับ', icon: ClipboardCheckIcon },
-  { to: '/ledger', label: 'ประวัติสต็อก', icon: HistoryIcon },
-  { to: '/audit', label: 'บันทึกการใช้งาน', icon: ClipboardListIcon, ownerOnly: true },
-  { to: '/team', label: 'ทีม', icon: UsersIcon, ownerOnly: true },
+  { to: '/', label: 'วันนี้' },
+  { to: '/orders', label: 'ออเดอร์' },
+  { to: '/stock', label: 'สต็อก' },
+  { to: '/counts', label: 'ตรวจนับ' },
+  { to: '/ledger', label: 'ประวัติสต็อก' },
+  { to: '/audit', label: 'บันทึกการใช้งาน', ownerOnly: true },
+  { to: '/team', label: 'ทีม', ownerOnly: true },
 ]
 
 function AppLayout() {
@@ -60,7 +48,7 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b border-line bg-surface">
+      <header className="sticky top-0 z-40 border-b border-edge bg-surface">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 px-4 md:px-6 xl:gap-8 xl:px-10">
           <Link to="/" className="flex items-center gap-2.5">
             <BrandMark />
@@ -76,13 +64,12 @@ function AppLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex shrink-0 items-center gap-2 border-b-2 border-transparent px-3 text-sm text-ink-2 hover:text-ink"
+                className="flex shrink-0 items-center border-b-2 border-transparent px-3 text-sm text-ink-2 hover:text-ink"
                 activeOptions={{ exact: item.to === '/' }}
                 activeProps={{
                   className: '!border-petrol-600 font-medium !text-ink',
                 }}
               >
-                <item.icon className="size-4" aria-hidden="true" />
                 {item.label}
               </Link>
             ))}

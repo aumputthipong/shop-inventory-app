@@ -459,12 +459,16 @@ paths:
   /api/orders:
     get:
       tags: [orders]
-      summary: Orders, newest first
+      summary: Orders, newest first unless sort=oldest
       operationId: listOrders
       parameters:
         - name: status
           in: query
           schema: { $ref: "#/components/schemas/OrderStatus" }
+        - name: sort
+          in: query
+          description: oldest puts the longest-waiting orders first, for work queues.
+          schema: { type: string, enum: [newest, oldest], default: newest }
         - name: q
           in: query
           description: Matches order number or channel reference.
@@ -485,6 +489,11 @@ paths:
                     items: { $ref: "#/components/schemas/OrderSummary" }
                   total: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "422":
+          description: sort is not newest or oldest.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorResponse" }
     post:
       tags: [orders]
       summary: Create an order and reserve its stock, all or nothing
@@ -611,6 +620,24 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
         "409": { $ref: "#/components/responses/InvalidState" }
+
+  /api/sales/today:
+    get:
+      tags: [orders]
+      summary: Today's orders and revenue by channel (owner)
+      description: |
+        Today is the calendar day in SHOP_TIMEZONE. Orders and revenue count
+        orders placed today that are not canceled; shipped counts orders shipped
+        today, whenever they were placed. Every channel is listed, zeros included.
+      operationId: getTodaySales
+      responses:
+        "200":
+          description: Today's sales.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DaySales" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
 
   /api/counts:
     get:
@@ -1228,6 +1255,23 @@ components:
         qty: { type: integer }
         unit_price: { $ref: "#/components/schemas/Money" }
 
+    DaySales:
+      type: object
+      required: [date, orders, revenue, shipped, channels]
+      properties:
+        date: { type: string, format: date, example: "2026-10-05" }
+        orders: { type: integer }
+        revenue: { type: string, example: "4350.00" }
+        shipped: { type: integer }
+        channels:
+          type: array
+          items:
+            type: object
+            required: [channel, orders, revenue]
+            properties:
+              channel: { $ref: "#/components/schemas/Channel" }
+              orders: { type: integer }
+              revenue: { type: string, example: "870.00" }
     OrderSummary:
       type: object
       required: [id, order_no, channel, status, total, item_count, created_at]
