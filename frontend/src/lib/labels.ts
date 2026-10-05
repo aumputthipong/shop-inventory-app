@@ -45,7 +45,7 @@ export const channelLabel: Record<Channel, string> = {
 }
 
 export const channelDot: Record<Channel, string> = {
-  store: 'bg-sand-700',
+  store: 'bg-kraft-500',
   shopee: 'bg-[#e8622c]',
   line: 'bg-[#22a95b]',
 }

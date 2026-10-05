@@ -51,14 +51,14 @@ api/openapi.yaml           Contract, written before handlers. Keep it in step wi
 backend/
   cmd/api/main.go          Wiring only. Does not import gin.
   internal/
-    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE, LINE_*)
+    config/                Env-only config (DATABASE_URL, HTTP_PORT, APP_ENV, GIN_MODE, STATIC_DIR, COOKIE_SECURE, SHOP_TIMEZONE, LINE_*)
     platform/database/     pgxpool setup + startup ping
     platform/logger/       slog JSON handler
     http/                  package httpx: router, middleware, JSON error helpers
     health/                GET /healthz
     auth/, users/          Cookie sessions, password hashing, team accounts
     products/, stock/      Catalog, balances, stock in/adjust, the movement ledger
-    orders/                All-or-nothing reservation and the pack/ship/cancel flow
+    orders/                All-or-nothing reservation, the pack/ship/cancel flow and today's sales
     counts/                Stock counts: staff submit, owner approves into ADJUST movements
     line/                  LINE customer ordering (LIFF form, ID token check, status messages)
     audit/                 Who did what, written in the same transaction as the change

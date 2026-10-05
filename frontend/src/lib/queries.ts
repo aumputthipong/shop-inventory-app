@@ -53,6 +53,11 @@ export const orderQueryOptions = (id: number) =>
     queryFn: ({ signal }) => api.getOrder(id, signal),
   })
 
+export const todaySalesQueryOptions = queryOptions({
+  queryKey: ['orders', 'sales-today'],
+  queryFn: ({ signal }) => api.getTodaySales(signal),
+})
+
 export const countsQueryOptions = (query: CountQuery) =>
   queryOptions({
     queryKey: ['counts', query],

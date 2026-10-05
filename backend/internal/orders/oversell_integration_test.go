@@ -285,3 +285,26 @@ func TestAdjustCannotTakeReservedUnits(t *testing.T) {
 	assert.Equal(t, int32(0), b.Available())
 	e.assertLedgerExplainsBalance(t, productID)
 }
+
+func TestListOrdersOldestFirst(t *testing.T) {
+	e := newEnv(t)
+	id := e.product(t, 10)
+	for range 2 {
+		_, err := e.orders.Create(t.Context(), orders.NewOrder{
+			Items: []orders.ItemRequest{{ProductID: id, Qty: 1}}, Customer: &orders.Customer{Name: "Ann"},
+		})
+		require.NoError(t, err)
+	}
+	reserved := orders.StatusReserved
+
+	for _, oldest := range []bool{true, false} {
+		items, _, err := e.orders.List(t.Context(), orders.Filter{Status: &reserved, OldestFirst: oldest, Limit: 100})
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(items), 2)
+		for i := 1; i < len(items); i++ {
+			prev, cur := items[i-1], items[i]
+			ascending := prev.CreatedAt.Before(cur.CreatedAt) || (prev.CreatedAt.Equal(cur.CreatedAt) && prev.ID < cur.ID)
+			assert.Equal(t, oldest, ascending, "order %d then %d", prev.ID, cur.ID)
+		}
+	}
+}

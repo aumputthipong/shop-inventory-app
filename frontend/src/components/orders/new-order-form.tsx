@@ -203,8 +203,9 @@ export function NewOrderForm({ products, mode }: { products: Product[]; mode: En
                 <div className="flex items-start justify-between gap-3">
                   <span className="flex min-w-0 flex-col">
                     <span className="truncate font-medium">{product.name}</span>
-                    <span className="text-[13px] text-ink-2">
-                      {formatMoney(product.price)} · ขายได้ {Math.max(product.available, 0)} ชิ้น
+                    <span className="flex gap-3 text-[13px] text-ink-2">
+                      <span>{formatMoney(product.price)}</span>
+                      <span>ขายได้ {Math.max(product.available, 0)} ชิ้น</span>
                     </span>
                   </span>
                   <Button

@@ -59,17 +59,18 @@ function CountPage() {
       <div>
         <BackLink to="/counts">กลับไปหน้าตรวจนับ</BackLink>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-[22px] leading-[30px] font-semibold">ตรวจนับ #{count.id}</h1>
+          <h1 className="page-title">ตรวจนับ #{count.id}</h1>
           <Chip tone={chip.tone}>{chip.label}</Chip>
         </div>
-        <p className="text-sm text-ink-2">
-          นับโดย {count.created_by_name ?? '-'} · {formatFullDateTime(count.created_at)}
+        <p className="flex flex-wrap gap-x-4 text-sm text-ink-2">
+          <span>
+            นับโดย {count.created_by_name ?? '-'} {formatFullDateTime(count.created_at)}
+          </span>
           {count.decided_at && (
-            <>
-              {' '}
-              · {count.status === 'approved' ? 'ยืนยันโดย' : 'ตัดสินโดย'}{' '}
+            <span>
+              {count.status === 'approved' ? 'ยืนยันโดย' : 'ตัดสินโดย'}{' '}
               {count.decided_by_name ?? '-'} {formatFullDateTime(count.decided_at)}
-            </>
+            </span>
           )}
         </p>
         {count.note && <p className="mt-1 text-sm text-ink-2">โน้ต: {count.note}</p>}

@@ -72,7 +72,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       className={cn(
-        '-mx-6 -mb-6 mt-2 flex items-center justify-end gap-2 border-t border-line bg-surface-2 px-6 py-3.5',
+        '-mx-6 -mb-6 mt-2 flex items-center justify-end gap-2 border-t border-line px-6 py-3.5',
         className,
       )}
       {...props}

@@ -1,23 +1,14 @@
 import { cn } from 'cn'
 
-import { productInitial, productTone } from '@/lib/avatar'
+import { productInitial } from '@/lib/avatar'
 
-export function ProductAvatar({
-  name,
-  sku,
-  size = 'md',
-}: {
-  name: string
-  sku: string
-  size?: 'md' | 'lg'
-}) {
+export function ProductAvatar({ name, size = 'md' }: { name: string; size?: 'md' | 'lg' }) {
   return (
     <span
       aria-hidden="true"
       className={cn(
-        'flex shrink-0 items-center justify-center font-semibold',
-        size === 'lg' ? 'size-12 rounded-md text-xl' : 'size-9 rounded-md text-base',
-        productTone(sku),
+        'flex shrink-0 items-center justify-center rounded-sm border border-kraft-300 bg-kraft-50 font-semibold text-kraft-700',
+        size === 'lg' ? 'size-12 text-xl' : 'size-9 text-base',
       )}
     >
       {productInitial(name)}

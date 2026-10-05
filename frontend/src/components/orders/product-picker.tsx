@@ -51,11 +51,12 @@ export function ProductPicker({
               key={p.id}
               className="grid min-h-16 grid-cols-[36px_minmax(0,1fr)_96px_120px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0"
             >
-              <ProductAvatar name={p.name} sku={p.sku} />
+              <ProductAvatar name={p.name} />
               <span className="flex min-w-0 flex-col">
                 <span className="truncate font-medium">{p.name}</span>
                 <span className="flex items-center gap-2.5 text-[13px] text-ink-2">
-                  <span className="code">{p.sku}</span> · {formatMoney(p.price)}
+                  <span className="code">{p.sku}</span>
+                  <span>{formatMoney(p.price)}</span>
                 </span>
               </span>
               <span className="flex flex-col items-end">

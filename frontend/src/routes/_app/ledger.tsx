@@ -60,7 +60,7 @@ function LedgerPage() {
         <HelpNote question="อ่านประวัตินี้ยังไง" className="mt-2 max-w-2xl">
           <p>
             แต่ละแถวคือหนึ่งครั้งที่สต็อกเปลี่ยน ช่อง “ในคลัง” และ “จอง” บอกว่าเปลี่ยนไปกี่ชิ้น ช่อง
-            “คงเหลือหลังจากนั้น” บอกยอดหลังรายการนั้น
+            “คงเหลือ” บอกยอดหลังรายการนั้น
           </p>
           <p>
             รับเข้าและปรับยอดทำให้ของในคลังเปลี่ยน จองไม่ทำให้ของออกจากคลัง แค่กันไว้ไม่ให้ขายซ้ำ
@@ -103,14 +103,14 @@ function LedgerPage() {
           )}
         </div>
 
-        <div className="grid h-9 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_80px_80px_150px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
+        <div className="grid h-9 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_72px_72px_120px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line px-4 text-[13px] text-ink-2">
           <span>เวลา</span>
           <span>สินค้า</span>
           <span>ประเภท</span>
           <span className="text-right">ในคลัง</span>
           <span className="text-right">จอง</span>
-          <span className="text-right">คงเหลือหลังจากนั้น</span>
-          <span>อ้างอิง</span>
+          <span className="text-right">คงเหลือ</span>
+          <span className="pl-5">อ้างอิง</span>
           <span>โดย</span>
           <span />
         </div>
@@ -130,7 +130,7 @@ function LedgerPage() {
             return (
               <li
                 key={m.id}
-                className="grid min-h-12 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_80px_80px_150px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
+                className="grid min-h-12 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_72px_72px_120px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
               >
                 <span className="text-[13px] text-ink-2">{formatDateTime(m.created_at)}</span>
                 <span className="flex min-w-0 flex-col">
@@ -155,25 +155,24 @@ function LedgerPage() {
                 >
                   {formatSigned(m.reserved_change)}
                 </span>
-                <span className="text-right text-sm">
-                  มี {m.on_hand_after} ·{' '}
-                  <span className="font-medium text-ink">ขายได้ {m.available_after}</span>
+                <span className="flex flex-col items-end">
+                  <span className="text-sm font-medium">ขายได้ {m.available_after}</span>
+                  <span className="text-xs text-ink-2">มีในคลัง {m.on_hand_after}</span>
                 </span>
-                <span className="flex min-w-0 flex-col text-sm">
+                <span className="flex min-w-0 flex-col pl-5 text-sm">
                   {m.order_id !== null && m.order_no ? (
-                    <Link
-                      to="/orders/$orderId"
-                      params={{ orderId: m.order_id }}
-                      className="font-medium hover:text-petrol-600 hover:underline"
-                    >
-                      <span className="code">{m.order_no}</span>
+                    <>
+                      <Link
+                        to="/orders/$orderId"
+                        params={{ orderId: m.order_id }}
+                        className="code self-start hover:text-petrol-600 hover:underline"
+                      >
+                        {m.order_no}
+                      </Link>
                       {m.order_channel && (
-                        <span className="font-normal text-ink-2">
-                          {' '}
-                          · {channelLabel[m.order_channel]}
-                        </span>
+                        <span className="text-xs text-ink-2">{channelLabel[m.order_channel]}</span>
                       )}
-                    </Link>
+                    </>
                   ) : m.receipt_id !== null ? (
                     <span className="font-medium">
                       {m.receipt_reference ? (
@@ -205,7 +204,7 @@ function LedgerPage() {
                       </span>
                     )
                   )}
-                  {m.note && <span className="truncate text-ink-2">{m.note}</span>}
+                  {m.note && <span className="truncate text-xs text-ink-2">{m.note}</span>}
                 </span>
                 <span className="truncate text-sm text-ink-2">{m.created_by_name ?? '-'}</span>
                 <span className="flex justify-end">

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { productInitial, productTone } from '@/lib/avatar'
+import { productInitial } from '@/lib/avatar'
 
 describe('productInitial', () => {
   it.each([
@@ -13,11 +13,5 @@ describe('productInitial', () => {
     ['', '?'],
   ])('%s starts with %s', (name, want) => {
     expect(productInitial(name)).toBe(want)
-  })
-})
-
-describe('productTone', () => {
-  it('gives the same product the same colour every time', () => {
-    expect(productTone('SKU-0005')).toBe(productTone('SKU-0005'))
   })
 })

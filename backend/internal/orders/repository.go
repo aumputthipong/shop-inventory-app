@@ -249,7 +249,8 @@ func (r *PgRepository) List(ctx context.Context, f Filter) ([]Summary, int64, er
 	}
 	q := sqlc.New(r.pool)
 	rows, err := q.ListOrders(ctx, sqlc.ListOrdersParams{
-		Status: status, Search: f.Search, PageLimit: f.Limit, PageOffset: f.Offset,
+		Status: status, Search: f.Search, OldestFirst: f.OldestFirst,
+		PageLimit: f.Limit, PageOffset: f.Offset,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("query orders: %w", err)
@@ -268,6 +269,29 @@ func (r *PgRepository) List(ctx context.Context, f Filter) ([]Summary, int64, er
 		})
 	}
 	return items, total, nil
+}
+
+func (r *PgRepository) Sales(ctx context.Context, day Day) (Sales, error) {
+	return salesOn(ctx, sqlc.New(r.pool), day)
+}
+
+func salesOn(ctx context.Context, q *sqlc.Queries, day Day) (Sales, error) {
+	totals, err := q.DayTotals(ctx, sqlc.DayTotalsParams{DayStart: day.Start, DayEnd: day.End})
+	if err != nil {
+		return Sales{}, fmt.Errorf("day totals: %w", err)
+	}
+	rows, err := q.DaySalesByChannel(ctx, sqlc.DaySalesByChannelParams{DayStart: day.Start, DayEnd: day.End})
+	if err != nil {
+		return Sales{}, fmt.Errorf("day sales by channel: %w", err)
+	}
+
+	out := Sales{Date: day.Date, Orders: totals.Orders, Revenue: totals.Revenue, Shipped: totals.Shipped}
+	for _, row := range rows {
+		out.Channels = append(out.Channels, ChannelSales{
+			Channel: Channel(row.Channel), Orders: row.Orders, Revenue: row.Revenue,
+		})
+	}
+	return out, nil
 }
 
 func ptr[T any](v T) *T {

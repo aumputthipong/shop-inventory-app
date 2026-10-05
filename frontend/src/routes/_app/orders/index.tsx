@@ -117,7 +117,7 @@ function OrdersPage() {
           />
         </div>
 
-        <div className="grid h-9 min-w-[920px] grid-cols-[170px_120px_90px_130px_120px_minmax(0,1fr)_120px] items-center gap-4 border-b border-line bg-surface-2 px-4 text-[13px] text-ink-2">
+        <div className="grid h-9 min-w-[920px] grid-cols-[170px_120px_90px_130px_120px_minmax(0,1fr)_120px] items-center gap-4 border-b border-line px-4 text-[13px] text-ink-2">
           <span>เลขออเดอร์</span>
           <span>ช่องทาง</span>
           <span className="text-right">จำนวน</span>

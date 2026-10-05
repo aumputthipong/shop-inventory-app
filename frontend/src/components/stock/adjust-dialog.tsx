@@ -116,7 +116,7 @@ function AdjustForm({ product, onDone }: { product: Product; onDone: () => void 
       <DialogHeader
         icon={<SlidersHorizontalIcon className="size-6" />}
         title="ปรับยอดสต็อก"
-        description={`${product.name} · ${product.sku}`}
+        description={`${product.name} (${product.sku})`}
       />
 
       <Segmented

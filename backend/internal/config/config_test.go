@@ -13,10 +13,11 @@ const testDSN = "postgres://user:pass@localhost:5432/db?sslmode=disable"
 
 func TestLoad(t *testing.T) {
 	tests := []struct {
-		name    string
-		env     map[string]string
-		want    config.Config
-		wantErr string
+		name     string
+		env      map[string]string
+		want     config.Config
+		wantZone string
+		wantErr  string
 	}{
 		{
 			name: "defaults applied when only database url is set",
@@ -93,6 +94,23 @@ func TestLoad(t *testing.T) {
 			},
 		},
 		{
+			name: "shop time zone read from the environment",
+			env:  map[string]string{"DATABASE_URL": testDSN, "SHOP_TIMEZONE": "Asia/Tokyo"},
+			want: config.Config{
+				DatabaseURL: testDSN,
+				HTTPPort:    8080,
+				AppEnv:      config.EnvDevelopment,
+				GinMode:     config.GinModeDebug,
+				Line:        config.LineConfig{Mode: config.LineModeDev},
+			},
+			wantZone: "Asia/Tokyo",
+		},
+		{
+			name:    "unknown shop time zone is rejected",
+			env:     map[string]string{"DATABASE_URL": testDSN, "SHOP_TIMEZONE": "Mars/Base"},
+			wantErr: "SHOP_TIMEZONE",
+		},
+		{
 			name:    "demo accounts need a known role",
 			env:     map[string]string{"DATABASE_URL": testDSN, "DEMO_ACCOUNTS": "admin:a@b.c:pw"},
 			wantErr: "DEMO_ACCOUNTS entry",
@@ -163,7 +181,7 @@ func TestLoad(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, key := range []string{"DATABASE_URL", "HTTP_PORT", "APP_ENV", "GIN_MODE", "STATIC_DIR", "COOKIE_SECURE",
-				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN", "LINE_OA_ID", "DEMO_ACCOUNTS"} {
+				"LINE_MODE", "LINE_LOGIN_CHANNEL_ID", "LINE_LIFF_ID", "LINE_CHANNEL_ACCESS_TOKEN", "LINE_OA_ID", "DEMO_ACCOUNTS", "SHOP_TIMEZONE"} {
 				t.Setenv(key, "")
 			}
 			for key, value := range tt.env {
@@ -179,6 +197,13 @@ func TestLoad(t *testing.T) {
 			}
 
 			require.NoError(t, err)
+			wantZone := tt.wantZone
+			if wantZone == "" {
+				wantZone = "Asia/Bangkok"
+			}
+			require.NotNil(t, got.ShopZone)
+			assert.Equal(t, wantZone, got.ShopZone.String())
+			got.ShopZone = nil
 			assert.Equal(t, tt.want, got)
 		})
 	}

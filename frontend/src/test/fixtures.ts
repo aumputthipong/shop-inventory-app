@@ -1,4 +1,4 @@
-import type { OrderSummary, Product } from '@/lib/api'
+import type { Movement, OrderSummary, Product } from '@/lib/api'
 
 export function product(overrides: Partial<Product> = {}): Product {
   const id = overrides.id ?? 1
@@ -33,6 +33,34 @@ export function orderSummary(overrides: Partial<OrderSummary> = {}): OrderSummar
     item_count: 2,
     created_by_name: 'พลอย',
     created_at: '2026-09-30T08:00:00Z',
+    ...overrides,
+  }
+}
+
+export function movement(overrides: Partial<Movement> = {}): Movement {
+  return {
+    id: 1,
+    product_id: 1,
+    sku: 'SKU-0001',
+    product_name: 'เสื้อยืด',
+    type: 'STOCK_IN',
+    qty_change: 10,
+    reserved_change: 0,
+    on_hand_after: 10,
+    reserved_after: 0,
+    available_after: 10,
+    order_id: null,
+    order_no: null,
+    order_channel: null,
+    count_id: null,
+    receipt_id: null,
+    receipt_reference: null,
+    reason: null,
+    note: null,
+    created_by_name: 'พลอย',
+    created_at: '2026-09-30T08:00:00Z',
+    reverses_id: null,
+    reversed: false,
     ...overrides,
   }
 }

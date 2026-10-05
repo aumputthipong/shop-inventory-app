@@ -27,6 +27,16 @@ export function formatFullDateTime(iso: string): string {
   return fullDateTime.format(new Date(iso))
 }
 
+export function hoursSince(iso: string, now: Date = new Date()): number {
+  return Math.max(Math.floor((now.getTime() - new Date(iso).getTime()) / 3_600_000), 0)
+}
+
+export function formatWaiting(hours: number): string {
+  if (hours < 1) return 'รอไม่ถึง 1 ชม.'
+  if (hours < 24) return `รอ ${hours} ชม.`
+  return `รอ ${Math.floor(hours / 24)} วัน`
+}
+
 export function formatSigned(n: number): string {
   if (n > 0) return `+${n}`
   if (n < 0) return `−${Math.abs(n)}`

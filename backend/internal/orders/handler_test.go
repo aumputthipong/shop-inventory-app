@@ -166,3 +166,75 @@ func TestTransitionConflict(t *testing.T) {
 	assert.Equal(t, http.StatusConflict, rec.Code)
 	assert.Equal(t, httpx.CodeInvalidState, decodeError(t, rec).Code)
 }
+
+type listingManager struct {
+	orders.Manager
+	got *orders.Filter
+}
+
+func (m listingManager) List(_ context.Context, f orders.Filter) ([]orders.Summary, int64, error) {
+	*m.got = f
+	return nil, 0, nil
+}
+
+func TestListOrdersSort(t *testing.T) {
+	tests := []struct {
+		query      string
+		wantStatus int
+		wantOldest bool
+	}{
+		{"", http.StatusOK, false},
+		{"?sort=newest", http.StatusOK, false},
+		{"?sort=oldest", http.StatusOK, true},
+		{"?sort=sideways", http.StatusUnprocessableEntity, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.query, func(t *testing.T) {
+			var got orders.Filter
+			rec := serve(t, listingManager{got: &got}, http.MethodGet, "/api/orders"+tt.query, "", true)
+			require.Equal(t, tt.wantStatus, rec.Code, rec.Body.String())
+			assert.Equal(t, tt.wantOldest, got.OldestFirst)
+		})
+	}
+}
+
+type salesManager struct {
+	orders.Manager
+}
+
+func (salesManager) Today(context.Context) (orders.Sales, error) {
+	return orders.Sales{
+		Date: "2026-10-05", Orders: 3, Revenue: "870.00", Shipped: 1,
+		Channels: []orders.ChannelSales{{Channel: orders.ChannelStore, Orders: 3, Revenue: "870.00"}},
+	}, nil
+}
+
+func TestTodaySalesIsForTheOwner(t *testing.T) {
+	tests := []struct {
+		role       actor.Role
+		wantStatus int
+	}{
+		{actor.RoleOwner, http.StatusOK},
+		{actor.RoleStaff, http.StatusForbidden},
+	}
+	for _, tt := range tests {
+		t.Run(string(tt.role), func(t *testing.T) {
+			router := httpx.NewRouter(httpx.RouterConfig{
+				Logger:    slog.New(slog.DiscardHandler),
+				GinMode:   config.GinModeTest,
+				Protected: []httpx.Route{orders.NewHandler(salesManager{})},
+				Sessions:  httpxtest.RoleSessions{},
+			})
+			req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/sales/today", nil)
+			req.AddCookie(&http.Cookie{Name: httpx.SessionCookie, Value: string(tt.role)})
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+
+			require.Equal(t, tt.wantStatus, rec.Code, rec.Body.String())
+			if tt.wantStatus == http.StatusOK {
+				assert.JSONEq(t, `{"date":"2026-10-05","orders":3,"revenue":"870.00","shipped":1,
+					"channels":[{"channel":"store","orders":3,"revenue":"870.00"}]}`, rec.Body.String())
+			}
+		})
+	}
+}

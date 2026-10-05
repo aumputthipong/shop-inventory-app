@@ -6,6 +6,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
+
+	// Embedded so SHOP_TIMEZONE loads on hosts without a zoneinfo database.
+	_ "time/tzdata"
 )
 
 const (
@@ -28,6 +32,7 @@ const (
 
 const (
 	defaultHTTPPort = "8080"
+	defaultTimezone = "Asia/Bangkok"
 	minPort         = 1
 	maxPort         = 65535
 )
@@ -39,6 +44,7 @@ type Config struct {
 	GinMode      string
 	StaticDir    string
 	CookieSecure bool
+	ShopZone     *time.Location
 	Line         LineConfig
 	DemoAccounts []DemoAccount
 }
@@ -106,6 +112,12 @@ func Load() (Config, error) {
 	default:
 		return Config{}, fmt.Errorf("config: COOKIE_SECURE %q must be true or false", raw)
 	}
+
+	zone, err := time.LoadLocation(envOrDefault("SHOP_TIMEZONE", defaultTimezone))
+	if err != nil {
+		return Config{}, fmt.Errorf("config: SHOP_TIMEZONE: %w", err)
+	}
+	cfg.ShopZone = zone
 
 	line, err := loadLine(cfg.AppEnv)
 	if err != nil {

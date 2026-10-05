@@ -71,7 +71,9 @@ func run() error {
 
 	productService := products.NewService(products.NewRepository(pool))
 	verifier, messenger := lineChannels(cfg.Line, log)
-	orderService := orders.NewService(orders.NewRepository(pool)).WithNotifier(line.NewNotifier(messenger, log))
+	orderService := orders.NewService(orders.NewRepository(pool)).
+		WithNotifier(line.NewNotifier(messenger, log)).
+		WithZone(cfg.ShopZone)
 	lineService := line.NewService(line.Settings{Mode: cfg.Line.Mode, LIFFID: cfg.Line.LIFFID, OAURL: cfg.Line.OAURL()}, verifier, orderService, productService)
 
 	server := &http.Server{

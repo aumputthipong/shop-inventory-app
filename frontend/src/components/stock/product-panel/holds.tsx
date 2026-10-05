@@ -30,8 +30,9 @@ export function Holds({ product }: { product: ProductDetail }) {
               >
                 {h.order_no}
               </Link>
-              <span className="text-xs text-ink-3">
-                {h.qty} ชิ้น · สั่งเมื่อ {formatDateTime(h.created_at)}
+              <span className="flex gap-3 text-xs text-ink-3">
+                <span>{h.qty} ชิ้น</span>
+                <span>สั่งเมื่อ {formatDateTime(h.created_at)}</span>
               </span>
             </div>
             <ChannelChip channel={h.channel} />

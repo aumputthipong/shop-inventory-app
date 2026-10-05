@@ -73,6 +73,77 @@ func (q *Queries) CreateOrder(ctx context.Context, arg CreateOrderParams) (Creat
 	return i, err
 }
 
+const daySalesByChannel = `-- name: DaySalesByChannel :many
+SELECT channel, count(*)::integer AS orders, coalesce(sum(total), 0)::numeric(12, 2) AS revenue
+FROM orders
+WHERE created_at >= $1 AND created_at < $2
+  AND status <> 'canceled'
+GROUP BY channel
+ORDER BY channel
+`
+
+type DaySalesByChannelParams struct {
+	DayStart time.Time `json:"day_start"`
+	DayEnd   time.Time `json:"day_end"`
+}
+
+type DaySalesByChannelRow struct {
+	Channel string `json:"channel"`
+	Orders  int32  `json:"orders"`
+	Revenue string `json:"revenue"`
+}
+
+func (q *Queries) DaySalesByChannel(ctx context.Context, arg DaySalesByChannelParams) ([]DaySalesByChannelRow, error) {
+	rows, err := q.db.Query(ctx, daySalesByChannel, arg.DayStart, arg.DayEnd)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DaySalesByChannelRow{}
+	for rows.Next() {
+		var i DaySalesByChannelRow
+		if err := rows.Scan(&i.Channel, &i.Orders, &i.Revenue); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const dayTotals = `-- name: DayTotals :one
+SELECT
+    count(*) FILTER (WHERE o.created_at >= $1 AND o.created_at < $2
+                       AND o.status <> 'canceled')::integer AS orders,
+    coalesce(sum(o.total) FILTER (WHERE o.created_at >= $1 AND o.created_at < $2
+                                    AND o.status <> 'canceled'), 0)::numeric(12, 2) AS revenue,
+    count(*) FILTER (WHERE o.shipped_at >= $1
+                       AND o.shipped_at < $2)::integer AS shipped
+FROM orders o
+WHERE (o.created_at >= $1 AND o.created_at < $2)
+   OR (o.shipped_at >= $1 AND o.shipped_at < $2)
+`
+
+type DayTotalsParams struct {
+	DayStart time.Time `json:"day_start"`
+	DayEnd   time.Time `json:"day_end"`
+}
+
+type DayTotalsRow struct {
+	Orders  int32  `json:"orders"`
+	Revenue string `json:"revenue"`
+	Shipped int32  `json:"shipped"`
+}
+
+func (q *Queries) DayTotals(ctx context.Context, arg DayTotalsParams) (DayTotalsRow, error) {
+	row := q.db.QueryRow(ctx, dayTotals, arg.DayStart, arg.DayEnd)
+	var i DayTotalsRow
+	err := row.Scan(&i.Orders, &i.Revenue, &i.Shipped)
+	return i, err
+}
+
 const getOrder = `-- name: GetOrder :one
 SELECT o.id, o.order_no, o.channel, o.external_ref, o.status, o.total, o.note,
        u.name AS created_by_name, o.created_at, o.updated_at,
@@ -201,15 +272,18 @@ LEFT JOIN users u ON u.id = o.created_by
 WHERE ($1::text IS NULL OR o.status = $1::text)
   AND ($2::text IS NULL OR o.order_no ILIKE '%' || $2::text || '%'
        OR o.external_ref ILIKE '%' || $2::text || '%')
-ORDER BY o.created_at DESC, o.id DESC
-LIMIT $4 OFFSET $3
+ORDER BY CASE WHEN $3::boolean THEN o.created_at END,
+         CASE WHEN $3::boolean THEN o.id END,
+         o.created_at DESC, o.id DESC
+LIMIT $5 OFFSET $4
 `
 
 type ListOrdersParams struct {
-	Status     *string `json:"status"`
-	Search     *string `json:"search"`
-	PageOffset int32   `json:"page_offset"`
-	PageLimit  int32   `json:"page_limit"`
+	Status      *string `json:"status"`
+	Search      *string `json:"search"`
+	OldestFirst bool    `json:"oldest_first"`
+	PageOffset  int32   `json:"page_offset"`
+	PageLimit   int32   `json:"page_limit"`
 }
 
 type ListOrdersRow struct {
@@ -228,6 +302,7 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListO
 	rows, err := q.db.Query(ctx, listOrders,
 		arg.Status,
 		arg.Search,
+		arg.OldestFirst,
 		arg.PageOffset,
 		arg.PageLimit,
 	)

@@ -57,7 +57,9 @@ LEFT JOIN users u ON u.id = o.created_by
 WHERE (sqlc.narg(status)::text IS NULL OR o.status = sqlc.narg(status)::text)
   AND (sqlc.narg(search)::text IS NULL OR o.order_no ILIKE '%' || sqlc.narg(search)::text || '%'
        OR o.external_ref ILIKE '%' || sqlc.narg(search)::text || '%')
-ORDER BY o.created_at DESC, o.id DESC
+ORDER BY CASE WHEN sqlc.arg(oldest_first)::boolean THEN o.created_at END,
+         CASE WHEN sqlc.arg(oldest_first)::boolean THEN o.id END,
+         o.created_at DESC, o.id DESC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
 
 -- name: CountOrders :one
@@ -66,3 +68,23 @@ FROM orders o
 WHERE (sqlc.narg(status)::text IS NULL OR o.status = sqlc.narg(status)::text)
   AND (sqlc.narg(search)::text IS NULL OR o.order_no ILIKE '%' || sqlc.narg(search)::text || '%'
        OR o.external_ref ILIKE '%' || sqlc.narg(search)::text || '%');
+
+-- name: DayTotals :one
+SELECT
+    count(*) FILTER (WHERE o.created_at >= sqlc.arg(day_start) AND o.created_at < sqlc.arg(day_end)
+                       AND o.status <> 'canceled')::integer AS orders,
+    coalesce(sum(o.total) FILTER (WHERE o.created_at >= sqlc.arg(day_start) AND o.created_at < sqlc.arg(day_end)
+                                    AND o.status <> 'canceled'), 0)::numeric(12, 2) AS revenue,
+    count(*) FILTER (WHERE o.shipped_at >= sqlc.arg(day_start)
+                       AND o.shipped_at < sqlc.arg(day_end))::integer AS shipped
+FROM orders o
+WHERE (o.created_at >= sqlc.arg(day_start) AND o.created_at < sqlc.arg(day_end))
+   OR (o.shipped_at >= sqlc.arg(day_start) AND o.shipped_at < sqlc.arg(day_end));
+
+-- name: DaySalesByChannel :many
+SELECT channel, count(*)::integer AS orders, coalesce(sum(total), 0)::numeric(12, 2) AS revenue
+FROM orders
+WHERE created_at >= sqlc.arg(day_start) AND created_at < sqlc.arg(day_end)
+  AND status <> 'canceled'
+GROUP BY channel
+ORDER BY channel;

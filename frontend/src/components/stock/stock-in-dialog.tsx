@@ -71,7 +71,7 @@ function StockInForm({ product, onDone }: { product: Product; onDone: () => void
       <DialogHeader
         icon={<PackagePlusIcon className="size-6" />}
         title="รับของเข้า"
-        description={`${product.name} · ${product.sku}`}
+        description={`${product.name} (${product.sku})`}
       />
 
       <div className="flex flex-col gap-2">

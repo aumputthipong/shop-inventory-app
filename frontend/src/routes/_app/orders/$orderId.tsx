@@ -96,7 +96,7 @@ function OrderPage() {
         <BackLink to="/orders">กลับไปหน้าออเดอร์</BackLink>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="code text-[22px] leading-[30px] font-semibold">{order.order_no}</h1>
+            <h1 className="code page-title">{order.order_no}</h1>
             <ChannelChip channel={order.channel} />
             <Chip tone={chip.tone}>{chip.label}</Chip>
           </div>
@@ -147,7 +147,7 @@ function OrderPage() {
                 key={item.product_id}
                 className="grid min-h-16 grid-cols-[44px_minmax(0,1fr)_90px_120px_130px] items-center gap-4 border-b border-line py-3 last:border-b-0"
               >
-                <ProductAvatar name={item.name} sku={item.sku} />
+                <ProductAvatar name={item.name} />
                 <span className="flex min-w-0 flex-col">
                   <Link
                     to="/stock"
