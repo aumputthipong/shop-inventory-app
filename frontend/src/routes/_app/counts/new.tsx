@@ -23,7 +23,7 @@ function NewCountPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         back={{ to: '/counts', label: 'กลับไปหน้าตรวจนับ' }}
-        title="นับสต็อก"
+        title="ตรวจนับรอบใหม่"
         description="ใส่จำนวนที่นับได้จริง ระบบจะเทียบกับตัวเลขในระบบให้"
       />
       <CountForm

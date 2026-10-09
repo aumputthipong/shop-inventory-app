@@ -260,12 +260,26 @@ func (r *PgRepository) List(ctx context.Context, f Filter) ([]Summary, int64, er
 		return nil, 0, fmt.Errorf("count orders: %w", err)
 	}
 
+	ids := make([]int64, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.ID)
+	}
+	lineRows, err := q.ListItemsForOrders(ctx, ids)
+	if err != nil {
+		return nil, 0, fmt.Errorf("list order lines: %w", err)
+	}
+	picks := make(map[int64][]Pick, len(rows))
+	for _, l := range lineRows {
+		picks[l.OrderID] = append(picks[l.OrderID], Pick{Name: l.Name, Qty: l.Qty})
+	}
+
 	items := make([]Summary, 0, len(rows))
 	for _, row := range rows {
 		items = append(items, Summary{
 			ID: row.ID, OrderNo: row.OrderNo, Channel: Channel(row.Channel), ExternalRef: row.ExternalRef,
 			Status: Status(row.Status), Total: row.Total, ItemCount: row.ItemCount,
 			CreatedByName: row.CreatedByName, CreatedAt: row.CreatedAt,
+			CustomerName: row.CustomerName, Picks: picks[row.ID],
 		})
 	}
 	return items, total, nil

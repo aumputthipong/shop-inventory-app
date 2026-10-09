@@ -92,15 +92,22 @@ type customerResponse struct {
 }
 
 type summaryResponse struct {
-	ID            int64     `json:"id"`
-	OrderNo       string    `json:"order_no"`
-	Channel       string    `json:"channel"`
-	ExternalRef   *string   `json:"external_ref"`
-	Status        string    `json:"status"`
-	Total         string    `json:"total"`
-	ItemCount     int32     `json:"item_count"`
-	CreatedByName *string   `json:"created_by_name"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID            int64          `json:"id"`
+	OrderNo       string         `json:"order_no"`
+	Channel       string         `json:"channel"`
+	ExternalRef   *string        `json:"external_ref"`
+	Status        string         `json:"status"`
+	Total         string         `json:"total"`
+	ItemCount     int32          `json:"item_count"`
+	CreatedByName *string        `json:"created_by_name"`
+	CreatedAt     time.Time      `json:"created_at"`
+	CustomerName  *string        `json:"customer_name"`
+	Lines         []lineResponse `json:"lines"`
+}
+
+type lineResponse struct {
+	Name string `json:"name"`
+	Qty  int32  `json:"qty"`
 }
 
 type listResponse struct {
@@ -183,10 +190,15 @@ func (h *Handler) list(c *gin.Context) {
 	}
 	out := make([]summaryResponse, 0, len(items))
 	for _, s := range items {
+		lines := make([]lineResponse, 0, len(s.Picks))
+		for _, l := range s.Picks {
+			lines = append(lines, lineResponse(l))
+		}
 		out = append(out, summaryResponse{
 			ID: s.ID, OrderNo: s.OrderNo, Channel: string(s.Channel), ExternalRef: s.ExternalRef,
 			Status: string(s.Status), Total: s.Total, ItemCount: s.ItemCount,
 			CreatedByName: s.CreatedByName, CreatedAt: s.CreatedAt,
+			CustomerName: s.CustomerName, Lines: lines,
 		})
 	}
 	c.JSON(http.StatusOK, listResponse{Items: out, Total: total})

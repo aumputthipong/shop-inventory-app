@@ -174,10 +174,14 @@ in the same PR as the behaviour it describes.
 - The stock list moves the unit strip under the product name below the `sm`
   breakpoint. A fixed 200px strip column left no room for the name on a phone.
 - Today shows how long each queued order has waited instead of its timestamp
-  (kept in the hover title); 48 hours or more becomes a warning chip, a default
-  close to the marketplaces' ship-within-two-days rule. The queues ask the
+  (kept in the hover title). It turns amber after 24 hours and red after 72,
+  either side of the marketplaces' ship-within-two-days rule. The queues ask the
   orders list for `sort=oldest`, so the five shown are the ones waiting longest;
   newest first would hide exactly the orders most at risk.
+- The orders list carries each order's customer name and lines (product name
+  and quantity) so Today can show what to pick without opening the order. The
+  lines for a page come from one `ListItemsForOrders` query keyed by the page's
+  order ids, not one query per order.
 - Today's sales (`GET /api/sales/today`, owner only) count orders placed today
   that are not canceled, with their totals, plus orders shipped today whenever
   they were placed. "Today" is the calendar day in `SHOP_TIMEZONE`, computed in

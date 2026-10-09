@@ -1,9 +1,10 @@
 import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TodayBoard } from '@/components/today/today-board'
 import { api } from '@/lib/api'
-import { movement, orderSummary, product } from '@/test/fixtures'
+import { orderSummary, product } from '@/test/fixtures'
 import { renderWithRouter } from '@/test/render'
 
 const hoursAgo = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString()
@@ -44,10 +45,6 @@ describe('TodayBoard', () => {
         { channel: 'line', orders: 3, revenue: '1050.00' },
       ],
     })
-    vi.spyOn(api, 'listMovements').mockResolvedValue({
-      items: [movement({ id: 9, product_name: 'กระเป๋าผ้า', type: 'STOCK_IN', qty_change: 12 })],
-      total: 1,
-    })
   })
 
   it('lists what needs doing today', async () => {
@@ -76,12 +73,37 @@ describe('TodayBoard', () => {
     expect(screen.getByText('รอ 3 วัน')).toBeInTheDocument()
   })
 
-  it('shows the latest stock movements', async () => {
+  it('shows who the order is for and what to pick', async () => {
+    vi.mocked(api.listOrders).mockResolvedValue({
+      items: [
+        orderSummary({
+          id: 7,
+          customer_name: 'คุณแอน',
+          lines: [
+            { name: 'เสื้อยืด', qty: 2 },
+            { name: 'หมวก', qty: 1 },
+          ],
+        }),
+      ],
+      total: 1,
+    })
     renderBoard(false)
 
-    const recent = await screen.findByRole('region', { name: 'ความเคลื่อนไหวล่าสุด' })
-    expect(await within(recent).findByText('กระเป๋าผ้า')).toBeInTheDocument()
-    expect(within(recent).getByText('+12')).toBeInTheDocument()
+    const lane = await screen.findByRole('region', { name: 'ต้องแพ็ก' })
+    expect(await within(lane).findByText('คุณแอน')).toBeInTheDocument()
+    expect(within(lane).getByText('เสื้อยืด ×2, หมวก ×1')).toBeInTheDocument()
+  })
+
+  it('packs an order from its row', async () => {
+    const act = vi
+      .spyOn(api, 'orderAction')
+      .mockResolvedValue({} as Awaited<ReturnType<typeof api.orderAction>>)
+    const user = userEvent.setup()
+    renderBoard(false)
+
+    await user.click(await screen.findByRole('button', { name: 'แพ็กแล้ว ORD-2026-00001' }))
+
+    expect(act).toHaveBeenCalledWith(1, 'pack')
   })
 
   it('asks the owner to review submitted counts', async () => {
@@ -133,5 +155,14 @@ describe('TodayBoard', () => {
     expect(await screen.findByText('ORD-2026-00001')).toBeInTheDocument()
     expect(screen.queryByRole('region', { name: 'ผลนับรอยืนยัน' })).not.toBeInTheDocument()
     expect(counts).not.toHaveBeenCalled()
+  })
+
+  it('receives stock for a low item from its row', async () => {
+    const user = userEvent.setup()
+    renderBoard(false)
+
+    await user.click(await screen.findByRole('button', { name: 'รับของเข้า หมวก' }))
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
   })
 })

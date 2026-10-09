@@ -47,7 +47,7 @@ function CountsPage() {
     <Button asChild>
       <Link to="/counts/new">
         <ClipboardCheckIcon aria-hidden="true" />
-        เริ่มนับสต็อก
+        เริ่มตรวจนับ
       </Link>
     </Button>
   )

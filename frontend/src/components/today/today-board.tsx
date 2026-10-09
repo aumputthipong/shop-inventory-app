@@ -1,40 +1,56 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { cn } from 'cn'
 import {
   ClipboardCheckIcon,
   InboxIcon,
   type LucideIcon,
+  PackageCheckIcon,
   PackagePlusIcon,
   StoreIcon,
   TruckIcon,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import { ChannelChip, Chip } from '@/components/chip'
 import { LineChatButton } from '@/components/line-chat-button'
 import { PageHeader } from '@/components/page-header'
+import { StockInDialog } from '@/components/stock/stock-in-dialog'
 import { Button } from '@/components/ui/button'
-import type { DaySales, OrderStatus, OrderSummary } from '@/lib/api'
-import { formatDateTime, formatMoney, formatSigned, formatWaiting, hoursSince } from '@/lib/format'
-import { channelIcon, channelLabel, movementChip } from '@/lib/labels'
+import {
+  api,
+  isApiError,
+  type DaySales,
+  type OrderStatus,
+  type OrderSummary,
+  type Product,
+} from '@/lib/api'
+import { formatDateTime, formatMoney, formatWaiting, hoursSince } from '@/lib/format'
+import { channelIcon, channelLabel } from '@/lib/labels'
 import {
   countsQueryOptions,
-  movementsQueryOptions,
+  invalidateStock,
   ordersQueryOptions,
   productsQueryOptions,
   todaySalesQueryOptions,
 } from '@/lib/queries'
+import { useToast } from '@/lib/toast'
 import { useLineChatUrl } from '@/lib/use-line-chat-url'
 
 const PREVIEW = 5
-const LONG_WAIT_HOURS = 48
+const LATE_HOURS = 24
+const OVERDUE_HOURS = 72
 
 const longDate = new Intl.DateTimeFormat('th-TH', {
   weekday: 'long',
   day: 'numeric',
   month: 'long',
 })
+
+const laneAction = {
+  reserved: { action: 'pack', label: 'แพ็กแล้ว', done: 'แพ็กเรียบร้อย', icon: PackageCheckIcon },
+  packed: { action: 'ship', label: 'ส่งแล้ว', done: 'ส่งแล้ว', icon: TruckIcon },
+} as const
 
 export function TodayBoard({ isOwner }: { isOwner: boolean }) {
   const toPack = useQuery(
@@ -43,7 +59,6 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
   const toShip = useQuery(ordersQueryOptions({ status: 'packed', sort: 'oldest', limit: PREVIEW }))
   const sales = useQuery({ ...todaySalesQueryOptions, enabled: isOwner })
   const products = useQuery(productsQueryOptions)
-  const moves = useQuery(movementsQueryOptions({ limit: PREVIEW }))
   const lineChatUrl = useLineChatUrl()
   const counts = useQuery({
     ...countsQueryOptions({ status: 'submitted', limit: 1 }),
@@ -92,10 +107,10 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
             <Button asChild variant="outline">
               <Link to="/counts/new">
                 <ClipboardCheckIcon aria-hidden="true" />
-                นับสต็อก
+                เริ่มตรวจนับ
               </Link>
             </Button>
-            {lineChatUrl && <LineChatButton url={lineChatUrl} />}
+            {lineChatUrl && <LineChatButton url={lineChatUrl} label="ลองสั่งแบบลูกค้าทาง LINE" />}
           </nav>
         }
       />
@@ -125,91 +140,22 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
         </section>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <OrderLane
           title="ต้องแพ็ก"
-          hint="จองของไว้แล้ว รอห่อ"
           status="reserved"
           total={toPack.data?.total}
           orders={toPack.data?.items}
         />
-        <OrderLane
-          title="รอส่ง"
-          hint="แพ็กแล้ว รอส่งให้ขนส่งหรือลูกค้า"
-          status="packed"
-          total={toShip.data?.total}
-          orders={toShip.data?.items}
-        />
-
-        <Section
-          title="ของใกล้หมด"
-          hint="ควรสั่งเพิ่มหรือรับของเข้า"
-          total={products.data ? restock.length : undefined}
-          more={
-            restock.length > PREVIEW && (
-              <Link to="/stock" className="text-brand-600 hover:underline">
-                ดูสต็อกทั้งหมด
-              </Link>
-            )
-          }
-        >
-          {restock.length === 0 ? (
-            <Empty>ทุกรายการยังมีของพอขาย</Empty>
-          ) : (
-            restock.slice(0, PREVIEW).map((p) => {
-              const left = Math.max(p.available, 0)
-              return (
-                <Row key={p.id}>
-                  <Link
-                    to="/stock"
-                    search={{ product: p.id }}
-                    className="min-w-0 flex-1 truncate font-medium hover:text-brand-600 hover:underline"
-                  >
-                    {p.name}
-                  </Link>
-                  <Chip tone={left === 0 ? 'bad' : 'warn'}>
-                    {left === 0 ? 'หมดแล้ว' : `เหลือ ${left} ชิ้น`}
-                  </Chip>
-                </Row>
-              )
-            })
-          )}
-        </Section>
-
-        <Section
-          title="ความเคลื่อนไหวล่าสุด"
-          hint="รับเข้า จอง ส่งออก และปรับยอด จากทุกคนในร้าน"
-          counted={false}
-          more={
-            (moves.data?.total ?? 0) > PREVIEW && (
-              <Link to="/ledger" className="text-brand-600 hover:underline">
-                ดูประวัติสต็อกทั้งหมด
-              </Link>
-            )
-          }
-        >
-          {moves.data?.items.length === 0 ? (
-            <Empty>ยังไม่มีความเคลื่อนไหว</Empty>
-          ) : (
-            moves.data?.items.map((m) => {
-              const chip = movementChip[m.type]
-              return (
-                <Row key={m.id}>
-                  <Chip tone={chip.tone} className="w-[72px] justify-center">
-                    {chip.label}
-                  </Chip>
-                  <span className="min-w-0 flex-1 truncate">{m.product_name}</span>
-                  <span className="w-10 text-right font-medium">
-                    {formatSigned(m.qty_change !== 0 ? m.qty_change : m.reserved_change)}
-                  </span>
-                  <span className="hidden w-24 text-right text-[13px] text-ink-2 sm:inline">
-                    {formatDateTime(m.created_at)}
-                  </span>
-                </Row>
-              )
-            })
-          )}
-        </Section>
+        <div className="flex flex-col gap-4">
+          <OrderLane
+            title="รอส่ง"
+            status="packed"
+            total={toShip.data?.total}
+            orders={toShip.data?.items}
+          />
+          <Restock products={products.data ? restock : undefined} />
+        </div>
       </div>
     </div>
   )
@@ -220,7 +166,7 @@ function SalesStrip({ sales }: { sales: DaySales | undefined }) {
   return (
     <section
       aria-label="ขายวันนี้"
-      className="mt-6 flex flex-wrap items-baseline gap-x-10 gap-y-3 border-t border-white/25 pt-4"
+      className="mt-4 flex flex-wrap items-baseline gap-x-10 gap-y-3 border-t border-white/25 pt-3"
     >
       <p className="flex flex-wrap items-baseline gap-x-3">
         <span className="text-ink-2">ขายวันนี้</span>
@@ -282,99 +228,208 @@ function Figure({
 
 function OrderLane({
   title,
-  hint,
   status,
   total,
   orders,
 }: {
   title: string
-  hint: string
-  status: OrderStatus
+  status: 'reserved' | 'packed'
   total: number | undefined
   orders: OrderSummary[] | undefined
 }) {
   return (
     <Section
       title={title}
-      hint={hint}
       total={total}
       more={
-        (total ?? 0) > 0 && (
-          <Link to="/orders" search={{ status }} className="text-brand-600 hover:underline">
+        (total ?? 0) > PREVIEW && (
+          <MoreLink to="/orders" search={{ status }}>
             ดูทั้งหมด {total} ออเดอร์
-          </Link>
+          </MoreLink>
         )
       }
     >
       {orders?.length === 0 ? (
         <Empty>ไม่มีออเดอร์ค้าง</Empty>
       ) : (
-        orders?.map((o) => {
-          const hours = hoursSince(o.created_at)
-          return (
-            <Row key={o.id}>
-              <Link
-                to="/orders/$orderId"
-                params={{ orderId: o.id }}
-                className="code min-w-0 flex-1 truncate hover:text-brand-600 hover:underline"
-              >
-                {o.order_no}
-              </Link>
-              <ChannelChip channel={o.channel} className="w-20" />
-              <span className="w-12 text-right text-sm text-ink-2">{o.item_count} ชิ้น</span>
-              <span className="flex w-24 justify-end" title={formatDateTime(o.created_at)}>
-                <span
-                  className={cn(
-                    'text-[13px]',
-                    hours >= LONG_WAIT_HOURS ? 'font-medium text-chip-warn-fg' : 'text-ink-3',
-                  )}
-                >
-                  {formatWaiting(hours)}
-                </span>
-              </span>
-            </Row>
-          )
-        })
+        orders?.map((o) => <OrderRow key={o.id} order={o} status={status} />)
       )}
     </Section>
   )
 }
 
+function OrderRow({ order: o, status }: { order: OrderSummary; status: 'reserved' | 'packed' }) {
+  const queryClient = useQueryClient()
+  const toast = useToast()
+  const step = laneAction[status]
+  const act = useMutation({
+    mutationFn: () => api.orderAction(o.id, step.action),
+    onSuccess: async () => {
+      toast(`${o.order_no} ${step.done}`)
+      await invalidateStock(queryClient)
+    },
+    onError: async (error) => {
+      if (isApiError(error, 'invalid_state')) await invalidateStock(queryClient)
+    },
+  })
+  const hours = hoursSince(o.created_at)
+  const picks = o.lines.map((l) => `${l.name} ×${l.qty}`).join(', ')
+
+  return (
+    <Row>
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+        <div className="flex items-center gap-3">
+          <Link
+            to="/orders/$orderId"
+            params={{ orderId: o.id }}
+            className="code min-w-0 truncate hover:text-brand-600 hover:underline"
+          >
+            {o.order_no}
+          </Link>
+          <ChannelChip channel={o.channel} />
+          <span
+            title={formatDateTime(o.created_at)}
+            className={cn(
+              'ml-auto text-[13px] whitespace-nowrap',
+              hours >= OVERDUE_HOURS
+                ? 'font-medium text-chip-bad-fg'
+                : hours >= LATE_HOURS
+                  ? 'font-medium text-chip-warn-fg'
+                  : 'text-ink-3',
+            )}
+          >
+            {formatWaiting(hours)}
+          </span>
+        </div>
+        <p className="truncate text-[13px] text-ink-2">
+          {o.customer_name && <span className="mr-2 font-medium text-ink">{o.customer_name}</span>}
+          {picks}
+        </p>
+        {act.isError && (
+          <p role="alert" className="text-[13px] text-chip-bad-fg">
+            {isApiError(act.error, 'invalid_state')
+              ? 'ออเดอร์นี้เพิ่งเปลี่ยนสถานะจากเครื่องอื่น'
+              : 'ทำรายการไม่สำเร็จ ลองใหม่อีกครั้ง'}
+          </p>
+        )}
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={act.isPending}
+        aria-label={`${step.label} ${o.order_no}`}
+        onClick={() => {
+          act.mutate()
+        }}
+      >
+        <step.icon aria-hidden="true" />
+        {step.label}
+      </Button>
+    </Row>
+  )
+}
+
+function Restock({ products }: { products: Product[] | undefined }) {
+  const [receiving, setReceiving] = useState<Product | null>(null)
+  return (
+    <Section
+      title="ของใกล้หมด"
+      total={products?.length}
+      more={(products?.length ?? 0) > PREVIEW && <MoreLink to="/stock">ดูสต็อกทั้งหมด</MoreLink>}
+    >
+      {products?.length === 0 ? (
+        <Empty>ทุกรายการยังมีของพอขาย</Empty>
+      ) : (
+        products?.slice(0, PREVIEW).map((p) => {
+          const left = Math.max(p.available, 0)
+          return (
+            <Row key={p.id}>
+              <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                <Link
+                  to="/stock"
+                  search={{ product: p.id }}
+                  className="max-w-full truncate font-medium hover:text-brand-600 hover:underline"
+                >
+                  {p.name}
+                </Link>
+                <Chip tone={left === 0 ? 'bad' : 'warn'}>
+                  {left === 0 ? 'หมดแล้ว' : `เหลือ ${left} ชิ้น`}
+                </Chip>
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                aria-label={`รับของเข้า ${p.name}`}
+                onClick={() => {
+                  setReceiving(p)
+                }}
+              >
+                <PackagePlusIcon aria-hidden="true" />
+                รับของเข้า
+              </Button>
+            </Row>
+          )
+        })
+      )}
+      {receiving && (
+        <StockInDialog
+          product={receiving}
+          open
+          onOpenChange={(open) => {
+            if (!open) setReceiving(null)
+          }}
+        />
+      )}
+    </Section>
+  )
+}
+
+function MoreLink({
+  to,
+  search,
+  children,
+}: {
+  to: '/orders' | '/stock'
+  search?: { status: OrderStatus }
+  children: ReactNode
+}) {
+  return (
+    <Link
+      to={to}
+      search={search}
+      className="text-brand-600 underline decoration-line-strong underline-offset-4 hover:decoration-brand-600"
+    >
+      {children}
+    </Link>
+  )
+}
+
 function Section({
   title,
-  hint,
-  counted = true,
   total,
   more,
   children,
 }: {
   title: string
-  hint: string
-  counted?: boolean
   total?: number
   more?: ReactNode
   children: ReactNode
 }) {
   return (
     <section aria-label={title} className="panel flex flex-col">
-      <header className="flex min-h-20 items-center gap-4 border-b border-line px-5 py-3">
-        {counted && (
-          <span
-            aria-label={`${title} ${total ?? 0}`}
-            className={cn(
-              'count min-w-8 shrink-0 px-1 text-center text-5xl',
-              total ? 'highlight' : 'text-line-strong',
-            )}
-          >
-            {total ?? '-'}
-          </span>
-        )}
-        <span className="flex min-w-0 flex-col">
-          <h2 className="text-base font-semibold">{title}</h2>
-          <span className="text-[13px] text-ink-2">{hint}</span>
+      <header className="flex items-center gap-3 border-b border-line px-5 py-3">
+        <span
+          aria-label={`${title} ${total ?? 0}`}
+          className={cn(
+            'count min-w-8 shrink-0 px-1 text-center text-[34px]',
+            total ? 'highlight' : 'text-line-strong',
+          )}
+        >
+          {total ?? '-'}
         </span>
+        <h2 className="text-base font-semibold">{title}</h2>
       </header>
-      <ul className="flex flex-1 flex-col px-5 py-1">{children}</ul>
+      <ul className="flex flex-col px-5 py-1">{children}</ul>
       {more && (
         <footer className="border-t border-line px-5 py-2.5 text-[13px] font-medium">{more}</footer>
       )}
@@ -384,7 +439,7 @@ function Section({
 
 function Row({ children }: { children: ReactNode }) {
   return (
-    <li className="flex min-h-11 items-center gap-3 border-b border-line py-2 last:border-b-0">
+    <li className="flex min-h-14 items-center gap-4 border-b border-line py-3 last:border-b-0">
       {children}
     </li>
   )

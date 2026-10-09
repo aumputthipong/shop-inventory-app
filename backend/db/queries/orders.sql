@@ -50,7 +50,7 @@ ORDER BY oi.id;
 
 -- name: ListOrders :many
 SELECT o.id, o.order_no, o.channel, o.external_ref, o.status, o.total,
-       u.name AS created_by_name, o.created_at,
+       u.name AS created_by_name, o.created_at, o.customer_name,
        (SELECT coalesce(sum(qty), 0)::integer FROM order_items WHERE order_id = o.id) AS item_count
 FROM orders o
 LEFT JOIN users u ON u.id = o.created_by
@@ -61,6 +61,13 @@ ORDER BY CASE WHEN sqlc.arg(oldest_first)::boolean THEN o.created_at END,
          CASE WHEN sqlc.arg(oldest_first)::boolean THEN o.id END,
          o.created_at DESC, o.id DESC
 LIMIT sqlc.arg(page_limit) OFFSET sqlc.arg(page_offset);
+
+-- name: ListItemsForOrders :many
+SELECT oi.order_id, p.name, oi.qty
+FROM order_items oi
+JOIN products p ON p.id = oi.product_id
+WHERE oi.order_id = ANY(sqlc.arg(order_ids)::bigint[])
+ORDER BY oi.order_id, oi.id;
 
 -- name: CountOrders :one
 SELECT count(*)

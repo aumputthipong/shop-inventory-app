@@ -16,8 +16,8 @@ yellow (waiting work, the current page, held units). A brighter blue
 1. **Counted, not decorated.** Counts are the loudest things on any screen,
    set in a condensed face like the quantity printed on a carton. Everything else
    is plain text, hairlines and whitespace. A count of work takes the place an
-   icon would have taken; icons help with finding things (the nav, sales
-   channels), they never decorate a heading.
+   icon would have taken. Icons sit only where they carry meaning: a
+   button's verb and a sales channel. The nav and headings are text.
 2. **Square panels, round buttons.** Panels, inputs and chips keep small
    radii (4-8px); chips look like printed labels, not bubbles. Buttons are
    pills, so anything you can press stands apart from the content.
@@ -108,21 +108,26 @@ no status chip, only one that is low, sold out or switched off.
 ## Components
 
 - **Top bar**: `on-brand` navy, flowing straight into the page band with no
-  rule between them. Each navigation item has a 16px icon and its label; the
-  current page is white and semibold with a 3px yellow underline.
+  rule between them. Navigation items are text only; the current page is
+  white and semibold with a 3px yellow underline.
 - **Page band**: `PageBand` (used by `PageHeader` and by detail pages) is the
   navy zone behind the back link, title, description and actions. It bleeds
   to the window edges and ends 56px below its content; the first panel after
-  it overlaps that foot by 32px. Whatever follows a page header must therefore
+  it overlaps that foot by 28px. Whatever follows a page header must therefore
   be a panel or an alert, never bare text.
 - **Today**: the page title is "งานวันนี้" with the date beside it, quick
-  actions on the right. A two-column grid of equal halves: orders in the order
-  they move (ต้องแพ็ก then รอส่ง) on the first row, stock (ของใกล้หมด, recent
-  movements) on the second. Panels in a row stretch to the same height and keep
-  their footer at the bottom. Each section opens with its count where an icon
-  would otherwise go: a count above zero sits on a yellow highlighter stroke
+  actions on the right. The grid follows the work, not a symmetry: ต้องแพ็ก
+  takes two thirds, and the right third stacks รอส่ง and ของใกล้หมด. Panels are
+  as tall as their content. Each section opens with its count and its title,
+  no subtitle: a count above zero sits on a yellow highlighter stroke
   (`highlight` utility), a count of zero turns `line-strong` so empty work
-  recedes.
+  recedes. Every row can be acted on where it stands: an order row shows the
+  order number, channel and wait on top, the customer and what to pick below,
+  and a "แพ็กแล้ว" or "ส่งแล้ว" button; a low-stock row has "รับของเข้า",
+  which opens the stock-in dialog. The wait turns `chip-warn-fg` after 24
+  hours and `chip-bad-fg` after 72. Stock movements live on ประวัติสต็อก, not
+  here. A "ดูทั้งหมด" link appears only when the panel holds more than it
+  shows, and is underlined like every text link.
   Exceptions that are usually zero (counts waiting for the owner) get a one-line
   notice above the grid only when they exist, never an empty panel. The owner
   also sees one sales line inside the band, under a pale rule: "ขายวันนี้", the
@@ -131,6 +136,8 @@ no status chip, only one that is low, sold out or switched off.
   figures recede to `ink-3`; a day with nothing sold or shipped collapses to
   the total and "ยังไม่มีออเดอร์วันนี้". Money stays in Plex, never the count
   face, and drops `.00` when the amount is whole.
+- **Text links**: `brand-600` with an underline in `line-strong` that turns
+  `brand-600` on hover, so a link never reads as plain text.
 - **Buttons**: 36px (40px for a dialog's main action), pill shaped. Primary
   is flat navy; secondary is white with `line-strong` border; ghost for
   low-emphasis actions in rows.
