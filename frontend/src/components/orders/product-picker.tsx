@@ -3,7 +3,6 @@ import { PlusIcon } from 'lucide-react'
 
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
-import { ProductAvatar } from '@/components/product-avatar'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/lib/api'
@@ -49,9 +48,8 @@ export function ProductPicker({
           return (
             <li
               key={p.id}
-              className="grid min-h-16 grid-cols-[36px_minmax(0,1fr)_96px_120px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0"
+              className="grid min-h-16 grid-cols-[minmax(0,1fr)_96px_120px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0"
             >
-              <ProductAvatar name={p.name} />
               <span className="flex min-w-0 flex-col">
                 <span className="truncate font-medium">{p.name}</span>
                 <span className="flex items-center gap-2.5 text-[13px] text-ink-2">

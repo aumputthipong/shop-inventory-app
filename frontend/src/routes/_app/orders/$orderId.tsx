@@ -7,8 +7,7 @@ import { useState } from 'react'
 import { ChannelChip, Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorAlert } from '@/components/error-alert'
-import { BackLink } from '@/components/page-header'
-import { ProductAvatar } from '@/components/product-avatar'
+import { BackLink, PageBand } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -92,7 +91,7 @@ function OrderPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <PageBand>
         <BackLink to="/orders">กลับไปหน้าออเดอร์</BackLink>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -134,7 +133,7 @@ function OrderPage() {
         {order.external_ref && (
           <p className="text-ink-2">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
         )}
-      </div>
+      </PageBand>
 
       {staleError && <ErrorAlert>{staleError}</ErrorAlert>}
 
@@ -145,14 +144,13 @@ function OrderPage() {
             {order.items.map((item) => (
               <li
                 key={item.product_id}
-                className="grid min-h-16 grid-cols-[44px_minmax(0,1fr)_90px_120px_130px] items-center gap-4 border-b border-line py-3 last:border-b-0"
+                className="grid min-h-16 grid-cols-[minmax(0,1fr)_90px_120px_130px] items-center gap-4 border-b border-line py-3 last:border-b-0"
               >
-                <ProductAvatar name={item.name} />
                 <span className="flex min-w-0 flex-col">
                   <Link
                     to="/stock"
                     search={{ product: item.product_id }}
-                    className="truncate font-medium hover:text-petrol-600 hover:underline"
+                    className="truncate font-medium hover:text-brand-600 hover:underline"
                   >
                     {item.name}
                   </Link>
@@ -186,7 +184,7 @@ function OrderPage() {
               {order.customer.phone && (
                 <a
                   href={`tel:${order.customer.phone}`}
-                  className="text-sm text-petrol-600 hover:underline"
+                  className="text-sm text-brand-600 hover:underline"
                 >
                   {order.customer.phone}
                 </a>
@@ -271,14 +269,14 @@ function Timeline({ order }: { order: Order }) {
                 aria-hidden="true"
                 className={cn(
                   'absolute top-8 left-[15px] h-[calc(100%-32px)] w-0.5',
-                  done ? 'bg-petrol-300' : 'bg-line',
+                  done ? 'bg-brand-300' : 'bg-line',
                 )}
               />
             )}
             <span
               className={cn(
                 'flex size-8 shrink-0 items-center justify-center rounded-full',
-                done ? 'bg-petrol-600 text-white' : 'border-2 border-line-strong bg-white',
+                done ? 'bg-brand-600 text-white' : 'border-2 border-line-strong bg-white',
                 order.status === 'canceled' && last && 'bg-chip-neutral-fg',
               )}
             >

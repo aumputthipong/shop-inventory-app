@@ -1,7 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { ClipboardCheckIcon, InboxIcon, PackagePlusIcon, StoreIcon } from 'lucide-react'
+import {
+  ClipboardCheckIcon,
+  InboxIcon,
+  type LucideIcon,
+  PackagePlusIcon,
+  StoreIcon,
+  TruckIcon,
+} from 'lucide-react'
 import type { ReactNode } from 'react'
 
 import { ChannelChip, Chip } from '@/components/chip'
@@ -10,7 +17,7 @@ import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import type { DaySales, OrderStatus, OrderSummary } from '@/lib/api'
 import { formatDateTime, formatMoney, formatSigned, formatWaiting, hoursSince } from '@/lib/format'
-import { channelDot, channelLabel, movementChip } from '@/lib/labels'
+import { channelIcon, channelLabel, movementChip } from '@/lib/labels'
 import {
   countsQueryOptions,
   movementsQueryOptions,
@@ -61,6 +68,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
         title="งานวันนี้"
         aside={longDate.format(new Date())}
         description={nothingToDo ? 'ไม่มีงานค้าง ออเดอร์ส่งครบ และของทุกรายการยังพอขาย' : undefined}
+        below={isOwner && <SalesStrip sales={sales.data} />}
         actions={
           <nav aria-label="ทางลัด" className="flex flex-wrap gap-2">
             <Button asChild>
@@ -92,14 +100,15 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
         }
       />
 
-      {isOwner && <SalesStrip sales={sales.data} />}
-
       {isOwner && pendingCounts > 0 && (
         <section
           aria-label="ผลนับรอยืนยัน"
           className="panel flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-4"
         >
-          <span aria-label={`ผลนับรอยืนยัน ${pendingCounts}`} className="count text-[34px]">
+          <span
+            aria-label={`ผลนับรอยืนยัน ${pendingCounts}`}
+            className="count px-1 text-[34px] highlight"
+          >
             {pendingCounts}
           </span>
           <span className="flex min-w-0 flex-1 flex-col">
@@ -138,7 +147,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
           total={products.data ? restock.length : undefined}
           more={
             restock.length > PREVIEW && (
-              <Link to="/stock" className="text-petrol-600 hover:underline">
+              <Link to="/stock" className="text-brand-600 hover:underline">
                 ดูสต็อกทั้งหมด
               </Link>
             )
@@ -154,7 +163,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
                   <Link
                     to="/stock"
                     search={{ product: p.id }}
-                    className="min-w-0 flex-1 truncate font-medium hover:text-petrol-600 hover:underline"
+                    className="min-w-0 flex-1 truncate font-medium hover:text-brand-600 hover:underline"
                   >
                     {p.name}
                   </Link>
@@ -173,7 +182,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
           counted={false}
           more={
             (moves.data?.total ?? 0) > PREVIEW && (
-              <Link to="/ledger" className="text-petrol-600 hover:underline">
+              <Link to="/ledger" className="text-brand-600 hover:underline">
                 ดูประวัติสต็อกทั้งหมด
               </Link>
             )
@@ -207,51 +216,66 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
 }
 
 function SalesStrip({ sales }: { sales: DaySales | undefined }) {
+  const quiet = sales?.orders === 0 && sales.shipped === 0
   return (
     <section
       aria-label="ขายวันนี้"
-      className="panel grid grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_repeat(4,minmax(0,1fr))]"
+      className="mt-6 flex flex-wrap items-baseline gap-x-10 gap-y-3 border-t border-white/25 pt-4"
     >
-      <div className="col-span-2 flex flex-col px-5 py-4 lg:col-span-1">
-        <span className="text-[13px] text-ink-2">ขายวันนี้</span>
+      <p className="flex flex-wrap items-baseline gap-x-3">
+        <span className="text-ink-2">ขายวันนี้</span>
         <span className="text-[22px] leading-[30px] font-semibold">
           {sales ? formatMoney(sales.revenue) : '-'}
         </span>
         <span className="text-[13px] text-ink-2">
-          {sales ? `จาก ${sales.orders} ออเดอร์ ไม่นับที่ยกเลิก` : 'กำลังโหลด'}
+          {!sales
+            ? 'กำลังโหลด'
+            : quiet
+              ? 'ยังไม่มีออเดอร์วันนี้'
+              : `จาก ${sales.orders} ออเดอร์ ไม่นับที่ยกเลิก`}
         </span>
-      </div>
-      {sales?.channels.map((c) => (
-        <Stat
-          key={c.channel}
-          label={
-            <span className="flex items-center gap-1.5">
-              <span
-                aria-hidden="true"
-                className={cn('size-1.5 rounded-full', channelDot[c.channel])}
-              />
-              {channelLabel[c.channel]}
-            </span>
-          }
-          value={formatMoney(c.revenue)}
-          note={`${c.orders} ออเดอร์`}
-        />
-      ))}
-      <Stat
-        label="ส่งออกวันนี้"
-        value={sales ? `${sales.shipped} ออเดอร์` : '-'}
-        note="ของออกจากร้านแล้ว"
-      />
+      </p>
+      {sales && !quiet && (
+        <dl className="flex flex-wrap gap-x-6 gap-y-1 lg:ml-auto">
+          {sales.channels.map((c) => (
+            <Figure
+              key={c.channel}
+              icon={channelIcon[c.channel].icon}
+              label={channelLabel[c.channel]}
+              value={formatMoney(c.revenue)}
+              muted={c.orders === 0}
+            />
+          ))}
+          <Figure
+            icon={TruckIcon}
+            label="ส่งออกแล้ว"
+            value={`${sales.shipped} ออเดอร์`}
+            muted={sales.shipped === 0}
+          />
+        </dl>
+      )}
     </section>
   )
 }
 
-function Stat({ label, value, note }: { label: ReactNode; value: string; note: string }) {
+function Figure({
+  icon: Icon,
+  label,
+  value,
+  muted,
+}: {
+  icon: LucideIcon
+  label: string
+  value: string
+  muted: boolean
+}) {
   return (
-    <div className="flex flex-col border-t border-line px-5 py-4 lg:border-t-0 lg:border-l">
-      <span className="text-[13px] text-ink-2">{label}</span>
-      <span className="text-base font-semibold">{value}</span>
-      <span className="text-[13px] text-ink-2">{note}</span>
+    <div className="flex items-center gap-1.5">
+      <dt className="flex items-center gap-1.5 text-ink-2">
+        <Icon className="size-4" aria-hidden="true" />
+        {label}
+      </dt>
+      <dd className={cn('font-medium', muted && 'font-normal text-ink-3')}>{value}</dd>
     </div>
   )
 }
@@ -276,7 +300,7 @@ function OrderLane({
       total={total}
       more={
         (total ?? 0) > 0 && (
-          <Link to="/orders" search={{ status }} className="text-petrol-600 hover:underline">
+          <Link to="/orders" search={{ status }} className="text-brand-600 hover:underline">
             ดูทั้งหมด {total} ออเดอร์
           </Link>
         )
@@ -292,18 +316,21 @@ function OrderLane({
               <Link
                 to="/orders/$orderId"
                 params={{ orderId: o.id }}
-                className="code min-w-0 flex-1 truncate hover:text-petrol-600 hover:underline"
+                className="code min-w-0 flex-1 truncate hover:text-brand-600 hover:underline"
               >
                 {o.order_no}
               </Link>
-              <ChannelChip channel={o.channel} />
+              <ChannelChip channel={o.channel} className="w-20" />
               <span className="w-12 text-right text-sm text-ink-2">{o.item_count} ชิ้น</span>
               <span className="flex w-24 justify-end" title={formatDateTime(o.created_at)}>
-                {hours >= LONG_WAIT_HOURS ? (
-                  <Chip tone="warn">{formatWaiting(hours)}</Chip>
-                ) : (
-                  <span className="text-[13px] text-ink-2">{formatWaiting(hours)}</span>
-                )}
+                <span
+                  className={cn(
+                    'text-[13px]',
+                    hours >= LONG_WAIT_HOURS ? 'font-medium text-chip-warn-fg' : 'text-ink-3',
+                  )}
+                >
+                  {formatWaiting(hours)}
+                </span>
               </span>
             </Row>
           )
@@ -335,8 +362,8 @@ function Section({
           <span
             aria-label={`${title} ${total ?? 0}`}
             className={cn(
-              'count min-w-8 shrink-0 text-center text-5xl',
-              !total && 'text-line-strong',
+              'count min-w-8 shrink-0 px-1 text-center text-5xl',
+              total ? 'highlight' : 'text-line-strong',
             )}
           >
             {total ?? '-'}

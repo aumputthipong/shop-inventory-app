@@ -47,7 +47,7 @@ function DialogHeader({
       {icon && (
         <span
           aria-hidden="true"
-          className="mt-1 flex size-5 shrink-0 items-center justify-center text-petrol-600 [&_svg]:size-5"
+          className="mt-1 flex size-5 shrink-0 items-center justify-center text-brand-600 [&_svg]:size-5"
         >
           {icon}
         </span>

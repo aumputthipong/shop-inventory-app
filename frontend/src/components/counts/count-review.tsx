@@ -4,7 +4,6 @@ import { ClipboardCheckIcon } from 'lucide-react'
 import { useState } from 'react'
 
 import { ErrorAlert } from '@/components/error-alert'
-import { ProductAvatar } from '@/components/product-avatar'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,8 +24,7 @@ export function CountLines({ count }: { count: StockCount }) {
 
   return (
     <section aria-label="ผลการนับ" className="panel overflow-x-auto">
-      <div className="grid h-9 min-w-[720px] grid-cols-[36px_minmax(0,1fr)_110px_90px_90px] items-center gap-4 border-b border-line px-4 text-[13px] text-ink-2">
-        <span />
+      <div className="grid h-9 min-w-[720px] grid-cols-[minmax(0,1fr)_110px_90px_90px] items-center gap-4 border-b border-line px-4 text-[13px] text-ink-2">
         <span>สินค้า</span>
         <span className="text-right">ในระบบตอนนับ</span>
         <span className="text-right">นับได้</span>
@@ -36,14 +34,13 @@ export function CountLines({ count }: { count: StockCount }) {
         {lines.map((l) => (
           <li
             key={l.product_id}
-            className="grid min-h-14 min-w-[720px] grid-cols-[36px_minmax(0,1fr)_110px_90px_90px] items-center gap-4 border-b border-line px-4 py-2 last:border-b-0"
+            className="grid min-h-14 min-w-[720px] grid-cols-[minmax(0,1fr)_110px_90px_90px] items-center gap-4 border-b border-line px-4 py-2 last:border-b-0"
           >
-            <ProductAvatar name={l.name} />
             <span className="flex min-w-0 flex-col">
               <span className="truncate font-medium">{l.name}</span>
               <span className="code text-xs text-ink-3">{l.sku}</span>
               {pending && l.on_hand_now !== l.expected && (
-                <span className="text-xs text-kraft-700">
+                <span className="text-xs text-marker-700">
                   หลังนับมีของเข้าออก ตอนนี้ในระบบ {l.on_hand_now} ชิ้น ระบบจะปรับเฉพาะส่วนต่าง
                 </span>
               )}

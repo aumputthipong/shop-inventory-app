@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { PencilIcon } from 'lucide-react'
 
-import { ProductAvatar } from '@/components/product-avatar'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { api, type ProductDetail } from '@/lib/api'
@@ -34,7 +33,6 @@ export function PanelHeader({
 
   return (
     <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-      <ProductAvatar name={product.name} size="lg" />
       <div className="flex min-w-0 flex-1 flex-col">
         <h2 className="truncate text-base leading-6 font-semibold">{product.name}</h2>
         <div className="flex gap-3 text-[13px] whitespace-nowrap text-ink-2">

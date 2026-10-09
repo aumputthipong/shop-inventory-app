@@ -5,7 +5,6 @@ import { Chip } from '@/components/chip'
 import { ErrorAlert } from '@/components/error-alert'
 import { capFor, type Cart } from '@/components/line/cart'
 import { BottomBar, Shell, type Customer } from '@/components/line/line-layout'
-import { ProductAvatar } from '@/components/product-avatar'
 import { Button } from '@/components/ui/button'
 import type { LineCatalogItem, Shortage } from '@/lib/api'
 import { formatMoney } from '@/lib/format'
@@ -122,11 +121,10 @@ function CatalogRow({
     <li
       className={cn(
         'flex items-center gap-3 panel p-3.5',
-        inCart && 'border-petrol-600 bg-petrol-50',
+        inCart && 'border-brand-600 bg-brand-50',
         out && 'opacity-60',
       )}
     >
-      <ProductAvatar name={item.name} size="lg" />
       <span className="flex min-w-0 flex-1 flex-col gap-1">
         <span className="line-clamp-2 leading-5 font-medium">{item.name}</span>
         <span className="flex flex-wrap items-center gap-2">

@@ -13,7 +13,7 @@ export function HelpNote({
 }) {
   return (
     <details className={cn('group text-[13px] text-ink-2', className)}>
-      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-sm font-medium text-petrol-600 hover:text-petrol-700 [&::-webkit-details-marker]:hidden">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 rounded-sm font-medium text-brand-600 hover:text-brand-700 [&::-webkit-details-marker]:hidden">
         <CircleHelpIcon className="size-4" aria-hidden="true" />
         {question}
         <ChevronDownIcon

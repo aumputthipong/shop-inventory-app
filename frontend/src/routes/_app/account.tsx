@@ -24,7 +24,7 @@ function AccountPage() {
         <div className="flex items-center gap-4">
           <span
             aria-hidden="true"
-            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-kraft-100 text-lg font-semibold text-kraft-700"
+            className="flex size-12 shrink-0 items-center justify-center rounded-full bg-marker-100 text-lg font-semibold text-marker-700"
           >
             {productInitial(me.name)}
           </span>
@@ -66,7 +66,7 @@ function Card({
   return (
     <section aria-label={title} className="panel p-5">
       <div className="mb-4 flex items-start gap-2.5">
-        <span aria-hidden="true" className="mt-0.5 flex shrink-0 text-petrol-600">
+        <span aria-hidden="true" className="mt-0.5 flex shrink-0 text-brand-600">
           {icon}
         </span>
         <div>

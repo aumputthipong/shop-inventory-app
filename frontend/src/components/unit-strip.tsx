@@ -8,8 +8,8 @@ interface Segment {
 }
 
 const kindClass: Record<Kind, string> = {
-  available: 'bg-petrol-600',
-  incoming: 'border-[1.5px] border-dashed border-petrol-600 bg-petrol-200',
+  available: 'bg-brand-600',
+  incoming: 'border-[1.5px] border-dashed border-brand-600 bg-brand-200',
   removing: 'border-[1.5px] border-dashed border-destructive',
   held: 'bg-hatch',
 }
@@ -97,13 +97,57 @@ export function UnitLegend() {
   return (
     <div className="flex gap-4 text-[13px] text-ink-2">
       <span className="flex items-center gap-1.5">
-        <span aria-hidden="true" className="h-4 w-3 rounded bg-petrol-600" />
+        <span aria-hidden="true" className="h-4 w-3 rounded bg-brand-600" />
         ขายได้
       </span>
       <span className="flex items-center gap-1.5">
         <span aria-hidden="true" className="h-4 w-3 rounded bg-hatch" />
         รอดำเนินการ
       </span>
+    </div>
+  )
+}
+
+export function StockBar({
+  onHand,
+  held,
+  className,
+}: {
+  onHand: number
+  held: number
+  className?: string
+}) {
+  const available = Math.max(onHand - held, 0)
+  const caption =
+    onHand === 0
+      ? 'ไม่มีของในคลัง'
+      : held === 0
+        ? `มีในคลัง ${onHand} ยังไม่มีออเดอร์จอง`
+        : held >= onHand
+          ? `จองไว้ครบทั้ง ${onHand}`
+          : `จองไว้ ${held} จาก ${onHand}`
+
+  return (
+    <div className={cn('flex flex-col gap-1.5', className)}>
+      <div
+        role="img"
+        aria-label={`ขายได้ ${available} ชิ้น จองไว้ ${held} ชิ้น จากที่มี ${onHand} ชิ้น`}
+        className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-xs bg-line"
+      >
+        {available > 0 && (
+          <span
+            className="block bg-brand-600"
+            style={{ width: `${(available / onHand) * 100}%` }}
+          />
+        )}
+        {held > 0 && onHand > 0 && (
+          <span
+            className="block min-w-1 flex-1 bg-hatch"
+            style={{ maxWidth: `${(Math.min(held, onHand) / onHand) * 100}%` }}
+          />
+        )}
+      </div>
+      <span className="text-xs text-ink-3">{caption}</span>
     </div>
   )
 }

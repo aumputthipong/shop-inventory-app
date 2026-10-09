@@ -48,7 +48,7 @@ export function ReceiptStep({
               <span
                 className={cn(
                   'flex size-5 items-center justify-center rounded-sm',
-                  i === 0 ? 'bg-petrol-600 text-white' : 'border border-line-strong bg-surface',
+                  i === 0 ? 'bg-brand-600 text-white' : 'border border-line-strong bg-surface',
                 )}
               >
                 {i === 0 && <CheckIcon className="size-3" aria-hidden="true" />}

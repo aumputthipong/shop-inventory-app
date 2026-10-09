@@ -1,4 +1,9 @@
 const money = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' })
+const wholeMoney = new Intl.NumberFormat('th-TH', {
+  style: 'currency',
+  currency: 'THB',
+  maximumFractionDigits: 0,
+})
 
 const dateTime = new Intl.DateTimeFormat('th-TH', {
   day: 'numeric',
@@ -16,7 +21,8 @@ const fullDateTime = new Intl.DateTimeFormat('th-TH', {
 })
 
 export function formatMoney(value: string | number): string {
-  return money.format(Number(value))
+  const n = Number(value)
+  return Number.isInteger(n) ? wholeMoney.format(n) : money.format(n)
 }
 
 export function formatDateTime(iso: string): string {

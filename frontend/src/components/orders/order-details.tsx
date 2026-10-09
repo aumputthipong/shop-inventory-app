@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router'
-import { cn } from 'cn'
 
+import { ChannelIcon } from '@/components/chip'
 import { ErrorAlert } from '@/components/error-alert'
 import { Segmented } from '@/components/segmented'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import type { OrderSummary } from '@/lib/api'
-import { channelDot, channelLabel } from '@/lib/labels'
+import { channelLabel } from '@/lib/labels'
 import type { EntryDetails } from '@/lib/order-entry'
 
 interface DetailsProps {
@@ -92,7 +92,7 @@ export function OnlineDetails({
             value: c,
             label: (
               <>
-                <span aria-hidden="true" className={cn('size-1.5 rounded-full', channelDot[c])} />
+                <ChannelIcon channel={c} />
                 {channelLabel[c]}
               </>
             ),
