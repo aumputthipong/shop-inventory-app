@@ -176,6 +176,13 @@ type Summary struct {
 	ItemCount     int32
 	CreatedByName *string
 	CreatedAt     time.Time
+	CustomerName  *string
+	Picks         []Pick
+}
+
+type Pick struct {
+	Name string
+	Qty  int32
 }
 
 type Filter struct {

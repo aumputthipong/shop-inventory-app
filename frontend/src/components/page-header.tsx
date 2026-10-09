@@ -20,7 +20,7 @@ export function PageBand({ className, children }: { className?: string; children
   return (
     <div
       className={cn(
-        '-mx-4 -mt-6 -mb-14 on-brand px-4 pt-6 pb-20 [border-image:linear-gradient(#2a3563_0_0)_fill_0//0_100vmax] md:-mx-6 md:px-6 xl:-mx-10 xl:-mt-8 xl:px-10 xl:pt-8',
+        '-mx-4 -mt-6 -mb-[52px] on-brand px-4 pt-6 pb-14 [border-image:linear-gradient(#2a3563_0_0)_fill_0//0_100vmax] md:-mx-6 md:px-6 xl:-mx-10 xl:-mt-8 xl:px-10 xl:pt-8',
         className,
       )}
     >

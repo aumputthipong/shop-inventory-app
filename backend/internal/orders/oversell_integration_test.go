@@ -308,3 +308,21 @@ func TestListOrdersOldestFirst(t *testing.T) {
 		}
 	}
 }
+
+func TestListOrdersShowsWhatToPick(t *testing.T) {
+	e := newEnv(t)
+	first, second := e.product(t, 5), e.product(t, 5)
+	created, err := e.orders.Create(t.Context(), orders.NewOrder{
+		Items:    []orders.ItemRequest{{ProductID: second, Qty: 2}, {ProductID: first, Qty: 1}},
+		Customer: &orders.Customer{Name: "Ann"},
+	})
+	require.NoError(t, err)
+	search := created.OrderNo
+
+	items, _, err := e.orders.List(t.Context(), orders.Filter{Search: &search, Limit: 10})
+	require.NoError(t, err)
+	require.Len(t, items, 1)
+	require.NotNil(t, items[0].CustomerName)
+	assert.Equal(t, "Ann", *items[0].CustomerName)
+	assert.Equal(t, []orders.Pick{{Name: "race test item", Qty: 2}, {Name: "race test item", Qty: 1}}, items[0].Picks)
+}

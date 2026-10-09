@@ -221,6 +221,40 @@ func (q *Queries) InsertOrderItem(ctx context.Context, arg InsertOrderItemParams
 	return err
 }
 
+const listItemsForOrders = `-- name: ListItemsForOrders :many
+SELECT oi.order_id, p.name, oi.qty
+FROM order_items oi
+JOIN products p ON p.id = oi.product_id
+WHERE oi.order_id = ANY($1::bigint[])
+ORDER BY oi.order_id, oi.id
+`
+
+type ListItemsForOrdersRow struct {
+	OrderID int64  `json:"order_id"`
+	Name    string `json:"name"`
+	Qty     int32  `json:"qty"`
+}
+
+func (q *Queries) ListItemsForOrders(ctx context.Context, orderIds []int64) ([]ListItemsForOrdersRow, error) {
+	rows, err := q.db.Query(ctx, listItemsForOrders, orderIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListItemsForOrdersRow{}
+	for rows.Next() {
+		var i ListItemsForOrdersRow
+		if err := rows.Scan(&i.OrderID, &i.Name, &i.Qty); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listOrderItems = `-- name: ListOrderItems :many
 SELECT oi.product_id, p.sku, p.name, oi.qty, oi.unit_price
 FROM order_items oi
@@ -265,7 +299,7 @@ func (q *Queries) ListOrderItems(ctx context.Context, orderID int64) ([]ListOrde
 
 const listOrders = `-- name: ListOrders :many
 SELECT o.id, o.order_no, o.channel, o.external_ref, o.status, o.total,
-       u.name AS created_by_name, o.created_at,
+       u.name AS created_by_name, o.created_at, o.customer_name,
        (SELECT coalesce(sum(qty), 0)::integer FROM order_items WHERE order_id = o.id) AS item_count
 FROM orders o
 LEFT JOIN users u ON u.id = o.created_by
@@ -295,6 +329,7 @@ type ListOrdersRow struct {
 	Total         string    `json:"total"`
 	CreatedByName *string   `json:"created_by_name"`
 	CreatedAt     time.Time `json:"created_at"`
+	CustomerName  *string   `json:"customer_name"`
 	ItemCount     int32     `json:"item_count"`
 }
 
@@ -322,6 +357,7 @@ func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListO
 			&i.Total,
 			&i.CreatedByName,
 			&i.CreatedAt,
+			&i.CustomerName,
 			&i.ItemCount,
 		); err != nil {
 			return nil, err

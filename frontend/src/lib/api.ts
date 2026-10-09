@@ -122,6 +122,8 @@ export interface OrderSummary {
   item_count: number
   created_by_name: string | null
   created_at: string
+  customer_name: string | null
+  lines: { name: string; qty: number }[]
 }
 
 export interface Order {

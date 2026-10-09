@@ -33,6 +33,8 @@ export function orderSummary(overrides: Partial<OrderSummary> = {}): OrderSummar
     item_count: 2,
     created_by_name: 'พลอย',
     created_at: '2026-09-30T08:00:00Z',
+    customer_name: null,
+    lines: [{ name: 'เสื้อยืด', qty: 2 }],
     ...overrides,
   }
 }

@@ -1,17 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import {
-  ClipboardCheckIcon,
-  HistoryIcon,
-  LayoutListIcon,
-  LogOutIcon,
-  type LucideIcon,
-  PackageIcon,
-  ReceiptTextIcon,
-  ScrollTextIcon,
-  UserRoundCogIcon,
-  UsersIcon,
-} from 'lucide-react'
+import { LogOutIcon, UserRoundCogIcon } from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 
 import { BrandMark } from '@/components/brand-mark'
@@ -41,18 +30,17 @@ export const Route = createFileRoute('/_app')({
 interface NavItem {
   to: '/' | '/orders' | '/stock' | '/counts' | '/ledger' | '/audit' | '/team'
   label: string
-  icon: LucideIcon
   ownerOnly?: boolean
 }
 
 const NAV: NavItem[] = [
-  { to: '/', label: 'วันนี้', icon: LayoutListIcon },
-  { to: '/orders', label: 'ออเดอร์', icon: ReceiptTextIcon },
-  { to: '/stock', label: 'สต็อก', icon: PackageIcon },
-  { to: '/counts', label: 'ตรวจนับ', icon: ClipboardCheckIcon },
-  { to: '/ledger', label: 'ประวัติสต็อก', icon: HistoryIcon },
-  { to: '/audit', label: 'บันทึกการใช้งาน', icon: ScrollTextIcon, ownerOnly: true },
-  { to: '/team', label: 'ทีม', icon: UsersIcon, ownerOnly: true },
+  { to: '/', label: 'วันนี้' },
+  { to: '/orders', label: 'ออเดอร์' },
+  { to: '/stock', label: 'สต็อก' },
+  { to: '/counts', label: 'ตรวจนับ' },
+  { to: '/ledger', label: 'ประวัติสต็อก' },
+  { to: '/audit', label: 'บันทึกการใช้งาน', ownerOnly: true },
+  { to: '/team', label: 'ทีม', ownerOnly: true },
 ]
 
 function AppLayout() {
@@ -76,11 +64,10 @@ function AppLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex shrink-0 items-center gap-2 border-y-[3px] border-transparent px-3 text-sm text-ink-2 hover:text-ink"
+                className="flex shrink-0 items-center border-y-[3px] border-transparent px-3 text-sm text-ink-2 hover:text-ink"
                 activeOptions={{ exact: item.to === '/' }}
                 activeProps={{ className: 'font-semibold !text-ink !border-b-marker-500' }}
               >
-                <item.icon className="size-4" aria-hidden="true" />
                 {item.label}
               </Link>
             ))}

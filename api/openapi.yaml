@@ -1274,7 +1274,7 @@ components:
               revenue: { type: string, example: "870.00" }
     OrderSummary:
       type: object
-      required: [id, order_no, channel, status, total, item_count, created_at]
+      required: [id, order_no, channel, status, total, item_count, created_at, lines]
       properties:
         id: { type: integer, format: int64 }
         order_no: { type: string, examples: [ORD-2026-00012] }
@@ -1285,6 +1285,16 @@ components:
         item_count: { type: integer, description: Sum of line quantities. }
         created_by_name: { type: [string, "null"] }
         created_at: { type: string, format: date-time }
+        customer_name: { type: [string, "null"], description: Set when the order was keyed in with a customer or placed through LINE. }
+        lines:
+          type: array
+          description: What to pick, in the order the lines were entered.
+          items:
+            type: object
+            required: [name, qty]
+            properties:
+              name: { type: string }
+              qty: { type: integer, minimum: 1 }
 
     Order:
       type: object
