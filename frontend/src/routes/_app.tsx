@@ -1,6 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { LogOutIcon, UserRoundCogIcon } from 'lucide-react'
+import {
+  ClipboardCheckIcon,
+  HistoryIcon,
+  LayoutListIcon,
+  LogOutIcon,
+  type LucideIcon,
+  PackageIcon,
+  ReceiptTextIcon,
+  ScrollTextIcon,
+  UserRoundCogIcon,
+  UsersIcon,
+} from 'lucide-react'
 import { DropdownMenu } from 'radix-ui'
 
 import { BrandMark } from '@/components/brand-mark'
@@ -30,17 +41,18 @@ export const Route = createFileRoute('/_app')({
 interface NavItem {
   to: '/' | '/orders' | '/stock' | '/counts' | '/ledger' | '/audit' | '/team'
   label: string
+  icon: LucideIcon
   ownerOnly?: boolean
 }
 
 const NAV: NavItem[] = [
-  { to: '/', label: 'วันนี้' },
-  { to: '/orders', label: 'ออเดอร์' },
-  { to: '/stock', label: 'สต็อก' },
-  { to: '/counts', label: 'ตรวจนับ' },
-  { to: '/ledger', label: 'ประวัติสต็อก' },
-  { to: '/audit', label: 'บันทึกการใช้งาน', ownerOnly: true },
-  { to: '/team', label: 'ทีม', ownerOnly: true },
+  { to: '/', label: 'วันนี้', icon: LayoutListIcon },
+  { to: '/orders', label: 'ออเดอร์', icon: ReceiptTextIcon },
+  { to: '/stock', label: 'สต็อก', icon: PackageIcon },
+  { to: '/counts', label: 'ตรวจนับ', icon: ClipboardCheckIcon },
+  { to: '/ledger', label: 'ประวัติสต็อก', icon: HistoryIcon },
+  { to: '/audit', label: 'บันทึกการใช้งาน', icon: ScrollTextIcon, ownerOnly: true },
+  { to: '/team', label: 'ทีม', icon: UsersIcon, ownerOnly: true },
 ]
 
 function AppLayout() {
@@ -48,7 +60,7 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b border-edge bg-surface">
+      <header className="sticky top-0 z-40 on-brand">
         <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 px-4 md:px-6 xl:gap-8 xl:px-10">
           <Link to="/" className="flex items-center gap-2.5">
             <BrandMark />
@@ -64,12 +76,11 @@ function AppLayout() {
               <Link
                 key={item.to}
                 to={item.to}
-                className="flex shrink-0 items-center border-b-2 border-transparent px-3 text-sm text-ink-2 hover:text-ink"
+                className="flex shrink-0 items-center gap-2 border-y-[3px] border-transparent px-3 text-sm text-ink-2 hover:text-ink"
                 activeOptions={{ exact: item.to === '/' }}
-                activeProps={{
-                  className: '!border-petrol-600 font-medium !text-ink',
-                }}
+                activeProps={{ className: 'font-semibold !text-ink !border-b-marker-500' }}
               >
+                <item.icon className="size-4" aria-hidden="true" />
                 {item.label}
               </Link>
             ))}
@@ -99,10 +110,10 @@ function AccountMenu({ name, roleText }: { name: string; roleText: string }) {
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger className="flex h-10 items-center gap-2 rounded-md py-1 pr-2.5 pl-1 text-left hover:bg-surface-2">
+      <DropdownMenu.Trigger className="flex h-10 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left hover:bg-surface-2">
         <span
           aria-hidden="true"
-          className="flex size-8 items-center justify-center rounded-full bg-kraft-100 text-[13px] font-semibold text-kraft-700"
+          className="flex size-8 items-center justify-center rounded-full bg-marker-500 text-[13px] font-semibold text-[#172036]"
         >
           {productInitial(name)}
         </span>

@@ -112,9 +112,9 @@ describe('TodayBoard', () => {
     renderBoard(true)
 
     const strip = await screen.findByRole('region', { name: 'ขายวันนี้' })
-    expect(await within(strip).findByText('฿1,250.00')).toBeInTheDocument()
+    expect(await within(strip).findByText('฿1,250')).toBeInTheDocument()
     expect(within(strip).getByText('จาก 4 ออเดอร์ ไม่นับที่ยกเลิก')).toBeInTheDocument()
-    expect(within(strip).getByText('฿1,050.00')).toBeInTheDocument()
+    expect(within(strip).getByText('฿1,050')).toBeInTheDocument()
     expect(within(strip).getByText('2 ออเดอร์')).toBeInTheDocument()
   })
 

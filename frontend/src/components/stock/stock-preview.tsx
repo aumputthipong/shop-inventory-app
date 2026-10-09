@@ -46,7 +46,7 @@ function Change({
         <span className="mx-1.5 text-ink-3" aria-hidden="true">
           →
         </span>
-        <span className={highlight ? 'font-semibold text-petrol-600' : 'font-semibold'}>
+        <span className={highlight ? 'font-semibold text-brand-600' : 'font-semibold'}>
           {after}
         </span>
       </div>

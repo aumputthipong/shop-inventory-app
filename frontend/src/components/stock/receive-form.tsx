@@ -6,7 +6,6 @@ import { useState, type SubmitEvent } from 'react'
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorAlert } from '@/components/error-alert'
-import { ProductAvatar } from '@/components/product-avatar'
 import { QtyStepper } from '@/components/qty-stepper'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
@@ -137,9 +136,8 @@ export function ReceiveForm({ products }: { products: Product[] }) {
             return (
               <li
                 key={p.id}
-                className="grid min-h-14 grid-cols-[36px_minmax(0,1fr)_90px_110px] items-center gap-4 border-b border-line px-4 py-2.5 last:border-b-0"
+                className="grid min-h-14 grid-cols-[minmax(0,1fr)_90px_110px] items-center gap-4 border-b border-line px-4 py-2.5 last:border-b-0"
               >
-                <ProductAvatar name={p.name} />
                 <span className="flex min-w-0 flex-col">
                   <span className="flex items-center gap-2">
                     <span className="truncate font-medium">{p.name}</span>

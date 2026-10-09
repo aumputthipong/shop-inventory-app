@@ -31,7 +31,7 @@ export function Segmented<T extends string>({
             className={cn(
               'flex h-8 items-center justify-center gap-1.5 rounded-sm text-sm',
               active
-                ? 'bg-surface font-medium text-ink shadow-[0_1px_2px_rgb(38_34_30/0.1)]'
+                ? 'bg-surface font-medium text-ink shadow-[0_1px_2px_rgb(28_31_42/0.1)]'
                 : 'text-ink-2 hover:text-ink',
             )}
           >

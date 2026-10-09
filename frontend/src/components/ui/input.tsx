@@ -2,7 +2,7 @@ import * as React from 'react'
 import { cn } from 'cn'
 
 const fieldClass =
-  'w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink transition-colors placeholder:text-ink-3 focus:border-petrol-600 focus:ring-2 focus:ring-petrol-100 focus:outline-none disabled:opacity-50 aria-invalid:border-destructive'
+  'w-full rounded-md border border-line-strong bg-surface px-3 text-sm text-ink transition-colors placeholder:text-ink-3 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 focus:outline-none disabled:opacity-50 aria-invalid:border-destructive'
 
 function Input({ className, ...props }: React.ComponentProps<'input'>) {
   return <input data-slot="input" className={cn(fieldClass, 'h-9', className)} {...props} />

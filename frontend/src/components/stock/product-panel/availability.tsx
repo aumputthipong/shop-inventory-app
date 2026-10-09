@@ -41,7 +41,7 @@ export function Availability({
             <span className="text-base text-ink-2">ชิ้น</span>
           </span>
         </div>
-        <Chip tone={chip.tone}>{chip.label}</Chip>
+        {product.stock_status !== 'in_stock' && <Chip tone={chip.tone}>{chip.label}</Chip>}
       </div>
       <span className="text-[13px] text-ink-2">{summary}</span>
       <UnitStrip size="lg" available={product.available} held={product.reserved} />
@@ -74,7 +74,7 @@ export function Availability({
           <button
             type="button"
             onClick={onEditAlert}
-            className="ml-auto font-medium whitespace-nowrap text-petrol-600 hover:underline"
+            className="ml-auto font-medium whitespace-nowrap text-brand-600 hover:underline"
           >
             ตั้งค่าแจ้งเตือน
           </button>

@@ -58,7 +58,7 @@ function CustomerAvatar({ customer }: { customer: Customer }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-kraft-100 text-sm font-semibold text-kraft-700"
+      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-marker-100 text-sm font-semibold text-marker-700"
     >
       {customer.name.trim().charAt(0)}
     </span>
@@ -84,8 +84,8 @@ function StepBar({ current }: { current: 1 | 2 | 3 }) {
             <span
               className={cn(
                 'flex size-5 shrink-0 items-center justify-center rounded-sm text-[11px] font-semibold',
-                done && 'bg-petrol-50 text-petrol-600',
-                active && 'bg-petrol-600 text-white',
+                done && 'bg-brand-50 text-brand-600',
+                active && 'bg-brand-600 text-white',
                 !done && !active && 'bg-surface-2 text-ink-3',
               )}
             >

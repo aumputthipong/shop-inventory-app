@@ -4,10 +4,9 @@ import { useState } from 'react'
 import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
-import { ProductAvatar } from '@/components/product-avatar'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
-import { UnitStrip } from '@/components/unit-strip'
+import { StockBar } from '@/components/unit-strip'
 import type { Product, StockStatus } from '@/lib/api'
 import { stockStatusChip } from '@/lib/labels'
 import { useProductSearch } from '@/lib/use-product-search'
@@ -67,8 +66,7 @@ export function ProductList({
         />
       </div>
 
-      <div className="grid h-9 grid-cols-[36px_minmax(0,1fr)_56px] items-center gap-x-4 border-b border-line px-4 text-[13px] text-ink-2 sm:grid-cols-[36px_minmax(0,1fr)_200px_80px]">
-        <span />
+      <div className="grid h-9 grid-cols-[minmax(0,1fr)_56px] items-center gap-x-4 border-b border-line px-4 text-[13px] text-ink-2 sm:grid-cols-[minmax(0,1fr)_200px_80px]">
         <span>สินค้า</span>
         <span className="hidden sm:block">ของในคลัง</span>
         <span className="text-right">ขายได้</span>
@@ -124,31 +122,28 @@ function ProductRow({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        'grid min-h-16 w-full cursor-pointer grid-cols-[36px_minmax(0,1fr)_56px] items-center gap-x-4 gap-y-2 px-4 py-3 text-left sm:grid-cols-[36px_minmax(0,1fr)_200px_80px]',
+        'grid min-h-16 w-full cursor-pointer grid-cols-[minmax(0,1fr)_56px] items-center gap-x-4 gap-y-2 px-4 py-3 text-left sm:grid-cols-[minmax(0,1fr)_200px_80px]',
         selected
-          ? 'bg-petrol-50 shadow-[inset_2px_0_0_var(--color-petrol-600)]'
+          ? 'bg-brand-50 shadow-[inset_2px_0_0_var(--color-brand-600)]'
           : 'hover:bg-surface-2',
       )}
     >
-      <ProductAvatar name={p.name} />
       <span className="flex min-w-0 flex-col gap-0.5">
         <span className="truncate text-sm font-medium">{p.name}</span>
         <span className="flex items-center gap-2">
           <span className="code text-xs text-ink-3">{p.sku}</span>
-          <Chip tone={chip.tone}>{chip.label}</Chip>
+          {p.stock_status !== 'in_stock' && <Chip tone={chip.tone}>{chip.label}</Chip>}
           {!p.is_active && <Chip tone="neutral">ปิดขาย</Chip>}
         </span>
       </span>
-      <span className="col-start-2 row-start-2 flex flex-col gap-1.5 sm:col-start-auto sm:row-start-auto">
-        <UnitStrip available={p.available} held={p.reserved} />
-        <span className="flex gap-3 text-xs text-ink-3">
-          <span>มี {p.on_hand}</span>
-          <span>รอดำเนินการ {p.reserved}</span>
-        </span>
-      </span>
+      <StockBar
+        onHand={p.on_hand}
+        held={p.reserved}
+        className="col-start-1 row-start-2 sm:col-start-auto sm:row-start-auto sm:pr-6"
+      />
       <span
         className={cn(
-          'count col-start-3 row-span-2 row-start-1 text-right text-[30px] sm:col-start-auto sm:row-span-1 sm:row-start-auto',
+          'count col-start-2 row-span-2 row-start-1 text-right text-[30px] sm:col-start-auto sm:row-span-1 sm:row-start-auto',
           p.available <= 0 && 'text-destructive',
         )}
       >
@@ -207,7 +202,7 @@ function ListEmptyState({
                 >
                   <span
                     aria-hidden="true"
-                    className="flex size-6 shrink-0 items-center justify-center rounded-full bg-kraft-100 text-xs font-semibold text-kraft-700"
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full bg-marker-100 text-xs font-semibold text-marker-700"
                   >
                     {i + 1}
                   </span>

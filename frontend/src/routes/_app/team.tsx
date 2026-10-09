@@ -89,7 +89,7 @@ function TeamPage() {
             >
               <span
                 aria-hidden="true"
-                className="flex size-11 items-center justify-center rounded-full bg-kraft-100 text-base font-semibold text-kraft-700"
+                className="flex size-11 items-center justify-center rounded-full bg-marker-100 text-base font-semibold text-marker-700"
               >
                 {productInitial(u.name)}
               </span>

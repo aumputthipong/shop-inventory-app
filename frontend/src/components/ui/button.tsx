@@ -8,20 +8,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:bg-petrol-700',
+        default: 'bg-primary text-primary-foreground hover:bg-brand-700',
         outline: 'border-line-strong bg-surface text-ink hover:bg-surface-2',
         secondary: 'bg-surface-2 text-ink hover:bg-line',
         ghost: 'text-ink-2 hover:bg-surface-2 hover:text-ink',
         destructive: 'bg-destructive text-white hover:bg-[#8e1f17]',
-        link: 'text-petrol-600 underline-offset-4 hover:underline',
+        link: 'text-brand-600 underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-9 rounded-md px-3.5 text-sm',
-        sm: 'h-8 rounded-md px-2.5 text-[13px]',
-        lg: 'h-10 rounded-md px-4 text-sm',
-        icon: 'size-9 rounded-md',
-        'icon-sm': 'size-8 rounded-md',
-        'icon-lg': 'size-10 rounded-md',
+        default: 'h-9 rounded-full px-4 text-sm',
+        sm: 'h-8 rounded-full px-3 text-[13px]',
+        lg: 'h-10 rounded-full px-5 text-sm',
+        icon: 'size-9 rounded-full',
+        'icon-sm': 'size-8 rounded-full',
+        'icon-lg': 'size-10 rounded-full',
       },
     },
     defaultVariants: {

@@ -39,27 +39,29 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
 
-  --color-canvas: #f5f3ef;
+  --color-canvas: #eef0f4;
   --color-surface: #ffffff;
-  --color-surface-2: #faf8f5;
-  --color-line: #e7e2da;
-  --color-line-strong: #d5cec3;
-  --color-edge: #e2dcd2;
-  --color-ink: #26221e;
-  --color-ink-2: #5f584f;
-  --color-ink-3: #7a7267;
+  --color-surface-2: #f6f8fc;
+  --color-line: #e6eaf2;
+  --color-line-strong: #c9d1e0;
+  --color-edge: #dde3ee;
+  --color-ink: #172036;
+  --color-ink-2: #4a5470;
+  --color-ink-3: #5f6983;
 
-  --color-petrol-50: #eef5f6;
-  --color-petrol-100: #e1eef0;
-  --color-petrol-200: #c9e0e5;
-  --color-petrol-600: #0e5e6f;
-  --color-petrol-700: #0b4d5b;
+  --color-brand-50: #eff1f8;
+  --color-brand-100: #e2e6f2;
+  --color-brand-200: #c8cfe6;
+  --color-brand-300: #a9b3d6;
+  --color-brand-600: #2a3563;
+  --color-brand-700: #1e2750;
 
-  --color-kraft-50: #fbf3e4;
-  --color-kraft-100: #f7e6c4;
-  --color-kraft-300: #e9cfa0;
-  --color-kraft-500: #c98a2e;
-  --color-kraft-700: #7a4b00;
+  --color-marker-50: #fefae6;
+  --color-marker-100: #fcf4c6;
+  --color-marker-300: #f8e98e;
+  --color-marker-500: #f3d83a;
+  --color-marker-600: #d9bd1c;
+  --color-marker-700: #6a5800;
 
   --color-chip-ok: #e5f2e8;
   --color-chip-ok-fg: #1e6b3e;
@@ -75,31 +77,31 @@
   --color-chip-violet-fg: #573aa6;
   --color-chip-teal: #e1f1ee;
   --color-chip-teal-fg: #0e6158;
-  --color-chip-neutral: #efebe5;
-  --color-chip-neutral-fg: #5a5249;
+  --color-chip-neutral: #eaeef5;
+  --color-chip-neutral-fg: #4a5470;
 
-  --shadow-float: 0 12px 32px rgb(38 34 30 / 0.16), 0 2px 6px rgb(38 34 30 / 0.08);
+  --shadow-float: 0 12px 32px rgb(23 32 54 / 0.14), 0 2px 6px rgb(23 32 54 / 0.06);
 }
 
 :root {
-  --background: #f5f3ef;
-  --foreground: #26221e;
+  --background: #eef0f4;
+  --foreground: #172036;
   --card: #ffffff;
-  --card-foreground: #26221e;
+  --card-foreground: #172036;
   --popover: #ffffff;
-  --popover-foreground: #26221e;
-  --primary: #0e5e6f;
+  --popover-foreground: #172036;
+  --primary: #2a3563;
   --primary-foreground: #ffffff;
-  --secondary: #faf8f5;
-  --secondary-foreground: #26221e;
-  --muted: #faf8f5;
-  --muted-foreground: #5f584f;
-  --accent: #faf8f5;
-  --accent-foreground: #26221e;
+  --secondary: #f6f8fc;
+  --secondary-foreground: #172036;
+  --muted: #f6f8fc;
+  --muted-foreground: #4a5470;
+  --accent: #f6f8fc;
+  --accent-foreground: #172036;
   --destructive: #a8261d;
-  --border: #e7e2da;
-  --input: #d5cec3;
-  --ring: #0e5e6f;
+  --border: #e6eaf2;
+  --input: #c9d1e0;
+  --ring: #2a3563;
   --radius: 0.5rem;
 }
 
@@ -117,7 +119,7 @@
     line-height: 1.6;
   }
   :focus-visible {
-    outline: 2px solid var(--color-petrol-600);
+    outline: 2px solid var(--color-brand-600);
     outline-offset: 2px;
   }
 }
@@ -131,7 +133,8 @@
 @utility page-title {
   font-size: 28px;
   line-height: 36px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 @utility code {
@@ -148,9 +151,28 @@
 @utility bg-hatch {
   background: repeating-linear-gradient(
     135deg,
-    var(--color-kraft-500) 0 2px,
-    var(--color-kraft-100) 2px 4px
+    var(--color-marker-600) 0 2px,
+    var(--color-marker-100) 2px 4px
   );
+}
+
+@utility on-brand {
+  background: #2a3563;
+  color: #ffffff;
+  --color-ink: #ffffff;
+  --color-ink-2: #dde2f0;
+  --color-ink-3: #b9c1da;
+  --color-surface: rgb(255 255 255 / 0.1);
+  --color-surface-2: rgb(255 255 255 / 0.18);
+  --color-line-strong: rgb(255 255 255 / 0.45);
+  --color-brand-600: #ffffff;
+  --color-brand-700: #e8ebf5;
+  --primary: #ffffff;
+  --primary-foreground: #1e2750;
+}
+
+@utility highlight {
+  background: linear-gradient(transparent 58%, var(--color-marker-500) 58% 92%, transparent 92%);
 }
 
 @media (prefers-reduced-motion: no-preference) {

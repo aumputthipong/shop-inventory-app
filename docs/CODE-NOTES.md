@@ -167,11 +167,10 @@ in the same PR as the behaviour it describes.
 - Route files and shadcn/ui components have `react-refresh/only-export-components`
   off: the router's autoCodeSplitting moves route components into their own
   module, and shadcn exports cva variant helpers by design.
-- Product tiles show the first letter of the name on one kraft tone, like a
-  marked carton. A colour per SKU encoded nothing and read as decoration. A fixed
-  icon set cannot cover every kind of product a shop sells; photo upload can
-  replace the tile later. Thai leading vowels (เ แ โ ใ ไ) are skipped so the
-  tile shows a consonant.
+- Products have no tile or placeholder image. A letter tile on one tone told
+  nothing the name did not, and read as filler; photo upload can add a real
+  image later. `productInitial` still draws people's avatars, and skips Thai
+  leading vowels (เ แ โ ใ ไ) so it shows a consonant.
 - The stock list moves the unit strip under the product name below the `sm`
   breakpoint. A fixed 200px strip column left no room for the name on a phone.
 - Today shows how long each queued order has waited instead of its timestamp

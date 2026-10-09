@@ -2,7 +2,7 @@ import type * as React from 'react'
 import { cn } from 'cn'
 
 import type { Channel } from '@/lib/api'
-import { channelDot, channelLabel, type ChipTone } from '@/lib/labels'
+import { channelIcon, channelLabel, type ChipTone } from '@/lib/labels'
 
 const toneClass: Record<ChipTone, string> = {
   ok: 'bg-chip-ok text-chip-ok-fg',
@@ -32,15 +32,20 @@ export function Chip({
   )
 }
 
+export function ChannelIcon({ channel, className }: { channel: Channel; className?: string }) {
+  const { icon: Icon, color } = channelIcon[channel]
+  return <Icon className={cn('size-4 shrink-0', color, className)} aria-hidden="true" />
+}
+
 export function ChannelChip({ channel, className }: { channel: Channel; className?: string }) {
   return (
     <span
       className={cn(
-        'inline-flex h-[22px] shrink-0 items-center gap-1.5 rounded-sm border border-line bg-surface px-2 text-xs font-medium whitespace-nowrap',
+        'inline-flex shrink-0 items-center gap-1.5 text-[13px] whitespace-nowrap text-ink-2',
         className,
       )}
     >
-      <span aria-hidden="true" className={cn('size-1.5 rounded-full', channelDot[channel])} />
+      <ChannelIcon channel={channel} />
       {channelLabel[channel]}
     </span>
   )

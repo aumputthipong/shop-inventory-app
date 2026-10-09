@@ -87,7 +87,7 @@ function LedgerPage() {
             ]}
           />
           {search.product !== undefined && (
-            <span className="mb-2 flex h-7 items-center gap-1.5 rounded-sm border border-petrol-200 bg-petrol-50 pr-1 pl-2.5 text-[13px] text-petrol-700">
+            <span className="mb-2 flex h-7 items-center gap-1.5 rounded-sm border border-brand-200 bg-brand-50 pr-1 pl-2.5 text-[13px] text-brand-700">
               เฉพาะ {product?.name ?? 'สินค้าที่เลือก'}
               <button
                 type="button"
@@ -95,7 +95,7 @@ function LedgerPage() {
                 onClick={() => {
                   setSearch({ ...search, product: undefined, offset: undefined })
                 }}
-                className="flex size-5 items-center justify-center rounded-xs hover:bg-petrol-100"
+                className="flex size-5 items-center justify-center rounded-xs hover:bg-brand-100"
               >
                 <XIcon className="size-3.5" aria-hidden="true" />
               </button>
@@ -137,7 +137,7 @@ function LedgerPage() {
                   <Link
                     to="/stock"
                     search={{ product: m.product_id }}
-                    className="truncate font-medium hover:text-petrol-600 hover:underline"
+                    className="truncate font-medium hover:text-brand-600 hover:underline"
                   >
                     {m.product_name}
                   </Link>
@@ -165,7 +165,7 @@ function LedgerPage() {
                       <Link
                         to="/orders/$orderId"
                         params={{ orderId: m.order_id }}
-                        className="code self-start hover:text-petrol-600 hover:underline"
+                        className="code self-start hover:text-brand-600 hover:underline"
                       >
                         {m.order_no}
                       </Link>
@@ -187,7 +187,7 @@ function LedgerPage() {
                     <Link
                       to="/counts/$countId"
                       params={{ countId: m.count_id }}
-                      className="font-medium hover:text-petrol-600 hover:underline"
+                      className="font-medium hover:text-brand-600 hover:underline"
                     >
                       ตรวจนับ #{m.count_id}
                     </Link>

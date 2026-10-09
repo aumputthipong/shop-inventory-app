@@ -26,7 +26,7 @@ export function Holds({ product }: { product: ProductDetail }) {
               <Link
                 to="/orders/$orderId"
                 params={{ orderId: h.order_id }}
-                className="code text-sm font-medium hover:text-petrol-600 hover:underline"
+                className="code text-sm font-medium hover:text-brand-600 hover:underline"
               >
                 {h.order_no}
               </Link>
@@ -35,8 +35,10 @@ export function Holds({ product }: { product: ProductDetail }) {
                 <span>สั่งเมื่อ {formatDateTime(h.created_at)}</span>
               </span>
             </div>
-            <ChannelChip channel={h.channel} />
-            <Chip tone={chip.tone}>{chip.label}</Chip>
+            <ChannelChip channel={h.channel} className="w-20" />
+            <span className="flex w-24 justify-end">
+              <Chip tone={chip.tone}>{chip.label}</Chip>
+            </span>
           </li>
         )
       })}

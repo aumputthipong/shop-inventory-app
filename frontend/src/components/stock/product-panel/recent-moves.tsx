@@ -52,7 +52,7 @@ export function RecentMoves({ productId, isOwner }: { productId: number; isOwner
       <Link
         to="/ledger"
         search={{ product: productId }}
-        className="px-5 py-3 text-[13px] font-medium text-petrol-600 hover:underline"
+        className="px-5 py-3 text-[13px] font-medium text-brand-600 hover:underline"
       >
         ดูประวัติทั้งหมด
       </Link>

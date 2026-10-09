@@ -19,7 +19,7 @@ export function DemoAccounts({ onPick }: { onPick: (account: DemoAccount) => voi
     <section aria-label="บัญชีทดลอง" className="mt-6 flex flex-col gap-3 border-t border-line pt-5">
       <div>
         <h2 className="flex items-center gap-1.5 text-sm font-semibold">
-          <FlaskConicalIcon className="size-4 text-kraft-700" aria-hidden="true" />
+          <FlaskConicalIcon className="size-4 text-marker-700" aria-hidden="true" />
           บัญชีทดลอง
         </h2>
         <p className="text-xs text-ink-2">ข้อมูลเป็นร้านตัวอย่าง และถูกรีเซ็ตเป็นระยะ</p>

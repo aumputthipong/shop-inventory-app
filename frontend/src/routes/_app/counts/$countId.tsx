@@ -4,7 +4,7 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Chip } from '@/components/chip'
 import { CountDecision, CountLines } from '@/components/counts/count-review'
 import { EmptyState } from '@/components/empty-state'
-import { BackLink } from '@/components/page-header'
+import { BackLink, PageBand } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { isApiError } from '@/lib/api'
 import { varianceTotals } from '@/lib/counts'
@@ -56,7 +56,7 @@ function CountPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
+      <PageBand>
         <BackLink to="/counts">กลับไปหน้าตรวจนับ</BackLink>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="page-title">ตรวจนับ #{count.id}</h1>
@@ -74,7 +74,7 @@ function CountPage() {
           )}
         </p>
         {count.note && <p className="mt-1 text-sm text-ink-2">โน้ต: {count.note}</p>}
-      </div>
+      </PageBand>
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="นับทั้งหมด" value={`${count.lines.length} รายการ`} />

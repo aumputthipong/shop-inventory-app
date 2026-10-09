@@ -32,7 +32,7 @@ export function FilterTabs<T>({
             className={cn(
               'flex h-11 shrink-0 items-center gap-1.5 border-b-2 text-sm whitespace-nowrap',
               active
-                ? 'border-petrol-600 font-medium text-ink'
+                ? 'border-brand-600 font-medium text-ink'
                 : 'border-transparent text-ink-2 hover:text-ink',
             )}
           >
