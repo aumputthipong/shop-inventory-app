@@ -196,6 +196,10 @@ npm install
 npm run dev        # http://localhost:5173, proxies /api and /healthz to the api on HTTP_PORT
 ```
 
+The dev server shows the TanStack Router and Query devtools buttons. To hide
+them, for screenshots say, put `VITE_DEVTOOLS=false` in `frontend/.env.local`
+and restart `npm run dev`.
+
 ## Running the whole shop with Docker
 
 One image holds the api, the built frontend and the seed command. Only Docker

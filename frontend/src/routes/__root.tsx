@@ -17,7 +17,7 @@ function RootLayout() {
   return (
     <Toaster>
       <Outlet />
-      {import.meta.env.DEV && (
+      {import.meta.env.DEV && import.meta.env.VITE_DEVTOOLS !== 'false' && (
         <>
           <TanStackRouterDevtools position="bottom-right" />
           <ReactQueryDevtools buttonPosition="bottom-left" />
