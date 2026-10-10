@@ -9,7 +9,7 @@ export function Holds({ product }: { product: ProductDetail }) {
   if (product.holds.length === 0) {
     return (
       <p className="px-5 py-5 text-[13px] text-ink-2">
-        ยังไม่มีออเดอร์จองสินค้านี้ ของทั้งหมดพร้อมขาย
+        ยังไม่มีออเดอร์จองสินค้านี้ ของทั้งหมดขายได้
       </p>
     )
   }

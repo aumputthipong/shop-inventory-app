@@ -67,5 +67,5 @@ export function effectSummary(mode: EntryMode, d: EntryDetails, units: number): 
       : d.channel === 'shopee'
         ? `ออเดอร์ Shopee ${d.externalRef.trim()}`
         : `${d.name.trim()} (LINE)`
-  return `กันของ ${units} ชิ้นไว้ให้ ${holder} จนกว่าจะส่งหรือยกเลิก`
+  return `จองของ ${units} ชิ้นไว้ให้ ${holder} จนกว่าจะส่งหรือยกเลิก`
 }

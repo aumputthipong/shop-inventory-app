@@ -13,13 +13,13 @@ import type {
 export type ChipTone = 'ok' | 'warn' | 'bad' | 'info' | 'indigo' | 'violet' | 'teal' | 'neutral'
 
 export const stockStatusChip: Record<StockStatus, { label: string; tone: ChipTone }> = {
-  in_stock: { label: 'พร้อมขาย', tone: 'ok' },
+  in_stock: { label: 'ขายได้', tone: 'ok' },
   low: { label: 'ใกล้หมด', tone: 'warn' },
   out_of_stock: { label: 'หมดแล้ว', tone: 'bad' },
 }
 
 export const orderStatusChip: Record<OrderStatus, { label: string; tone: ChipTone }> = {
-  reserved: { label: 'รอดำเนินการ', tone: 'warn' },
+  reserved: { label: 'รอแพ็ก', tone: 'warn' },
   packed: { label: 'แพ็กแล้ว', tone: 'info' },
   shipped: { label: 'ส่งแล้ว', tone: 'ok' },
   canceled: { label: 'ยกเลิก', tone: 'neutral' },
@@ -53,7 +53,7 @@ export const channelIcon: Record<Channel, { icon: LucideIcon; color: string }> =
 }
 
 export const adjustReasonLabel: Record<AdjustReason, string> = {
-  count_correction: 'นับสต็อกแล้วไม่ตรง',
+  count_correction: 'ตรวจนับแล้วไม่ตรง',
   damaged: 'สินค้าเสียหาย',
   lost: 'สินค้าหาย',
   other: 'อื่นๆ',

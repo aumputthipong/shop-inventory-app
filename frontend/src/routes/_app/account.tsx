@@ -18,7 +18,7 @@ function AccountPage() {
 
   return (
     <div className="flex max-w-[720px] flex-col gap-6">
-      <PageHeader title="บัญชีของฉัน" description="ข้อมูลที่ใช้เข้าสู่ระบบ และรหัสผ่านของคุณ" />
+      <PageHeader title="บัญชีของฉัน" />
 
       <Card icon={<UserRoundIcon className="size-5" />} title="ข้อมูลบัญชี">
         <div className="flex items-center gap-4">

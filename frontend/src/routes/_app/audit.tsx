@@ -67,10 +67,7 @@ function AuditPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="บันทึกการใช้งาน"
-        description="ใครทำอะไรเมื่อไร รวมถึงออเดอร์ที่ระบบปฏิเสธเพราะของไม่พอ"
-      />
+      <PageHeader title="บันทึกการใช้งาน" />
 
       <section aria-label="บันทึกการใช้งาน" className="overflow-x-auto panel p-3">
         <div className="grid h-9 min-w-[760px] grid-cols-[120px_140px_220px_minmax(0,1fr)] items-center gap-4 px-4 text-[13px] font-medium text-ink-2">

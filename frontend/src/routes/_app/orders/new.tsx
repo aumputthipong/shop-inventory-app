@@ -19,14 +19,12 @@ function NewOrderPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        back={{ to: '/orders', label: 'กลับไปหน้าออเดอร์' }}
         title="ขายหน้าร้าน"
-        description="ลูกค้าซื้อที่ร้าน รับของไปเลยหรือเก็บไว้ให้มารับทีหลัง ถ้าของไม่พอ ระบบจะไม่บันทึกเลยสักชิ้น"
         actions={
           <Button asChild variant="outline">
             <Link to="/orders/online">
               <InboxIcon aria-hidden="true" />
-              ออเดอร์จาก Shopee หรือ LINE
+              คีย์ออเดอร์ออนไลน์
             </Link>
           </Button>
         }
