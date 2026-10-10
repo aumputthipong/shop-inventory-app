@@ -31,12 +31,12 @@ describe('StockBar', () => {
     { onHand: 1, held: 0, caption: 'มีในคลัง 1 ยังไม่มีออเดอร์จอง' },
     { onHand: 0, held: 0, caption: 'ไม่มีของในคลัง' },
   ])('says $caption', ({ onHand, held, caption }) => {
-    render(<StockBar onHand={onHand} held={held} />)
+    render(<StockBar onHand={onHand} held={held} alertAt={5} />)
 
     expect(screen.getByText(caption)).toBeInTheDocument()
     expect(
       screen.getByRole('img', {
-        name: `ขายได้ ${onHand - held} ชิ้น จองไว้ ${held} ชิ้น จากที่มี ${onHand} ชิ้น`,
+        name: `ขายได้ ${onHand - held} ชิ้น จองไว้ ${held} ชิ้น จากที่มี ${onHand} ชิ้น แจ้งเตือนเมื่อเหลือ 5 ชิ้น`,
       }),
     ).toBeInTheDocument()
   })

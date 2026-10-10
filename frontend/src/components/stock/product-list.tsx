@@ -7,43 +7,50 @@ import { FilterTabs } from '@/components/filter-tabs'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
 import { StockBar } from '@/components/unit-strip'
-import type { Product, StockStatus } from '@/lib/api'
+import type { Product } from '@/lib/api'
 import { stockStatusChip } from '@/lib/labels'
 import { useProductSearch } from '@/lib/use-product-search'
 
-type Filter = 'all' | 'low' | 'out_of_stock'
+export type StockFilter = 'all' | 'restock' | 'out_of_stock'
 
-const TABS: { value: Filter; label: string }[] = [
+const TABS: { value: StockFilter; label: string }[] = [
   { value: 'all', label: 'ทั้งหมด' },
-  { value: 'low', label: 'ใกล้หมด' },
+  { value: 'restock', label: 'ควรเติมของ' },
   { value: 'out_of_stock', label: 'หมดแล้ว' },
 ]
+
+const shows: Record<StockFilter, (p: Product) => boolean> = {
+  all: () => true,
+  restock: (p) => p.stock_status !== 'in_stock',
+  out_of_stock: (p) => p.stock_status === 'out_of_stock',
+}
 
 export function ProductList({
   products,
   selectedId,
   onSelect,
   onAdd,
+  filter: shownFilter,
+  onFilterChange,
 }: {
   products: Product[]
   selectedId: number | undefined
   onSelect: (id: number) => void
   onAdd?: () => void
+  filter?: StockFilter
+  onFilterChange?: (filter: StockFilter) => void
 }) {
-  const [filter, setFilter] = useState<Filter>('all')
+  const [ownFilter, setOwnFilter] = useState<StockFilter>('all')
+  const filter = shownFilter ?? ownFilter
+  const setFilter = onFilterChange ?? setOwnFilter
 
-  const count = (status: StockStatus) => products.filter((p) => p.stock_status === status).length
-  const counts: Record<Filter, number> = {
+  const counts: Record<StockFilter, number> = {
     all: products.length,
-    low: count('low'),
-    out_of_stock: count('out_of_stock'),
+    restock: products.filter(shows.restock).length,
+    out_of_stock: products.filter(shows.out_of_stock).length,
   }
 
-  const {
-    query,
-    setQuery,
-    results: visible,
-  } = useProductSearch(products.filter((p) => filter === 'all' || p.stock_status === filter))
+  const { query, setQuery, results: visible } = useProductSearch(products.filter(shows[filter]))
 
   return (
     <section aria-label="รายการสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
@@ -139,6 +146,7 @@ function ProductRow({
       <StockBar
         onHand={p.on_hand}
         held={p.reserved}
+        alertAt={p.low_stock_threshold}
         className="col-start-1 row-start-2 sm:col-start-auto sm:row-start-auto sm:pr-6"
       />
       <span
@@ -177,7 +185,7 @@ function ListEmptyState({
 }: {
   hasProducts: boolean
   query: string
-  filter: Filter
+  filter: StockFilter
   onReset: () => void
   onAdd?: () => void
 }) {
@@ -236,7 +244,7 @@ function ListEmptyState({
   }
   return (
     <EmptyState
-      title={filter === 'out_of_stock' ? 'ไม่มีสินค้าที่หมดสต็อก' : 'ไม่มีสินค้าที่ใกล้หมด'}
+      title={filter === 'out_of_stock' ? 'ไม่มีสินค้าที่หมดแล้ว' : 'ไม่มีสินค้าที่ต้องเติมของ'}
       body={
         filter === 'out_of_stock'
           ? 'ทุกรายการยังขายได้อยู่'

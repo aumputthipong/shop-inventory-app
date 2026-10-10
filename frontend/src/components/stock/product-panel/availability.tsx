@@ -34,7 +34,7 @@ export function Availability({
         <div className="flex flex-col">
           <span className="text-[13px] text-ink-2">ขายได้อีก</span>
           <span className="mt-1 flex items-baseline gap-2">
-            <span className={cn('count text-[64px]', product.available <= 0 && 'text-destructive')}>
+            <span className={cn('count text-5xl', product.available <= 0 && 'text-destructive')}>
               {Math.max(product.available, 0)}
             </span>
             <span className="text-base text-ink-2">ชิ้น</span>

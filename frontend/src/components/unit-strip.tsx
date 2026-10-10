@@ -108,16 +108,23 @@ export function UnitLegend() {
   )
 }
 
+// The full bar is three times the alert point, so a short bar means close to running out.
 export function StockBar({
   onHand,
   held,
+  alertAt,
   className,
 }: {
   onHand: number
   held: number
+  alertAt: number
   className?: string
 }) {
   const available = Math.max(onHand - held, 0)
+  const scale = alertAt > 0 ? alertAt * 3 : Math.max(onHand, 1)
+  const shownAvailable = Math.min(available, scale)
+  const shownHeld = Math.min(held, scale - shownAvailable)
+  const share = (n: number) => `${(n / scale) * 100}%`
   const caption =
     onHand === 0
       ? 'ไม่มีของในคลัง'
@@ -129,21 +136,27 @@ export function StockBar({
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <div
-        role="img"
-        aria-label={`ขายได้ ${available} ชิ้น จองไว้ ${held} ชิ้น จากที่มี ${onHand} ชิ้น`}
-        className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-xs bg-line"
-      >
-        {available > 0 && (
+      <div className="relative">
+        <div
+          role="img"
+          aria-label={`ขายได้ ${available} ชิ้น จองไว้ ${held} ชิ้น จากที่มี ${onHand} ชิ้น แจ้งเตือนเมื่อเหลือ ${alertAt} ชิ้น`}
+          className="flex h-2.5 w-full gap-0.5 overflow-hidden rounded-xs bg-line"
+        >
+          {shownAvailable > 0 && (
+            <span
+              className="block shrink-0 bg-brand-600"
+              style={{ width: share(shownAvailable) }}
+            />
+          )}
+          {shownHeld > 0 && (
+            <span className="block min-w-1 bg-hatch" style={{ width: share(shownHeld) }} />
+          )}
+        </div>
+        {alertAt > 0 && (
           <span
-            className="block bg-brand-600"
-            style={{ width: `${(available / onHand) * 100}%` }}
-          />
-        )}
-        {held > 0 && onHand > 0 && (
-          <span
-            className="block min-w-1 flex-1 bg-hatch"
-            style={{ maxWidth: `${(Math.min(held, onHand) / onHand) * 100}%` }}
+            aria-hidden="true"
+            className="absolute -inset-y-1 w-0.5 -translate-x-1/2 rounded-full bg-ink-3"
+            style={{ left: share(alertAt) }}
           />
         )}
       </div>
