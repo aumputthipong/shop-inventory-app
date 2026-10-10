@@ -7,14 +7,15 @@ import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
 import type { Product } from '@/lib/api'
 import { formatMoney } from '@/lib/format'
-import { stockStatusChip } from '@/lib/labels'
 import { useProductSearch } from '@/lib/use-product-search'
 
 export function ProductPicker({
   products,
+  inCart,
   onAdd,
 }: {
   products: Product[]
+  inCart: ReadonlyMap<number, number>
   onAdd: (id: number) => void
 }) {
   const {
@@ -43,32 +44,31 @@ export function ProductPicker({
       )}
       <ul>
         {choices.map((p) => {
-          const chip = stockStatusChip[p.stock_status]
-          const soldOut = p.available <= 0
+          const left = Math.max(p.available, 0)
+          const full = (inCart.get(p.id) ?? 0) >= left
           return (
             <li
               key={p.id}
-              className="grid min-h-16 grid-cols-[minmax(0,1fr)_96px_120px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0"
+              className="grid min-h-16 grid-cols-[minmax(0,1fr)_auto_120px] items-center gap-4 border-b border-line px-4 py-3 last:border-b-0"
             >
-              <span className="flex min-w-0 flex-col">
-                <span className="truncate font-medium">{p.name}</span>
-                <span className="flex items-center gap-2.5 text-[13px] text-ink-2">
-                  <span className="code">{p.sku}</span>
-                  <span>{formatMoney(p.price)}</span>
+              <span className="flex min-w-0 flex-col items-start gap-1">
+                <span className="max-w-full truncate font-medium">{p.name}</span>
+                <span className="flex items-center gap-2.5">
+                  <span className="code text-xs text-ink-3">{p.sku}</span>
+                  {p.stock_status !== 'in_stock' && (
+                    <Chip tone={left === 0 ? 'bad' : 'warn'}>
+                      {left === 0 ? 'หมดแล้ว' : `เหลือ ${left} ชิ้น`}
+                    </Chip>
+                  )}
                 </span>
               </span>
-              <span className="flex flex-col items-end">
-                <span
-                  className={cn('text-lg leading-6 font-semibold', soldOut && 'text-destructive')}
-                >
-                  {Math.max(p.available, 0)}
-                </span>
-                <Chip tone={chip.tone}>{soldOut ? 'หมดแล้ว' : 'ขายได้'}</Chip>
+              <span className={cn('text-base font-semibold', left === 0 && 'text-ink-3')}>
+                {formatMoney(p.price)}
               </span>
               <Button
                 type="button"
                 variant="outline"
-                disabled={soldOut}
+                disabled={full}
                 aria-label={`ใส่ ${p.name} ลงตะกร้า`}
                 onClick={() => {
                   onAdd(p.id)

@@ -9,16 +9,20 @@ export function QtyStepper({
   value,
   onChange,
   invalid,
+  max,
   unit = 'ชิ้น',
 }: {
   id: string
   value: string
   onChange: (next: string) => void
   invalid?: boolean
+  max?: number
   unit?: string
 }) {
+  const current = parseQty(value) ?? 0
   const step = (delta: number) => {
-    onChange(String(Math.max(1, (parseQty(value) ?? 0) + delta)))
+    const next = Math.max(1, current + delta)
+    onChange(String(max === undefined ? next : Math.min(next, Math.max(max, 1))))
   }
 
   return (
@@ -50,6 +54,7 @@ export function QtyStepper({
         variant="outline"
         size="icon"
         aria-label="เพิ่มจำนวน"
+        disabled={max !== undefined && current >= max}
         onClick={() => {
           step(1)
         }}

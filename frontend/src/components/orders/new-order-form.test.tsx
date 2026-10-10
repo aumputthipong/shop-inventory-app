@@ -36,6 +36,21 @@ async function startCart(mode: EntryMode) {
 }
 
 describe('NewOrderForm in the store', () => {
+  it('stops adding once the cart holds every unit that can be sold', async () => {
+    const user = userEvent.setup()
+    const lastTwo = product({ id: 2, name: 'หมวก', on_hand: 2, stock_status: 'low' })
+    renderWithRouter(<NewOrderForm products={[lastTwo]} mode="store" />)
+
+    const add = await screen.findByRole('button', { name: 'ใส่ หมวก ลงตะกร้า' })
+    expect(screen.getByText('เหลือ 2 ชิ้น')).toBeInTheDocument()
+    await user.click(add)
+    await user.click(screen.getByRole('button', { name: 'เพิ่มจำนวน' }))
+
+    expect(screen.getByDisplayValue('2')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'เพิ่มจำนวน' })).toBeDisabled()
+    expect(add).toBeDisabled()
+  })
+
   it('hands the goods over by default', async () => {
     const create = vi.spyOn(api, 'createOrder').mockResolvedValue({ ...created, status: 'shipped' })
     const user = await startCart('store')
