@@ -171,6 +171,17 @@ in the same PR as the behaviour it describes.
   nothing the name did not, and read as filler; photo upload can add a real
   image later. `productInitial` still draws people's avatars, and skips Thai
   leading vowels (เ แ โ ใ ไ) so it shows a consonant.
+- Navigation is one list in `src/lib/nav.ts`, rendered by `AppNav` in both the
+  sidebar and the phone drawer. The current item is found by
+  `activeNavPath`, the longest whole-segment match. TanStack's own active
+  matching is fuzzy by prefix, so it would mark ออเดอร์ on `/orders/new` too;
+  the links pass `activeOptions={{ exact: true }}` and set `aria-current`
+  from `activeNavPath` instead.
+- Split layouts (stock list and panel, order entry and cart, receive and its
+  form, Today's grid, order detail) switch on the width of `main` through
+  container queries (`@4xl`, `@5xl`), not on the window. With a 208px sidebar
+  the window breakpoints put the stock list beside its 480px panel at a
+  content width where product names no longer fit.
 - The stock list moves the unit strip under the product name below the `sm`
   breakpoint. A fixed 200px strip column left no room for the name on a phone.
 - Today shows how long each queued order has waited instead of its timestamp

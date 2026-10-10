@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, Outlet, createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
-import { LogOutIcon, UserRoundCogIcon } from 'lucide-react'
-import { DropdownMenu } from 'radix-ui'
+import { LogOutIcon, MenuIcon, UserRoundCogIcon, XIcon } from 'lucide-react'
+import { Dialog, DropdownMenu } from 'radix-ui'
+import { useState } from 'react'
 
+import { AppNav } from '@/components/app-nav'
 import { BrandMark } from '@/components/brand-mark'
 import { api, isApiError } from '@/lib/api'
 import { productInitial } from '@/lib/avatar'
@@ -27,60 +29,70 @@ export const Route = createFileRoute('/_app')({
   component: AppLayout,
 })
 
-interface NavItem {
-  to: '/' | '/orders' | '/stock' | '/counts' | '/ledger' | '/audit' | '/team'
-  label: string
-  ownerOnly?: boolean
-}
-
-const NAV: NavItem[] = [
-  { to: '/', label: 'วันนี้' },
-  { to: '/orders', label: 'ออเดอร์' },
-  { to: '/stock', label: 'สต็อก' },
-  { to: '/counts', label: 'ตรวจนับ' },
-  { to: '/ledger', label: 'ประวัติสต็อก' },
-  { to: '/audit', label: 'บันทึกการใช้งาน', ownerOnly: true },
-  { to: '/team', label: 'ทีม', ownerOnly: true },
-]
-
 function AppLayout() {
   const me = useCurrentUser()
 
   return (
-    <div className="flex min-h-svh flex-col">
+    <div className="min-h-svh">
       <header className="sticky top-0 z-40 on-brand">
-        <div className="mx-auto flex h-14 max-w-[1440px] items-center gap-4 px-4 md:px-6 xl:gap-8 xl:px-10">
-          <Link to="/" className="flex items-center gap-2.5">
+        <div className="flex h-14 items-center gap-2 px-4 md:px-6 lg:pl-0">
+          <NavDrawer isOwner={me.isOwner} />
+          <Link to="/" className="flex items-center gap-2.5 lg:w-52 lg:px-6">
             <BrandMark />
-            <span className="hidden text-[15px] font-semibold tracking-tight xl:inline">
-              Shop Inventory
-            </span>
+            <span className="text-[15px] font-semibold tracking-tight">Shop Inventory</span>
           </Link>
-          <nav
-            aria-label="เมนูหลัก"
-            className="flex min-w-0 items-stretch self-stretch overflow-x-auto overflow-y-hidden"
-          >
-            {NAV.filter((item) => !item.ownerOnly || me.isOwner).map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className="flex shrink-0 items-center border-y-[3px] border-transparent px-3 text-sm text-ink-2 hover:text-ink"
-                activeOptions={{ exact: item.to === '/' }}
-                activeProps={{ className: 'font-semibold !text-ink !border-b-marker-500' }}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
           <div className="ml-auto">
             <AccountMenu name={me.name} roleText={roleLabel[me.role]} />
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 md:px-6 xl:px-10 xl:py-8">
-        <Outlet />
-      </main>
+      <div className="lg:grid lg:grid-cols-[208px_minmax(0,1fr)]">
+        <aside className="hidden border-r border-edge bg-surface lg:sticky lg:top-14 lg:block lg:h-[calc(100svh-3.5rem)] lg:overflow-y-auto">
+          <AppNav isOwner={me.isOwner} />
+        </aside>
+        <main className="@container w-full max-w-[1400px] min-w-0 px-4 py-6 md:px-6 xl:px-10 xl:py-8">
+          <Outlet />
+        </main>
+      </div>
     </div>
+  )
+}
+
+function NavDrawer({ isOwner }: { isOwner: boolean }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger
+        aria-label="เปิดเมนู"
+        className="flex size-10 items-center justify-center rounded-full hover:bg-surface-2 lg:hidden"
+      >
+        <MenuIcon className="size-5" aria-hidden="true" />
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-ink/25 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0" />
+        <Dialog.Content
+          aria-describedby={undefined}
+          className="fixed inset-y-0 left-0 z-50 w-[280px] max-w-[85vw] overflow-y-auto bg-surface shadow-float outline-none data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left data-[state=open]:animate-in data-[state=open]:slide-in-from-left"
+        >
+          <div className="flex h-14 items-center justify-between border-b border-line px-6">
+            <Dialog.Title className="flex items-center gap-2.5 text-[15px] font-semibold">
+              <BrandMark />
+              Shop Inventory
+            </Dialog.Title>
+            <Dialog.Close className="flex size-8 items-center justify-center rounded-md text-ink-2 hover:bg-surface-2 hover:text-ink">
+              <XIcon className="size-4" aria-hidden="true" />
+              <span className="sr-only">ปิดเมนู</span>
+            </Dialog.Close>
+          </div>
+          <AppNav
+            isOwner={isOwner}
+            onNavigate={() => {
+              setOpen(false)
+            }}
+          />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }
 

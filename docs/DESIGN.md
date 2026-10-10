@@ -52,7 +52,7 @@ about a third of the screen; the band now stops under the title row, about
 | `brand-600` | `#2A3563` | Top bar, page band, primary action, links, focus ring, selected item, available units |
 | `brand-700` | `#1E2750` | Primary hover |
 | `brand-50` | `#EFF1F8` | Selected row background |
-| `marker-500` | `#F3D83A` | Highlighter: counts of waiting work, current page underline, brand mark lid, avatars |
+| `marker-500` | `#F3D83A` | Highlighter: counts of waiting work, the current sidebar item's bar, brand mark lid, avatars |
 | `marker-600` | `#D9BD1C` | Held-units hatch stripe |
 | `marker-100` | `#FCF4C6` | Held-units hatch ground |
 | `marker-700` | `#6A5800` | Text on marker tints |
@@ -108,15 +108,44 @@ no status chip, only one that is low, sold out or switched off.
 - Focus: 2px navy outline with 2px offset, on every interactive element
   (white inside the band).
 
+## Navigation
+
+Every destination sits in one sidebar, grouped by the work it belongs to
+(`src/lib/nav.ts` holds the list):
+
+| Group | Items |
+|---|---|
+| (none) | วันนี้ |
+| งานขาย | ออเดอร์, ขายหน้าร้าน, คีย์ออเดอร์ออนไลน์ |
+| คลังสินค้า | สต็อก, รับของเข้า, ตรวจนับ, ประวัติสต็อก |
+| จัดการร้าน (owner only) | ทีม, บันทึกการใช้งาน |
+
+The account page stays in the account menu. A new page joins the group whose
+work it serves; a new group needs a reason a shop owner would recognise.
+
+- **Top bar**: `on-brand` navy, 56px, full width: the brand in a slot as wide
+  as the sidebar, the account menu on the right. Below `lg` a menu button sits
+  before the brand.
+- **Sidebar** (`lg` and up): 208px, white with an `edge` right border, sticky
+  under the top bar and scrolling on its own. Text only. Group labels are 12px
+  `ink-3`, sentence case. Items are 36px rows of 14px `ink-2`. The current item
+  is `ink` semibold on `brand-50` with a 3px yellow bar on its leading edge.
+  The current item is the longest path that matches whole segments, so
+  `/orders/new` is ขายหน้าร้าน and `/orders/12` is ออเดอร์.
+- **Drawer** (below `lg`): the same list in a 280px sheet from the left over
+  a dimmed page. It closes on a link, on its close button and on Escape.
+- **Content width**: `main` is a container (`@container`), left-aligned,
+  at most 1400px wide. Layouts that split into columns switch on the
+  container, not the window, because the sidebar takes 208px: `@5xl` (1024px)
+  for a list beside a 440-480px side panel (stock, new order, receive), `@4xl`
+  (896px) for Today's grid and the order detail.
+
 ## Components
 
-- **Top bar**: `on-brand` navy, flowing straight into the page band with no
-  rule between them. Navigation items are text only; the current page is
-  white and semibold with a 3px yellow underline.
 - **Page band**: `PageBand` (used by `PageHeader` and by detail pages) is the
   navy zone behind the back link, the title (with `aside` and chips) and the
-  actions, all on one row. It bleeds to the window edges and ends 16px below
-  that row. Descriptions, help notes, meta lines and Today's sales sit under
+  actions, all on one row. It fills the content column, bleeds to the
+  window's right edge (never over the sidebar) and ends 16px below that row. Descriptions, help notes, meta lines and Today's sales sit under
   the band on the canvas, 16px below it.
 - **Today**: the page title is "งานวันนี้" with the date beside it, quick
   actions on the right. The grid follows the work, not a symmetry: ต้องแพ็ก

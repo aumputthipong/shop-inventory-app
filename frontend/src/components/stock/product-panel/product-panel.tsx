@@ -31,7 +31,7 @@ export function ProductPanel({ productId, isOwner }: { productId: number; isOwne
     <aside
       id="product-panel"
       aria-label="สินค้าที่เลือก"
-      className="panel flex w-full shrink-0 scroll-mt-20 flex-col overflow-hidden xl:w-[480px]"
+      className="panel flex w-full shrink-0 scroll-mt-20 flex-col overflow-hidden @5xl:w-[480px]"
     >
       <PanelHeader
         product={product}
@@ -122,7 +122,7 @@ export function ProductPanel({ productId, isOwner }: { productId: number; isOwne
 
 function PanelShell({ children }: { children: ReactNode }) {
   return (
-    <aside className="panel flex w-full shrink-0 items-center justify-center p-10 text-ink-2 xl:w-[480px]">
+    <aside className="panel flex w-full shrink-0 items-center justify-center p-10 text-ink-2 @5xl:w-[480px]">
       {children}
     </aside>
   )
