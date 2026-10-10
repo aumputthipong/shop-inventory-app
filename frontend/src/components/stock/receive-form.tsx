@@ -108,7 +108,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
   }
 
   return (
-    <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
+    <div className="flex flex-col items-stretch gap-6 @5xl:flex-row @5xl:items-start">
       <section aria-label="เลือกสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
         <div className="border-b border-line p-3">
           <SearchInput
@@ -168,7 +168,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
         onSubmit={onSubmit}
         aria-label="ของที่รับเข้า"
         noValidate
-        className="flex w-full shrink-0 flex-col gap-5 panel p-5 xl:sticky xl:top-[80px] xl:w-[440px]"
+        className="flex w-full shrink-0 flex-col gap-5 panel p-5 @5xl:sticky @5xl:top-[80px] @5xl:w-[440px]"
       >
         <h2 className="text-base font-semibold">ของในใบส่งของนี้</h2>
 

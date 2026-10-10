@@ -78,7 +78,7 @@ function StockPage() {
         }
       />
 
-      <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
+      <div className="flex flex-col items-stretch gap-6 @5xl:flex-row @5xl:items-start">
         <ProductList
           products={products}
           selectedId={selectedId}

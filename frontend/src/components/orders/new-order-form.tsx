@@ -139,13 +139,13 @@ export function NewOrderForm({ products, mode }: { products: Product[]; mode: En
         : 'บันทึกและเก็บของไว้ให้'
 
   return (
-    <div className="flex flex-col items-stretch gap-6 xl:flex-row xl:items-start">
+    <div className="flex flex-col items-stretch gap-6 @5xl:flex-row @5xl:items-start">
       <ProductPicker products={products} onAdd={add} />
 
       <form
         onSubmit={onSubmit}
         aria-label="ตะกร้า"
-        className="flex w-full shrink-0 flex-col gap-5 panel p-5 xl:sticky xl:top-[80px] xl:w-[440px]"
+        className="flex w-full shrink-0 flex-col gap-5 panel p-5 @5xl:sticky @5xl:top-[80px] @5xl:w-[440px]"
       >
         <h2 className="text-base font-semibold">ตะกร้า</h2>
 

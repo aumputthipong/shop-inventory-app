@@ -140,7 +140,7 @@ export function TodayBoard({ isOwner }: { isOwner: boolean }) {
         </section>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="grid items-start gap-4 @4xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <OrderLane
           title="ต้องแพ็ก"
           status="reserved"
@@ -166,7 +166,7 @@ function SalesStrip({ sales }: { sales: DaySales | undefined }) {
   return (
     <section
       aria-label="ขายวันนี้"
-      className="mt-4 flex flex-wrap items-baseline gap-x-10 gap-y-3 border-t border-white/25 pt-3"
+      className="-mt-2 flex flex-wrap items-baseline gap-x-10 gap-y-3"
     >
       <p className="flex flex-wrap items-baseline gap-x-3">
         <span className="text-ink-2">ขายวันนี้</span>
@@ -182,7 +182,7 @@ function SalesStrip({ sales }: { sales: DaySales | undefined }) {
         </span>
       </p>
       {sales && !quiet && (
-        <dl className="flex flex-wrap gap-x-6 gap-y-1 lg:ml-auto">
+        <dl className="flex flex-wrap gap-x-6 gap-y-1 @4xl:ml-auto">
           {sales.channels.map((c) => (
             <Figure
               key={c.channel}

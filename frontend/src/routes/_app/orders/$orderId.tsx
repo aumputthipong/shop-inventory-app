@@ -130,14 +130,14 @@ function OrderPage() {
             )}
           </div>
         </div>
-        {order.external_ref && (
-          <p className="text-ink-2">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
-        )}
       </PageBand>
+      {order.external_ref && (
+        <p className="-mt-2 text-ink-2">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
+      )}
 
       {staleError && <ErrorAlert>{staleError}</ErrorAlert>}
 
-      <div className="flex flex-col items-stretch gap-6 lg:flex-row lg:items-start">
+      <div className="flex flex-col items-stretch gap-6 @4xl:flex-row @4xl:items-start">
         <section aria-label="รายการสินค้า" className="min-w-0 flex-1 panel p-5">
           <h2 className="mb-3 text-base font-semibold">สินค้า {order.items.length} รายการ</h2>
           <ul className="flex flex-col">
@@ -173,7 +173,7 @@ function OrderPage() {
           )}
         </section>
 
-        <div className="flex w-full shrink-0 flex-col gap-6 lg:w-[400px]">
+        <div className="flex w-full shrink-0 flex-col gap-6 @4xl:w-[400px]">
           {order.customer && (
             <section aria-label="ลูกค้า" className="panel p-5">
               <div className="mb-3 flex items-center justify-between gap-3">
