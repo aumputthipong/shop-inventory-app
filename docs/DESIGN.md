@@ -89,7 +89,7 @@ no status chip, only one that is low, sold out or switched off.
 | Section title | 16 / 24 | 600 |
 | Body | 14 / 22 | 400 |
 | Meta, table header | 13 / 20 | 400-500 |
-| Count, hero (available in the product panel) | 64 / 1 | count 700 |
+| Count, hero (available in the product panel) | 48 / 1 | count 700 |
 | Count, work lane (Today) | 48 / 1 | count 700 |
 | Count, side list (Today) | 34 / 1 | count 700 |
 | Count, table column | 30 / 1 | count 700 |
@@ -192,12 +192,15 @@ work it serves; a new group needs a reason a shop owner would recognise.
 - **Channel**: `ChannelChip` is the channel's icon in its own colour (store
   navy, Shopee orange, LINE green) followed by the name in `ink-2`; no box. In
   a row it gets a fixed width so the icons line up down the list.
-- **Stock bar** (product list): `StockBar`, one fixed-length bar per row,
-  10px tall. The full length is what is on hand: navy for what can still be
-  sold, yellow hatch for what orders hold, an empty `line` track when nothing
-  is on hand. A caption below says it in words ("จองไว้ 6 จาก 22"). Every row
-  has the same length so the list keeps one rhythm; the count column carries
-  the absolute number.
+- **Stock bar** (product list): `StockBar`, one fixed-length track per row,
+  10px tall, measured against the product's alert point: the full track is
+  three times that point, and a 2px `ink-3` tick marks the point itself. Navy
+  is what can still be sold, then yellow hatch for what orders hold, capped
+  at the track. A product near its alert point shows a short bar beside the
+  tick, so a list of mostly full bars points straight at what needs stock. A
+  track measured against what is on hand was tried first: one unit left
+  filled it like sixty did. A caption below says it in words ("จองไว้ 6 จาก
+  22"); the count column carries the absolute number.
 - **Unit strip** (product panel, stock change preview): one square-ish cell per
   unit (radius 2): navy = available, yellow hatch = held by orders. Above 40
   units it becomes a proportional bar.

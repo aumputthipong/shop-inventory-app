@@ -33,11 +33,12 @@ describe('ProductList', () => {
     render(<ProductList products={products} selectedId={1} onSelect={vi.fn()} />)
 
     const tabs = screen.getByRole('group', { name: 'แสดงสินค้า' })
-    await user.click(within(tabs).getByRole('button', { name: /ใกล้หมด/ }))
+    await user.click(within(tabs).getByRole('button', { name: /ควรเติมของ/ }))
 
     const list = screen.getByRole('list')
-    expect(within(list).getAllByRole('button')).toHaveLength(1)
+    expect(within(list).getAllByRole('button')).toHaveLength(2)
     expect(within(list).getByText('กางเกงยีนส์ขายาว 32')).toBeInTheDocument()
+    expect(within(list).getByText('หมวกแก๊ป สีดำ')).toBeInTheDocument()
   })
 
   it('searches by sku and offers a way back when nothing matches', async () => {
