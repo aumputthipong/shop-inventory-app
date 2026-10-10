@@ -130,10 +130,10 @@ function OrderPage() {
             )}
           </div>
         </div>
-        {order.external_ref && (
-          <p className="text-ink-2">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
-        )}
       </PageBand>
+      {order.external_ref && (
+        <p className="-mt-2 text-ink-2">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
+      )}
 
       {staleError && <ErrorAlert>{staleError}</ErrorAlert>}
 

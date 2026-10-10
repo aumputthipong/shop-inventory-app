@@ -62,6 +62,8 @@ function CountPage() {
           <h1 className="page-title">ตรวจนับ #{count.id}</h1>
           <Chip tone={chip.tone}>{chip.label}</Chip>
         </div>
+      </PageBand>
+      <div className="-mt-2">
         <p className="flex flex-wrap gap-x-4 text-sm text-ink-2">
           <span>
             นับโดย {count.created_by_name ?? '-'} {formatFullDateTime(count.created_at)}
@@ -74,7 +76,7 @@ function CountPage() {
           )}
         </p>
         {count.note && <p className="mt-1 text-sm text-ink-2">โน้ต: {count.note}</p>}
-      </PageBand>
+      </div>
 
       <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="นับทั้งหมด" value={`${count.lines.length} รายการ`} />

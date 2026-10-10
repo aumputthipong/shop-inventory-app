@@ -166,7 +166,7 @@ function SalesStrip({ sales }: { sales: DaySales | undefined }) {
   return (
     <section
       aria-label="ขายวันนี้"
-      className="mt-4 flex flex-wrap items-baseline gap-x-10 gap-y-3 border-t border-white/25 pt-3"
+      className="-mt-2 flex flex-wrap items-baseline gap-x-10 gap-y-3"
     >
       <p className="flex flex-wrap items-baseline gap-x-3">
         <span className="text-ink-2">ขายวันนี้</span>

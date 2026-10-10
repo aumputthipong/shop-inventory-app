@@ -1,15 +1,18 @@
 # Design system: Stockroom
 
-The back office of a small shop: a navy band carries the app frame and each
-page heading, white label panels sit on a cool canvas and overlap the foot of
-the band, and highlighter yellow marks the work that is waiting for you. Clean
+The back office of a small shop: a slim navy band carries the app frame and
+each page heading, white label panels sit on a cool canvas below it, and
+highlighter yellow marks the work that is waiting for you. Clean
 and square like a place where every unit is counted. People use it all day, so
 it stays quiet and lets the numbers speak.
 
 Colour follows 60-30-10: about 60 percent canvas and white panels, 30 percent
 navy (the top bar, the page band, actions and the unit strip), 10 percent
 yellow (waiting work, the current page, held units). A brighter blue
-(`#2456DE`) was tried for the band and read too loud for all-day use.
+(`#2456DE`) was tried for the band and read too loud for all-day use. A taller
+band (title, description and sales inside, panels overlapping its foot) took
+about a third of the screen; the band now stops under the title row, about
+120px with the top bar, like a marketplace header.
 
 ## Principles
 
@@ -111,10 +114,10 @@ no status chip, only one that is low, sold out or switched off.
   rule between them. Navigation items are text only; the current page is
   white and semibold with a 3px yellow underline.
 - **Page band**: `PageBand` (used by `PageHeader` and by detail pages) is the
-  navy zone behind the back link, title, description and actions. It bleeds
-  to the window edges and ends 56px below its content; the first panel after
-  it overlaps that foot by 28px. Whatever follows a page header must therefore
-  be a panel or an alert, never bare text.
+  navy zone behind the back link, the title (with `aside` and chips) and the
+  actions, all on one row. It bleeds to the window edges and ends 16px below
+  that row. Descriptions, help notes, meta lines and Today's sales sit under
+  the band on the canvas, 16px below it.
 - **Today**: the page title is "งานวันนี้" with the date beside it, quick
   actions on the right. The grid follows the work, not a symmetry: ต้องแพ็ก
   takes two thirds, and the right third stacks รอส่ง and ของใกล้หมด. Panels are
@@ -130,7 +133,7 @@ no status chip, only one that is low, sold out or switched off.
   shows, and is underlined like every text link.
   Exceptions that are usually zero (counts waiting for the owner) get a one-line
   notice above the grid only when they exist, never an empty panel. The owner
-  also sees one sales line inside the band, under a pale rule: "ขายวันนี้", the
+  also sees one sales line under the band: "ขายวันนี้", the
   total at 22px and the order count on one baseline, then each channel and
   shipped as icon, label and figure on the right. Zero
   figures recede to `ink-3`; a day with nothing sold or shipped collapses to
