@@ -115,7 +115,11 @@ export function NewOrderForm({ products, mode }: { products: Product[]; mode: En
   const canSubmit =
     rows.length > 0 && !hasErrors && missing === null && duplicate === null && !submit.isPending
 
+  const inCart = new Map(lines.map((l) => [l.productId, parseQty(l.qty) ?? 0]))
+
   const add = (id: number) => {
+    const left = Math.max(byId.get(id)?.available ?? 0, 0)
+    if ((inCart.get(id) ?? 0) >= left) return
     setSaved(null)
     setLines((current) =>
       current.some((l) => l.productId === id)
@@ -140,139 +144,143 @@ export function NewOrderForm({ products, mode }: { products: Product[]; mode: En
 
   return (
     <div className="flex flex-col items-stretch gap-6 @5xl:flex-row @5xl:items-start">
-      <ProductPicker products={products} onAdd={add} />
+      <ProductPicker products={products} inCart={inCart} onAdd={add} />
 
       <form
         onSubmit={onSubmit}
         aria-label="ตะกร้า"
-        className="flex w-full shrink-0 flex-col gap-5 panel p-5 @5xl:sticky @5xl:top-[80px] @5xl:w-[440px]"
+        className="flex w-full shrink-0 flex-col panel @5xl:sticky @5xl:top-[80px] @5xl:max-h-[calc(100svh-104px)] @5xl:w-[440px]"
       >
-        <h2 className="text-base font-semibold">ตะกร้า</h2>
+        <h2 className="px-5 pt-5 pb-4 text-base font-semibold">ตะกร้า</h2>
 
-        {saved && (
-          <p
-            role="status"
-            className="flex items-center gap-2 rounded-md bg-chip-ok px-3 py-2.5 text-[13px] text-chip-ok-fg"
-          >
-            <CircleCheckIcon className="size-4 shrink-0" aria-hidden="true" />
-            <span>
-              บันทึก{' '}
-              <Link
-                to="/orders/$orderId"
-                params={{ orderId: saved.id }}
-                className="font-medium underline"
-              >
-                {saved.order_no}
-              </Link>{' '}
-              แล้ว คีย์ใบถัดไปได้เลย
-            </span>
-          </p>
-        )}
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-5">
+          {saved && (
+            <p
+              role="status"
+              className="flex items-center gap-2 rounded-md bg-chip-ok px-3 py-2.5 text-[13px] text-chip-ok-fg"
+            >
+              <CircleCheckIcon className="size-4 shrink-0" aria-hidden="true" />
+              <span>
+                บันทึก{' '}
+                <Link
+                  to="/orders/$orderId"
+                  params={{ orderId: saved.id }}
+                  className="font-medium underline"
+                >
+                  {saved.order_no}
+                </Link>{' '}
+                แล้ว คีย์ใบถัดไปได้เลย
+              </span>
+            </p>
+          )}
 
-        {mode === 'store' ? (
-          <StoreDetails details={details} onChange={changeDetails} />
-        ) : (
-          <OnlineDetails
-            details={details}
-            onChange={changeDetails}
-            duplicate={duplicate}
-            onRefBlur={() => {
-              setCheckedRef(details.externalRef)
-            }}
-          />
-        )}
+          {mode === 'store' ? (
+            <StoreDetails details={details} onChange={changeDetails} />
+          ) : (
+            <OnlineDetails
+              details={details}
+              onChange={changeDetails}
+              duplicate={duplicate}
+              onRefBlur={() => {
+                setCheckedRef(details.externalRef)
+              }}
+            />
+          )}
 
-        {stillShort > 0 && (
-          <ErrorAlert>
-            สต็อกเปลี่ยนระหว่างนี้ มี {stillShort} รายการที่ของไม่พอแล้ว ปรับจำนวนแล้วบันทึกอีกครั้ง
-            ยังไม่ได้บันทึกอะไร
-          </ErrorAlert>
-        )}
+          {stillShort > 0 && (
+            <ErrorAlert>
+              สต็อกเปลี่ยนระหว่างนี้ มี {stillShort} รายการที่ของไม่พอแล้ว
+              ปรับจำนวนแล้วบันทึกอีกครั้ง ยังไม่ได้บันทึกอะไร
+            </ErrorAlert>
+          )}
 
-        {rows.length === 0 ? (
-          <p className="rounded-md border border-dashed border-line-strong px-4 py-8 text-center text-[13px] text-ink-2">
-            ยังไม่มีสินค้าในตะกร้า กด “ใส่ตะกร้า” จากรายการด้านซ้าย
-          </p>
-        ) : (
-          <ul className="flex flex-col">
-            {rows.map(({ line, product, error }) => (
-              <li
-                key={line.productId}
-                className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <span className="flex min-w-0 flex-col">
-                    <span className="truncate font-medium">{product.name}</span>
-                    <span className="flex gap-3 text-[13px] text-ink-2">
-                      <span>{formatMoney(product.price)}</span>
-                      <span>ขายได้ {Math.max(product.available, 0)} ชิ้น</span>
+          {rows.length === 0 ? (
+            <p className="rounded-md border border-dashed border-line-strong px-4 py-8 text-center text-[13px] text-ink-2">
+              ยังไม่มีสินค้าในตะกร้า กด “ใส่ตะกร้า” จากรายการด้านซ้าย
+            </p>
+          ) : (
+            <ul className="flex flex-col">
+              {rows.map(({ line, product, error }) => (
+                <li
+                  key={line.productId}
+                  className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate font-medium">{product.name}</span>
+                      <span className="text-[13px] text-ink-2">{formatMoney(product.price)}</span>
                     </span>
-                  </span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={`เอา ${product.name} ออก`}
-                    onClick={() => {
-                      setLines((current) => current.filter((l) => l.productId !== line.productId))
-                    }}
-                  >
-                    <Trash2Icon aria-hidden="true" />
-                  </Button>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <QtyStepper
-                    id={`qty-${line.productId}`}
-                    value={line.qty}
-                    invalid={error !== null}
-                    onChange={(next) => {
-                      setLines((current) =>
-                        current.map((l) =>
-                          l.productId === line.productId ? { ...l, qty: next } : l,
-                        ),
-                      )
-                    }}
-                  />
-                  <span className="font-medium">
-                    {formatMoney(Number(product.price) * (parseQty(line.qty) ?? 0))}
-                  </span>
-                </div>
-                {error && <p className="text-sm text-destructive">{error}</p>}
-              </li>
-            ))}
-          </ul>
-        )}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={`เอา ${product.name} ออก`}
+                      onClick={() => {
+                        setLines((current) => current.filter((l) => l.productId !== line.productId))
+                      }}
+                    >
+                      <Trash2Icon aria-hidden="true" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <QtyStepper
+                      id={`qty-${line.productId}`}
+                      value={line.qty}
+                      max={Math.max(product.available, 0)}
+                      invalid={error !== null}
+                      onChange={(next) => {
+                        setLines((current) =>
+                          current.map((l) =>
+                            l.productId === line.productId ? { ...l, qty: next } : l,
+                          ),
+                        )
+                      }}
+                    />
+                    <span className="font-medium">
+                      {formatMoney(Number(product.price) * (parseQty(line.qty) ?? 0))}
+                    </span>
+                  </div>
+                  {error && <p className="text-sm text-destructive">{error}</p>}
+                </li>
+              ))}
+            </ul>
+          )}
 
-        <Field label="โน้ต (ไม่ใส่ก็ได้)">
-          <Input
-            value={note}
-            maxLength={500}
-            onChange={(e) => {
-              setNote(e.target.value)
-            }}
-          />
-        </Field>
-
-        <div className="flex items-center justify-between border-t border-line pt-4">
-          <span className="text-ink-2">ยอดรวม</span>
-          <span className="text-xl font-semibold">{formatMoney(total)}</span>
+          <Field label="โน้ต (ไม่ใส่ก็ได้)">
+            <Input
+              value={note}
+              maxLength={500}
+              onChange={(e) => {
+                setNote(e.target.value)
+              }}
+            />
+          </Field>
         </div>
 
-        {submit.isError && shortages.size === 0 && (
-          <ErrorAlert>
-            {isApiError(submit.error, 'conflict')
-              ? 'ออเดอร์ Shopee นี้บันทึกไว้แล้ว ไม่ต้องคีย์ซ้ำ'
-              : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
-          </ErrorAlert>
-        )}
+        <div className="sticky bottom-0 flex flex-col gap-3 rounded-b-lg border-t border-line bg-surface px-5 pt-4 pb-5">
+          <div className="flex items-center justify-between">
+            <span className="text-ink-2">ยอดรวม</span>
+            <span className="text-xl font-semibold">{formatMoney(total)}</span>
+          </div>
 
-        {rows.length > 0 && (
-          <p className="text-[13px] text-ink-2">{missing ?? effectSummary(mode, details, units)}</p>
-        )}
+          {submit.isError && shortages.size === 0 && (
+            <ErrorAlert>
+              {isApiError(submit.error, 'conflict')
+                ? 'ออเดอร์ Shopee นี้บันทึกไว้แล้ว ไม่ต้องคีย์ซ้ำ'
+                : 'บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง'}
+            </ErrorAlert>
+          )}
 
-        <Button type="submit" size="lg" disabled={!canSubmit}>
-          {submit.isPending ? 'กำลังบันทึก...' : submitLabel}
-        </Button>
+          {rows.length > 0 && (
+            <p className="text-[13px] text-ink-2">
+              {missing ?? effectSummary(mode, details, units)}
+            </p>
+          )}
+
+          <Button type="submit" size="lg" disabled={!canSubmit}>
+            {submit.isPending ? 'กำลังบันทึก...' : submitLabel}
+          </Button>
+        </div>
       </form>
     </div>
   )
