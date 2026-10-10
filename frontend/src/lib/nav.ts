@@ -1,3 +1,17 @@
+import {
+  ClipboardCheckIcon,
+  HistoryIcon,
+  InboxIcon,
+  LayoutListIcon,
+  type LucideIcon,
+  PackageIcon,
+  PackagePlusIcon,
+  ReceiptTextIcon,
+  ScrollTextIcon,
+  StoreIcon,
+  UsersIcon,
+} from 'lucide-react'
+
 export type NavPath =
   | '/'
   | '/orders'
@@ -13,6 +27,7 @@ export type NavPath =
 export interface NavItem {
   to: NavPath
   label: string
+  icon: LucideIcon
 }
 
 export interface NavGroup {
@@ -22,30 +37,30 @@ export interface NavGroup {
 }
 
 export const NAV_GROUPS: NavGroup[] = [
-  { items: [{ to: '/', label: 'วันนี้' }] },
+  { items: [{ to: '/', label: 'วันนี้', icon: LayoutListIcon }] },
   {
     label: 'งานขาย',
     items: [
-      { to: '/orders', label: 'ออเดอร์' },
-      { to: '/orders/new', label: 'ขายหน้าร้าน' },
-      { to: '/orders/online', label: 'คีย์ออเดอร์ออนไลน์' },
+      { to: '/orders', label: 'ออเดอร์', icon: ReceiptTextIcon },
+      { to: '/orders/new', label: 'ขายหน้าร้าน', icon: StoreIcon },
+      { to: '/orders/online', label: 'คีย์ออเดอร์ออนไลน์', icon: InboxIcon },
     ],
   },
   {
     label: 'คลังสินค้า',
     items: [
-      { to: '/stock', label: 'สต็อก' },
-      { to: '/receive', label: 'รับของเข้า' },
-      { to: '/counts', label: 'ตรวจนับ' },
-      { to: '/ledger', label: 'ประวัติสต็อก' },
+      { to: '/stock', label: 'สต็อก', icon: PackageIcon },
+      { to: '/receive', label: 'รับของเข้า', icon: PackagePlusIcon },
+      { to: '/counts', label: 'ตรวจนับ', icon: ClipboardCheckIcon },
+      { to: '/ledger', label: 'ประวัติสต็อก', icon: HistoryIcon },
     ],
   },
   {
     label: 'จัดการร้าน',
     ownerOnly: true,
     items: [
-      { to: '/team', label: 'ทีม' },
-      { to: '/audit', label: 'บันทึกการใช้งาน' },
+      { to: '/team', label: 'ทีม', icon: UsersIcon },
+      { to: '/audit', label: 'บันทึกการใช้งาน', icon: ScrollTextIcon },
     ],
   },
 ]
