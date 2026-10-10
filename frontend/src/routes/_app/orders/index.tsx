@@ -5,7 +5,6 @@ import { InboxIcon, StoreIcon } from 'lucide-react'
 import { ChannelChip, Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
-import { HelpNote } from '@/components/help-note'
 import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import { SearchInput } from '@/components/search-input'
@@ -52,7 +51,6 @@ function OrdersPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="ออเดอร์"
-        description="ทุกช่องทางใช้สต็อกกองเดียวกัน ออเดอร์จองของไว้จนกว่าจะส่งหรือยกเลิก"
         actions={
           <div className="flex flex-wrap justify-end gap-2.5">
             <Button asChild variant="outline">
@@ -69,25 +67,7 @@ function OrdersPage() {
             </Button>
           </div>
         }
-      >
-        <HelpNote question="สถานะออเดอร์แต่ละแบบหมายถึงอะไร" className="mt-2 max-w-2xl">
-          <p>
-            <span className="font-medium text-ink">รอดำเนินการ</span> บันทึกออเดอร์แล้ว
-            ของถูกกันไว้ให้ลูกค้าคนนี้ ยังอยู่ในคลัง
-          </p>
-          <p>
-            <span className="font-medium text-ink">แพ็กแล้ว</span> ห่อของเสร็จ รอส่ง
-            ของยังนับว่าอยู่ในคลัง
-          </p>
-          <p>
-            <span className="font-medium text-ink">ส่งแล้ว</span> ของออกจากร้าน ระบบตัดออกจากคลังให้
-            ขายหน้าร้านที่ลูกค้ารับของไปเลยจะเป็นสถานะนี้ทันที
-          </p>
-          <p>
-            <span className="font-medium text-ink">ยกเลิก</span> คืนของที่จองไว้กลับมาขายได้ทันที
-          </p>
-        </HelpNote>
-      </PageHeader>
+      />
 
       <section aria-label="รายการออเดอร์" className="panel overflow-x-auto">
         <div className="flex min-w-[920px] flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-line px-4 pt-2">

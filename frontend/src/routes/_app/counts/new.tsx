@@ -21,11 +21,7 @@ function NewCountPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        back={{ to: '/counts', label: 'กลับไปหน้าตรวจนับ' }}
-        title="ตรวจนับรอบใหม่"
-        description="ใส่จำนวนที่นับได้จริง ระบบจะเทียบกับตัวเลขในระบบให้"
-      />
+      <PageHeader title="ตรวจนับรอบใหม่" />
       <CountForm
         products={products}
         isOwner={me.isOwner}

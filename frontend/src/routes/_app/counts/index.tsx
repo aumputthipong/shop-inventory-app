@@ -54,11 +54,7 @@ function CountsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="ตรวจนับสต็อก"
-        description="นับของจริงเทียบกับตัวเลขในระบบ จะได้รู้ว่าของหายหรือกรอกผิดตรงไหน"
-        actions={<>{start}</>}
-      />
+      <PageHeader title="ตรวจนับสต็อก" actions={<>{start}</>} />
 
       <section aria-label="รายการตรวจนับ" className="panel overflow-x-auto">
         <div className="min-w-[760px] border-b border-line px-4 pt-2">

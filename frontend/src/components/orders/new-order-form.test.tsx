@@ -57,7 +57,7 @@ describe('NewOrderForm in the store', () => {
 
     await user.type(screen.getByRole('textbox', { name: 'เบอร์โทร' }), '0812345678')
     expect(save).toBeEnabled()
-    expect(screen.getByText(/กันของ 1 ชิ้นไว้ให้ 0812345678/)).toBeInTheDocument()
+    expect(screen.getByText(/จองของ 1 ชิ้นไว้ให้ 0812345678/)).toBeInTheDocument()
   })
 })
 

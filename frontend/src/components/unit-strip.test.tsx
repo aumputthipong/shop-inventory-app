@@ -7,9 +7,7 @@ describe('UnitStrip', () => {
   it('draws one cell per unit and names both groups', () => {
     const { container } = render(<UnitStrip available={3} held={5} />)
 
-    expect(
-      screen.getByRole('img', { name: 'ขายได้ 3 ชิ้น รอดำเนินการ 5 ชิ้น' }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: 'ขายได้ 3 ชิ้น จองไว้ 5 ชิ้น' })).toBeInTheDocument()
     expect(container.querySelectorAll('[role="img"] > span')).toHaveLength(8)
   })
 

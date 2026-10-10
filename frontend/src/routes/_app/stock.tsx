@@ -59,7 +59,7 @@ function StockPage() {
               <Button asChild variant="outline">
                 <Link to="/receive">
                   <PackagePlusIcon aria-hidden="true" />
-                  รับของจากใบส่งของ
+                  รับของเข้าหลายรายการ
                 </Link>
               </Button>
             )}

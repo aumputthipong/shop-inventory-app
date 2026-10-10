@@ -149,8 +149,9 @@ work it serves; a new group needs a reason a shop owner would recognise.
 - **Page band**: `PageBand` (used by `PageHeader` and by detail pages) is the
   navy zone behind the back link, the title (with `aside` and chips) and the
   actions, all on one row. It fills the content column, bleeds to the
-  window's right edge (never over the sidebar) and ends 16px below that row. Descriptions, help notes, meta lines and Today's sales sit under
-  the band on the canvas, 16px below it.
+  window's right edge (never over the sidebar) and ends 16px below that row.
+  Status lines, detail-page meta and Today's sales sit under the band on the
+  canvas, 16px below it.
 - **Today**: the page title is "งานวันนี้" with the date beside it, quick
   actions on the right. The grid follows the work, not a symmetry: ต้องแพ็ก
   takes two thirds, and the right third stacks รอส่ง and ของใกล้หมด. Panels are
@@ -204,10 +205,13 @@ work it serves; a new group needs a reason a shop owner would recognise.
   tile or placeholder image.
 - **Empty states**: the open box (ink outline, yellow lid) with a navy
   magnifier, one sentence of help and at most one action.
-- **Page header**: `PageHeader` (title, optional `aside` beside it, one line
-  of description, actions on the right, optional back link). No eyebrow line
-  above the title. Detail pages that need chips beside the
-  title use `BackLink` and their own title row.
+- **Page header**: `PageHeader` (title, optional `aside` beside it, actions
+  on the right). No eyebrow line above the title and no subtitle that restates
+  it; a `description` is only for a live status ("มี 3 รายการที่ควรเติมของ") or
+  a rule the page cannot show (who may do what on ทีม). A back link belongs
+  only on detail pages (one order, one count), never on a page the sidebar
+  lists. Detail pages that need chips beside the title use `BackLink` and
+  their own title row in `PageBand`.
 - **Form fields**: `Field` from `components/ui/field.tsx`: 13px label above the
   control, a muted hint or a red error below.
 - **Errors**: `ErrorAlert`: `chip-bad` fill, radius 6, alert icon, 13px text.
@@ -218,7 +222,23 @@ work it serves; a new group needs a reason a shop owner would recognise.
 
 Plain Thai, short, from the shop's point of view: "ขายได้อีก 3 ชิ้น", not
 "Available quantity: 3". Errors say what happened and what to do next. Toasts
-confirm with the same verb as the button that caused them.
+confirm with the same verb as the button that caused them. If a word needs a
+help note to be understood, change the word or the sentence around it instead:
+the page says "มีในคลัง 22 ชิ้น จองไว้ให้ 2 ออเดอร์ รวม 6 ชิ้น", not a "?"
+that explains the terms.
+
+One word per idea, everywhere (labels, legends, buttons, toasts, aria
+labels):
+
+| Idea | Word | Not |
+|---|---|---|
+| Units an order holds | จองไว้ | รอดำเนินการ, กันไว้ |
+| Units that can still be sold | ขายได้ | พร้อมขาย, ว่าง |
+| Units on the shelf | มีในคลัง | สต็อกจริง |
+| Order not packed yet | รอแพ็ก | รอดำเนินการ |
+| Bringing stock in | รับของเข้า | รับของจากใบส่งของ |
+| Counting the shelf | ตรวจนับ | นับสต็อก |
+| Keying in a marketplace or chat order | คีย์ออเดอร์ออนไลน์ | ออเดอร์จาก Shopee หรือ LINE |
 
 ## Don't
 

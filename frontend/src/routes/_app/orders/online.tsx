@@ -19,9 +19,7 @@ function OnlineOrderPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        back={{ to: '/orders', label: 'กลับไปหน้าออเดอร์' }}
         title="คีย์ออเดอร์ออนไลน์"
-        description="บันทึกออเดอร์ที่ลูกค้าสั่งทาง Shopee หรือทักแชท LINE ระบบกันของไว้จนกว่าจะแพ็กและส่ง ออเดอร์ที่ลูกค้าสั่งผ่านฟอร์ม LINE เข้ามาเองไม่ต้องคีย์"
         actions={
           <Button asChild variant="outline">
             <Link to="/orders/new">
