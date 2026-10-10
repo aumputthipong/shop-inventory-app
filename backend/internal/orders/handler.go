@@ -17,6 +17,7 @@ type Manager interface {
 	Apply(ctx context.Context, id int64, action Action) (Order, error)
 	Get(ctx context.Context, id int64) (Order, error)
 	List(ctx context.Context, f Filter) ([]Summary, int64, error)
+	StatusCounts(ctx context.Context, f Filter) (map[Status]int64, error)
 	Today(ctx context.Context) (Sales, error)
 }
 
@@ -111,8 +112,9 @@ type lineResponse struct {
 }
 
 type listResponse struct {
-	Items []summaryResponse `json:"items"`
-	Total int64             `json:"total"`
+	Items        []summaryResponse `json:"items"`
+	Total        int64             `json:"total"`
+	StatusCounts map[string]int64  `json:"status_counts"`
 }
 
 type channelSalesResponse struct {
@@ -174,6 +176,14 @@ func (h *Handler) list(c *gin.Context) {
 		s := Status(raw)
 		f.Status = &s
 	}
+	if raw := c.Query("channel"); raw != "" {
+		ch := Channel(raw)
+		if !ch.Valid() {
+			httpx.RespondFieldError(c, "channel", "channel must be store, shopee or line")
+			return
+		}
+		f.Channel = &ch
+	}
 	switch c.Query("sort") {
 	case "", "newest":
 	case "oldest":
@@ -188,6 +198,15 @@ func (h *Handler) list(c *gin.Context) {
 		httpx.RespondInternal(c, err)
 		return
 	}
+	counts, err := h.svc.StatusCounts(c.Request.Context(), f)
+	if err != nil {
+		httpx.RespondInternal(c, err)
+		return
+	}
+	byStatus := make(map[string]int64, len(counts))
+	for st, n := range counts {
+		byStatus[string(st)] = n
+	}
 	out := make([]summaryResponse, 0, len(items))
 	for _, s := range items {
 		lines := make([]lineResponse, 0, len(s.Picks))
@@ -201,7 +220,7 @@ func (h *Handler) list(c *gin.Context) {
 			CustomerName: s.CustomerName, Lines: lines,
 		})
 	}
-	c.JSON(http.StatusOK, listResponse{Items: out, Total: total})
+	c.JSON(http.StatusOK, listResponse{Items: out, Total: total, StatusCounts: byStatus})
 }
 
 func (h *Handler) today(c *gin.Context) {

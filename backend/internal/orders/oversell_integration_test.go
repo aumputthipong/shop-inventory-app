@@ -326,3 +326,32 @@ func TestListOrdersShowsWhatToPick(t *testing.T) {
 	assert.Equal(t, "Ann", *items[0].CustomerName)
 	assert.Equal(t, []orders.Pick{{Name: "race test item", Qty: 2}, {Name: "race test item", Qty: 1}}, items[0].Picks)
 }
+
+func TestListOrdersFindsCustomersAndCountsStatuses(t *testing.T) {
+	e := newEnv(t)
+	id := e.product(t, 5)
+	name := testdb.Unique("Ann ")
+	_, err := e.orders.Create(t.Context(), orders.NewOrder{
+		Channel:  orders.ChannelLine,
+		Items:    []orders.ItemRequest{{ProductID: id, Qty: 1}},
+		Customer: &orders.Customer{Name: name, Phone: "0812345678"},
+	})
+	require.NoError(t, err)
+	line := orders.ChannelLine
+	store := orders.ChannelStore
+
+	found, total, err := e.orders.List(t.Context(), orders.Filter{Search: &name, Channel: &line, Limit: 10})
+	require.NoError(t, err)
+	assert.Equal(t, int64(1), total)
+	require.Len(t, found, 1)
+
+	none, _, err := e.orders.List(t.Context(), orders.Filter{Search: &name, Channel: &store, Limit: 10})
+	require.NoError(t, err)
+	assert.Empty(t, none)
+
+	counts, err := e.orders.StatusCounts(t.Context(), orders.Filter{Search: &name})
+	require.NoError(t, err)
+	assert.Equal(t, map[orders.Status]int64{
+		orders.StatusReserved: 1, orders.StatusPacked: 0, orders.StatusShipped: 0, orders.StatusCanceled: 0,
+	}, counts)
+}

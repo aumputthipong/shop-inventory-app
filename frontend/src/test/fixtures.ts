@@ -1,4 +1,4 @@
-import type { Movement, OrderSummary, Product } from '@/lib/api'
+import type { Movement, OrderPage, OrderSummary, Product } from '@/lib/api'
 
 export function product(overrides: Partial<Product> = {}): Product {
   const id = overrides.id ?? 1
@@ -64,5 +64,13 @@ export function movement(overrides: Partial<Movement> = {}): Movement {
     reverses_id: null,
     reversed: false,
     ...overrides,
+  }
+}
+
+export function orderPage(items: OrderSummary[], total = items.length): OrderPage {
+  return {
+    items,
+    total,
+    status_counts: { reserved: 0, packed: 0, shipped: 0, canceled: 0 },
   }
 }

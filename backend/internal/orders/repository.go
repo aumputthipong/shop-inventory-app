@@ -247,15 +247,16 @@ func (r *PgRepository) List(ctx context.Context, f Filter) ([]Summary, int64, er
 	if f.Status != nil {
 		status = ptr(string(*f.Status))
 	}
+	channel := channelArg(f.Channel)
 	q := sqlc.New(r.pool)
 	rows, err := q.ListOrders(ctx, sqlc.ListOrdersParams{
-		Status: status, Search: f.Search, OldestFirst: f.OldestFirst,
+		Status: status, Channel: channel, Search: f.Search, OldestFirst: f.OldestFirst,
 		PageLimit: f.Limit, PageOffset: f.Offset,
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("query orders: %w", err)
 	}
-	total, err := q.CountOrders(ctx, sqlc.CountOrdersParams{Status: status, Search: f.Search})
+	total, err := q.CountOrders(ctx, sqlc.CountOrdersParams{Status: status, Channel: channel, Search: f.Search})
 	if err != nil {
 		return nil, 0, fmt.Errorf("count orders: %w", err)
 	}
@@ -283,6 +284,27 @@ func (r *PgRepository) List(ctx context.Context, f Filter) ([]Summary, int64, er
 		})
 	}
 	return items, total, nil
+}
+
+func (r *PgRepository) StatusCounts(ctx context.Context, f Filter) (map[Status]int64, error) {
+	rows, err := sqlc.New(r.pool).CountOrdersByStatus(ctx, sqlc.CountOrdersByStatusParams{
+		Channel: channelArg(f.Channel), Search: f.Search,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("query status counts: %w", err)
+	}
+	counts := make(map[Status]int64, len(rows))
+	for _, row := range rows {
+		counts[Status(row.Status)] = row.Orders
+	}
+	return counts, nil
+}
+
+func channelArg(c *Channel) *string {
+	if c == nil {
+		return nil
+	}
+	return ptr(string(*c))
 }
 
 func (r *PgRepository) Sales(ctx context.Context, day Day) (Sales, error) {

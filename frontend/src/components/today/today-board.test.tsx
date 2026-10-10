@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { TodayBoard } from '@/components/today/today-board'
 import { api } from '@/lib/api'
-import { orderSummary, product } from '@/test/fixtures'
+import { orderPage, orderSummary, product } from '@/test/fixtures'
 import { renderWithRouter } from '@/test/render'
 
 const hoursAgo = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString()
@@ -19,14 +19,11 @@ describe('TodayBoard', () => {
     vi.spyOn(api, 'listOrders').mockImplementation((query) =>
       Promise.resolve(
         query.status === 'reserved'
-          ? {
-              items: [
-                orderSummary({ id: 1, status: 'reserved', created_at: hoursAgo(3) }),
-                orderSummary({ id: 2, status: 'reserved', created_at: hoursAgo(72) }),
-              ],
-              total: 2,
-            }
-          : { items: [], total: 0 },
+          ? orderPage([
+              orderSummary({ id: 1, status: 'reserved', created_at: hoursAgo(3) }),
+              orderSummary({ id: 2, status: 'reserved', created_at: hoursAgo(72) }),
+            ])
+          : orderPage([]),
       ),
     )
     vi.spyOn(api, 'listProducts').mockResolvedValue([
@@ -74,8 +71,8 @@ describe('TodayBoard', () => {
   })
 
   it('shows who the order is for and what to pick', async () => {
-    vi.mocked(api.listOrders).mockResolvedValue({
-      items: [
+    vi.mocked(api.listOrders).mockResolvedValue(
+      orderPage([
         orderSummary({
           id: 7,
           customer_name: 'คุณแอน',
@@ -84,9 +81,8 @@ describe('TodayBoard', () => {
             { name: 'หมวก', qty: 1 },
           ],
         }),
-      ],
-      total: 1,
-    })
+      ]),
+    )
     renderBoard(false)
 
     const lane = await screen.findByRole('region', { name: 'ต้องแพ็ก' })

@@ -55,8 +55,11 @@ SELECT o.id, o.order_no, o.channel, o.external_ref, o.status, o.total,
 FROM orders o
 LEFT JOIN users u ON u.id = o.created_by
 WHERE (sqlc.narg(status)::text IS NULL OR o.status = sqlc.narg(status)::text)
+  AND (sqlc.narg(channel)::text IS NULL OR o.channel = sqlc.narg(channel)::text)
   AND (sqlc.narg(search)::text IS NULL OR o.order_no ILIKE '%' || sqlc.narg(search)::text || '%'
-       OR o.external_ref ILIKE '%' || sqlc.narg(search)::text || '%')
+       OR o.external_ref ILIKE '%' || sqlc.narg(search)::text || '%'
+       OR o.customer_name ILIKE '%' || sqlc.narg(search)::text || '%'
+       OR o.customer_phone ILIKE '%' || sqlc.narg(search)::text || '%')
 ORDER BY CASE WHEN sqlc.arg(oldest_first)::boolean THEN o.created_at END,
          CASE WHEN sqlc.arg(oldest_first)::boolean THEN o.id END,
          o.created_at DESC, o.id DESC
@@ -73,8 +76,21 @@ ORDER BY oi.order_id, oi.id;
 SELECT count(*)
 FROM orders o
 WHERE (sqlc.narg(status)::text IS NULL OR o.status = sqlc.narg(status)::text)
+  AND (sqlc.narg(channel)::text IS NULL OR o.channel = sqlc.narg(channel)::text)
   AND (sqlc.narg(search)::text IS NULL OR o.order_no ILIKE '%' || sqlc.narg(search)::text || '%'
-       OR o.external_ref ILIKE '%' || sqlc.narg(search)::text || '%');
+       OR o.external_ref ILIKE '%' || sqlc.narg(search)::text || '%'
+       OR o.customer_name ILIKE '%' || sqlc.narg(search)::text || '%'
+       OR o.customer_phone ILIKE '%' || sqlc.narg(search)::text || '%');
+
+-- name: CountOrdersByStatus :many
+SELECT o.status, count(*) AS orders
+FROM orders o
+WHERE (sqlc.narg(channel)::text IS NULL OR o.channel = sqlc.narg(channel)::text)
+  AND (sqlc.narg(search)::text IS NULL OR o.order_no ILIKE '%' || sqlc.narg(search)::text || '%'
+       OR o.external_ref ILIKE '%' || sqlc.narg(search)::text || '%'
+       OR o.customer_name ILIKE '%' || sqlc.narg(search)::text || '%'
+       OR o.customer_phone ILIKE '%' || sqlc.narg(search)::text || '%')
+GROUP BY o.status;
 
 -- name: DayTotals :one
 SELECT

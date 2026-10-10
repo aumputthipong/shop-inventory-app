@@ -177,6 +177,10 @@ func (m listingManager) List(_ context.Context, f orders.Filter) ([]orders.Summa
 	return nil, 0, nil
 }
 
+func (listingManager) StatusCounts(context.Context, orders.Filter) (map[orders.Status]int64, error) {
+	return map[orders.Status]int64{orders.StatusReserved: 2}, nil
+}
+
 func TestListOrdersSort(t *testing.T) {
 	tests := []struct {
 		query      string
@@ -196,6 +200,39 @@ func TestListOrdersSort(t *testing.T) {
 			assert.Equal(t, tt.wantOldest, got.OldestFirst)
 		})
 	}
+}
+
+func TestListOrdersChannel(t *testing.T) {
+	line := orders.ChannelLine
+	tests := []struct {
+		query       string
+		wantStatus  int
+		wantChannel *orders.Channel
+	}{
+		{"", http.StatusOK, nil},
+		{"?channel=line", http.StatusOK, &line},
+		{"?channel=fax", http.StatusUnprocessableEntity, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.query, func(t *testing.T) {
+			var got orders.Filter
+			rec := serve(t, listingManager{got: &got}, http.MethodGet, "/api/orders"+tt.query, "", true)
+			require.Equal(t, tt.wantStatus, rec.Code, rec.Body.String())
+			assert.Equal(t, tt.wantChannel, got.Channel)
+		})
+	}
+}
+
+func TestListOrdersCountsEveryStatus(t *testing.T) {
+	var got orders.Filter
+	rec := serve(t, listingManager{got: &got}, http.MethodGet, "/api/orders", "", true)
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var body struct {
+		StatusCounts map[string]int64 `json:"status_counts"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &body))
+	assert.Equal(t, int64(2), body.StatusCounts["reserved"])
 }
 
 type salesManager struct {
