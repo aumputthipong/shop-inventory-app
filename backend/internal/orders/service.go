@@ -187,6 +187,7 @@ type Pick struct {
 
 type Filter struct {
 	Status      *Status
+	Channel     *Channel
 	Search      *string
 	OldestFirst bool
 	Limit       int32
@@ -231,6 +232,7 @@ type Repository interface {
 	Transition(ctx context.Context, id int64, action Action, plan TransitionPlanner) error
 	Get(ctx context.Context, id int64) (Order, error)
 	List(ctx context.Context, f Filter) ([]Summary, int64, error)
+	StatusCounts(ctx context.Context, f Filter) (map[Status]int64, error)
 	Sales(ctx context.Context, day Day) (Sales, error)
 }
 
@@ -339,6 +341,20 @@ func (s *Service) List(ctx context.Context, f Filter) ([]Summary, int64, error) 
 		return nil, 0, fmt.Errorf("list orders: %w", err)
 	}
 	return items, total, nil
+}
+
+// StatusCounts counts the orders matching f's channel and search in every status, ignoring f.Status.
+func (s *Service) StatusCounts(ctx context.Context, f Filter) (map[Status]int64, error) {
+	counts, err := s.repo.StatusCounts(ctx, f)
+	if err != nil {
+		return nil, fmt.Errorf("count orders by status: %w", err)
+	}
+	for _, st := range []Status{StatusReserved, StatusPacked, StatusShipped, StatusCanceled} {
+		if _, ok := counts[st]; !ok {
+			counts[st] = 0
+		}
+	}
+	return counts, nil
 }
 
 func (s *Service) Today(ctx context.Context) (Sales, error) {

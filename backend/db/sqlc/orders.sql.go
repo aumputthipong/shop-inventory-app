@@ -14,20 +14,65 @@ const countOrders = `-- name: CountOrders :one
 SELECT count(*)
 FROM orders o
 WHERE ($1::text IS NULL OR o.status = $1::text)
-  AND ($2::text IS NULL OR o.order_no ILIKE '%' || $2::text || '%'
-       OR o.external_ref ILIKE '%' || $2::text || '%')
+  AND ($2::text IS NULL OR o.channel = $2::text)
+  AND ($3::text IS NULL OR o.order_no ILIKE '%' || $3::text || '%'
+       OR o.external_ref ILIKE '%' || $3::text || '%'
+       OR o.customer_name ILIKE '%' || $3::text || '%'
+       OR o.customer_phone ILIKE '%' || $3::text || '%')
 `
 
 type CountOrdersParams struct {
-	Status *string `json:"status"`
-	Search *string `json:"search"`
+	Status  *string `json:"status"`
+	Channel *string `json:"channel"`
+	Search  *string `json:"search"`
 }
 
 func (q *Queries) CountOrders(ctx context.Context, arg CountOrdersParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countOrders, arg.Status, arg.Search)
+	row := q.db.QueryRow(ctx, countOrders, arg.Status, arg.Channel, arg.Search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const countOrdersByStatus = `-- name: CountOrdersByStatus :many
+SELECT o.status, count(*) AS orders
+FROM orders o
+WHERE ($1::text IS NULL OR o.channel = $1::text)
+  AND ($2::text IS NULL OR o.order_no ILIKE '%' || $2::text || '%'
+       OR o.external_ref ILIKE '%' || $2::text || '%'
+       OR o.customer_name ILIKE '%' || $2::text || '%'
+       OR o.customer_phone ILIKE '%' || $2::text || '%')
+GROUP BY o.status
+`
+
+type CountOrdersByStatusParams struct {
+	Channel *string `json:"channel"`
+	Search  *string `json:"search"`
+}
+
+type CountOrdersByStatusRow struct {
+	Status string `json:"status"`
+	Orders int64  `json:"orders"`
+}
+
+func (q *Queries) CountOrdersByStatus(ctx context.Context, arg CountOrdersByStatusParams) ([]CountOrdersByStatusRow, error) {
+	rows, err := q.db.Query(ctx, countOrdersByStatus, arg.Channel, arg.Search)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CountOrdersByStatusRow{}
+	for rows.Next() {
+		var i CountOrdersByStatusRow
+		if err := rows.Scan(&i.Status, &i.Orders); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const createOrder = `-- name: CreateOrder :one
@@ -304,16 +349,20 @@ SELECT o.id, o.order_no, o.channel, o.external_ref, o.status, o.total,
 FROM orders o
 LEFT JOIN users u ON u.id = o.created_by
 WHERE ($1::text IS NULL OR o.status = $1::text)
-  AND ($2::text IS NULL OR o.order_no ILIKE '%' || $2::text || '%'
-       OR o.external_ref ILIKE '%' || $2::text || '%')
-ORDER BY CASE WHEN $3::boolean THEN o.created_at END,
-         CASE WHEN $3::boolean THEN o.id END,
+  AND ($2::text IS NULL OR o.channel = $2::text)
+  AND ($3::text IS NULL OR o.order_no ILIKE '%' || $3::text || '%'
+       OR o.external_ref ILIKE '%' || $3::text || '%'
+       OR o.customer_name ILIKE '%' || $3::text || '%'
+       OR o.customer_phone ILIKE '%' || $3::text || '%')
+ORDER BY CASE WHEN $4::boolean THEN o.created_at END,
+         CASE WHEN $4::boolean THEN o.id END,
          o.created_at DESC, o.id DESC
-LIMIT $5 OFFSET $4
+LIMIT $6 OFFSET $5
 `
 
 type ListOrdersParams struct {
 	Status      *string `json:"status"`
+	Channel     *string `json:"channel"`
 	Search      *string `json:"search"`
 	OldestFirst bool    `json:"oldest_first"`
 	PageOffset  int32   `json:"page_offset"`
@@ -336,6 +385,7 @@ type ListOrdersRow struct {
 func (q *Queries) ListOrders(ctx context.Context, arg ListOrdersParams) ([]ListOrdersRow, error) {
 	rows, err := q.db.Query(ctx, listOrders,
 		arg.Status,
+		arg.Channel,
 		arg.Search,
 		arg.OldestFirst,
 		arg.PageOffset,

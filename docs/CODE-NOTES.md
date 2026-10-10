@@ -193,6 +193,11 @@ in the same PR as the behaviour it describes.
   and quantity) so Today can show what to pick without opening the order. The
   lines for a page come from one `ListItemsForOrders` query keyed by the page's
   order ids, not one query per order.
+- The orders list search matches order number, channel reference, customer
+  name and customer phone, because a customer who messages on LINE is found
+  by name, not by order number. The response carries `status_counts` for the
+  same channel and search with the status filter left out, so every tab can
+  show its count from one request.
 - Today's sales (`GET /api/sales/today`, owner only) count orders placed today
   that are not canceled, with their totals, plus orders shipped today whenever
   they were placed. "Today" is the calendar day in `SHOP_TIMEZONE`, computed in

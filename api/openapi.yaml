@@ -469,9 +469,12 @@ paths:
           in: query
           description: oldest puts the longest-waiting orders first, for work queues.
           schema: { type: string, enum: [newest, oldest], default: newest }
+        - name: channel
+          in: query
+          schema: { $ref: "#/components/schemas/Channel" }
         - name: q
           in: query
-          description: Matches order number or channel reference.
+          description: Matches order number, channel reference, customer name or customer phone.
           schema: { type: string }
         - $ref: "#/components/parameters/Limit"
         - $ref: "#/components/parameters/Offset"
@@ -482,15 +485,20 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [items, total]
+                required: [items, total, status_counts]
                 properties:
                   items:
                     type: array
                     items: { $ref: "#/components/schemas/OrderSummary" }
                   total: { type: integer }
+                  status_counts:
+                    type: object
+                    description: Orders matching channel and q in each status, ignoring the status filter.
+                    required: [reserved, packed, shipped, canceled]
+                    additionalProperties: { type: integer }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "422":
-          description: sort is not newest or oldest.
+          description: sort is not newest or oldest, or channel is not a known channel.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/ErrorResponse" }

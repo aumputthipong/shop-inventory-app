@@ -384,10 +384,15 @@ export interface MovementQuery {
 
 export interface OrderQuery {
   status?: OrderStatus
+  channel?: Channel
   q?: string
   sort?: 'newest' | 'oldest'
   limit?: number
   offset?: number
+}
+
+export interface OrderPage extends Page<OrderSummary> {
+  status_counts: Record<OrderStatus, number>
 }
 
 export interface DaySales {
@@ -435,7 +440,7 @@ export const api = {
     apiFetch<Page<Movement>>(withQuery('/api/movements', { ...query }), { signal }),
 
   listOrders: (query: OrderQuery, signal?: AbortSignal) =>
-    apiFetch<Page<OrderSummary>>(withQuery('/api/orders', { ...query }), { signal }),
+    apiFetch<OrderPage>(withQuery('/api/orders', { ...query }), { signal }),
   getOrder: (id: number, signal?: AbortSignal) => apiFetch<Order>(`/api/orders/${id}`, { signal }),
   createOrder: (input: NewOrder) => send<Order>('POST', '/api/orders', input),
   orderAction: (id: number, action: OrderAction) =>

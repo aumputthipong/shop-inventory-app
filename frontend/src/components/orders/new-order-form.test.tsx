@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { NewOrderForm } from '@/components/orders/new-order-form'
 import { api, type Order } from '@/lib/api'
 import type { EntryMode } from '@/lib/order-entry'
-import { orderSummary, product } from '@/test/fixtures'
+import { orderPage, orderSummary, product } from '@/test/fixtures'
 import { renderWithRouter } from '@/test/render'
 
 const shirt = product({ id: 1, name: 'เสื้อยืด' })
@@ -85,10 +85,9 @@ describe('NewOrderForm for online orders', () => {
   })
 
   it('stops a Shopee order that was already keyed in', async () => {
-    vi.spyOn(api, 'listOrders').mockResolvedValue({
-      items: [orderSummary({ id: 5, channel: 'shopee', external_ref: '2410ABC' })],
-      total: 1,
-    })
+    vi.spyOn(api, 'listOrders').mockResolvedValue(
+      orderPage([orderSummary({ id: 5, channel: 'shopee', external_ref: '2410ABC' })]),
+    )
     const user = await startCart('online')
 
     await user.click(screen.getByRole('button', { name: /Shopee/ }))
@@ -100,7 +99,7 @@ describe('NewOrderForm for online orders', () => {
   })
 
   it('keeps the channel and clears the cart for the next order', async () => {
-    vi.spyOn(api, 'listOrders').mockResolvedValue({ items: [], total: 0 })
+    vi.spyOn(api, 'listOrders').mockResolvedValue(orderPage([]))
     const create = vi.spyOn(api, 'createOrder').mockResolvedValue(created)
     const user = await startCart('online')
 
