@@ -19,8 +19,10 @@ about a third of the screen; the band now stops under the title row, about
 1. **Counted, not decorated.** Counts are the loudest things on any screen,
    set in a condensed face like the quantity printed on a carton. Everything else
    is plain text, hairlines and whitespace. A count of work takes the place an
-   icon would have taken. Icons sit only where they carry meaning: a
-   button's verb and a sales channel. The nav and headings are text.
+   icon would have taken. Icons sit only where they help someone find or
+   pick: a button's verb, a sales channel and a sidebar item. Headings are
+   text. A page keeps the same icon everywhere (ขายหน้าร้าน is the store in
+   the sidebar and on Today's button).
 2. **Square panels, round buttons.** Panels, inputs and chips keep small
    radii (4-8px); chips look like printed labels, not bubbles. Buttons are
    pills, so anything you can press stands apart from the content.
@@ -127,9 +129,11 @@ work it serves; a new group needs a reason a shop owner would recognise.
   as the sidebar, the account menu on the right. Below `lg` a menu button sits
   before the brand.
 - **Sidebar** (`lg` and up): 208px, white with an `edge` right border, sticky
-  under the top bar and scrolling on its own. Text only. Group labels are 12px
-  `ink-3`, sentence case. Items are 36px rows of 14px `ink-2`. The current item
-  is `ink` semibold on `brand-50` with a 3px yellow bar on its leading edge.
+  under the top bar and scrolling on its own. Groups are split by a `line`
+  rule; each opens with its label in 13px semibold `ink`, so the label reads
+  as a heading over its items. Items are 36px rows: an 18px icon in `ink-3`
+  and the label in 14px `ink-2`. The current item is `ink` semibold on
+  `brand-50` with a navy icon and a 3px yellow bar on its leading edge.
   The current item is the longest path that matches whole segments, so
   `/orders/new` is ขายหน้าร้าน and `/orders/12` is ออเดอร์.
 - **Drawer** (below `lg`): the same list in a 280px sheet from the left over
