@@ -49,9 +49,9 @@ describe('TodayBoard', () => {
     renderBoard(true)
 
     expect(await screen.findByText('ORD-2026-00001')).toBeInTheDocument()
-    expect(screen.getByLabelText('ต้องแพ็ก 2')).toBeInTheDocument()
+    expect(screen.getByLabelText('รอแพ็ก 2')).toBeInTheDocument()
     expect(screen.getByLabelText('รอส่ง 0')).toBeInTheDocument()
-    expect(screen.getByText('ไม่มีออเดอร์ค้าง')).toBeInTheDocument()
+    expect(screen.getByLabelText('ของใกล้หมด 2')).toBeInTheDocument()
 
     const restock = screen.getAllByRole('link', { name: /แก้วน้ำ|หมวก/ })
     expect(restock.map((l) => l.textContent)).toEqual(['แก้วน้ำ', 'หมวก'])
@@ -66,26 +66,33 @@ describe('TodayBoard', () => {
     vi.spyOn(api, 'listCounts').mockResolvedValue({ items: [], total: 0 })
     renderBoard(true)
 
-    expect(await screen.findByText('รอ 3 ชม.')).toBeInTheDocument()
-    expect(screen.getByText('รอ 3 วัน')).toBeInTheDocument()
+    expect(await screen.findByText('3 ชม.')).toBeInTheDocument()
+    expect(screen.getByText('3 วัน')).toBeInTheDocument()
+    expect(screen.getByText('ล่าช้า')).toBeInTheDocument()
   })
 
   it('shows who the order is for and what to pick', async () => {
-    vi.mocked(api.listOrders).mockResolvedValue(
-      orderPage([
-        orderSummary({
-          id: 7,
-          customer_name: 'คุณแอน',
-          lines: [
-            { name: 'เสื้อยืด', qty: 2 },
-            { name: 'หมวก', qty: 1 },
-          ],
-        }),
-      ]),
+    vi.mocked(api.listOrders).mockImplementation((query) =>
+      Promise.resolve(
+        orderPage(
+          query.status === 'reserved'
+            ? [
+                orderSummary({
+                  id: 7,
+                  customer_name: 'คุณแอน',
+                  lines: [
+                    { name: 'เสื้อยืด', qty: 2 },
+                    { name: 'หมวก', qty: 1 },
+                  ],
+                }),
+              ]
+            : [],
+        ),
+      ),
     )
     renderBoard(false)
 
-    const lane = await screen.findByRole('region', { name: 'ต้องแพ็ก' })
+    const lane = await screen.findByRole('region', { name: 'คิวออเดอร์' })
     expect(await within(lane).findByText('คุณแอน')).toBeInTheDocument()
     expect(within(lane).getByText('เสื้อยืด ×2, หมวก ×1')).toBeInTheDocument()
   })

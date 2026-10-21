@@ -17,19 +17,26 @@ import { movementChip } from '@/lib/labels'
 import { invalidateStock } from '@/lib/queries'
 import { useToast } from '@/lib/toast'
 
-export function ReverseMovementButton({ movement }: { movement: Movement }) {
+export function ReverseMovementButton({
+  movement,
+  compact,
+}: {
+  movement: Movement
+  compact?: boolean
+}) {
   const [open, setOpen] = useState(false)
   return (
     <>
       <Button
         variant="ghost"
-        size="sm"
+        size={compact ? 'icon-sm' : 'sm'}
+        aria-label={compact ? 'ยกเลิกรายการนี้' : undefined}
         onClick={() => {
           setOpen(true)
         }}
       >
         <Undo2Icon aria-hidden="true" />
-        ยกเลิก
+        {!compact && 'ยกเลิก'}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

@@ -1,8 +1,8 @@
 import type * as React from 'react'
 import { cn } from 'cn'
 
-import type { Channel } from '@/lib/api'
-import { channelIcon, channelLabel, type ChipTone } from '@/lib/labels'
+import type { Channel, OrderStatus } from '@/lib/api'
+import { channelLabel, type ChipTone, orderStatusChip } from '@/lib/labels'
 
 const toneClass: Record<ChipTone, string> = {
   ok: 'bg-chip-ok text-chip-ok-fg',
@@ -32,21 +32,55 @@ export function Chip({
   )
 }
 
-export function ChannelIcon({ channel, className }: { channel: Channel; className?: string }) {
-  const { icon: Icon, color } = channelIcon[channel]
-  return <Icon className={cn('size-4 shrink-0', color, className)} aria-hidden="true" />
+const channelColor: Record<Channel, string> = {
+  store: 'bg-channel-store',
+  shopee: 'bg-channel-shopee',
+  line: 'bg-channel-line',
+}
+
+export function ChannelMark({ channel, className }: { channel: Channel; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cn('h-4 w-1 shrink-0 rounded-[1px]', channelColor[channel], className)}
+    />
+  )
 }
 
 export function ChannelChip({ channel, className }: { channel: Channel; className?: string }) {
   return (
+    <span className={cn('inline-flex shrink-0 items-center gap-2 whitespace-nowrap', className)}>
+      <ChannelMark channel={channel} />
+      {channelLabel[channel]}
+    </span>
+  )
+}
+
+const statusClass: Record<OrderStatus, string> = {
+  reserved: 'font-semibold text-ink',
+  packed: 'font-medium text-ink',
+  shipped: 'text-ink-2',
+  canceled: 'text-ink-3 line-through',
+}
+
+export function OrderStatusText({
+  status,
+  late,
+  className,
+}: {
+  status: OrderStatus
+  late?: boolean
+  className?: string
+}) {
+  return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center gap-1.5 text-[13px] whitespace-nowrap text-ink-2',
+        'whitespace-nowrap',
+        late ? 'font-semibold text-late' : statusClass[status],
         className,
       )}
     >
-      <ChannelIcon channel={channel} />
-      {channelLabel[channel]}
+      {late ? 'ล่าช้า' : orderStatusChip[status].label}
     </span>
   )
 }

@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-21T00:00:00Z",
+  "title": "Design System: Platform Board",
+  "extensions": {
+    "colorMeta": {
+      "navy": {
+        "role": "primary",
+        "displayName": "Station Navy",
+        "canonical": "#2A3563",
+        "tonalRamp": [
+          "#141A33",
+          "#1E2750",
+          "#2A3563",
+          "#4A5585",
+          "#A9B3D6",
+          "#C8CFE6",
+          "#E2E6F2",
+          "#EFF1F8"
+        ]
+      },
+      "marker-yellow": {
+        "role": "secondary",
+        "displayName": "Marker Yellow",
+        "canonical": "#F3D83A",
+        "tonalRamp": [
+          "#3D3200",
+          "#6A5800",
+          "#A08A0C",
+          "#D9BD1C",
+          "#F3D83A",
+          "#F8E98E",
+          "#FCF4C6",
+          "#FEFAE6"
+        ]
+      },
+      "late": {
+        "role": "tertiary",
+        "displayName": "Delay Red",
+        "canonical": "#B42318",
+        "tonalRamp": [
+          "#4A0E09",
+          "#7A1710",
+          "#A8261D",
+          "#B42318",
+          "#D9574C",
+          "#EE9A92",
+          "#F7CFCA",
+          "#FBE8E4"
+        ]
+      },
+      "channel-shopee": {
+        "role": "tertiary",
+        "displayName": "Shopee Line",
+        "canonical": "#EE4D2D",
+        "tonalRamp": [
+          "#4F160B",
+          "#8A2713",
+          "#C23A1F",
+          "#EE4D2D",
+          "#F37D65",
+          "#F8AE9F",
+          "#FCD8D0",
+          "#FEEFEB"
+        ]
+      },
+      "channel-line": {
+        "role": "tertiary",
+        "displayName": "LINE Line",
+        "canonical": "#06C755",
+        "tonalRamp": [
+          "#013D1A",
+          "#02652B",
+          "#048F3D",
+          "#06C755",
+          "#45D982",
+          "#86E7AD",
+          "#C4F3D6",
+          "#E7FBEF"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Cool Canvas",
+        "canonical": "#EEF0F4",
+        "tonalRamp": [
+          "#262A33",
+          "#474D5A",
+          "#6F7685",
+          "#9EA4B1",
+          "#C9CDD6",
+          "#DDE0E7",
+          "#EEF0F4",
+          "#F7F8FA"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#172036",
+        "tonalRamp": [
+          "#0B1020",
+          "#172036",
+          "#2E3850",
+          "#4A5470",
+          "#5F6983",
+          "#8E96AC",
+          "#C9D1E0",
+          "#E6EAF2"
+        ]
+      },
+      "edge": {
+        "role": "neutral",
+        "displayName": "Edge",
+        "canonical": "#DDE3EE"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#E6EAF2"
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Line",
+        "canonical": "#C9D1E0"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#FFFFFF"
+      }
+    },
+    "typographyMeta": {
+      "board-figure": {
+        "displayName": "Board figure",
+        "purpose": "The Today board's clock and waiting figures, and ขายได้อีก in the product panel."
+      },
+      "page-title": {
+        "displayName": "Page title",
+        "purpose": "One per page, on the canvas over a 2px ink rule."
+      },
+      "figure": {
+        "displayName": "List figure",
+        "purpose": "Counts in list columns (ขายได้). Panel figures use the same utility at 24px."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Dialog titles, the product name in the panel, empty-state titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Almost all text. Sheet heads are 14px bold, names in rows 14px medium."
+      },
+      "meta": {
+        "displayName": "Meta",
+        "purpose": "Second lines in a cell, sheet meta, field labels."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Column labels and chips."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "SKUs and order numbers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 12px 32px rgb(23 32 54 / 0.14), 0 2px 6px rgb(23 32 54 / 0.06)",
+        "purpose": "Dialogs, the account menu, the nav drawer and the toast. Never under sheets on the page."
+      }
+    ],
+    "motion": [
+      {
+        "name": "rise",
+        "value": "0.2s ease-out, translateY(8px) to none with fade",
+        "purpose": "Toast entrance, only when reduced motion is not requested."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "lg (sidebar)",
+        "value": "1024px"
+      },
+      {
+        "name": "@2xl (queue columns)",
+        "value": "672px container"
+      },
+      {
+        "name": "@4xl (order detail split)",
+        "value": "896px container"
+      },
+      {
+        "name": "@5xl (list beside panel)",
+        "value": "1024px container"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Flat navy, 3px corners; the one main action of a page or row.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2\"/><path d=\"M15 18H9\"/><path d=\"M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14\"/><circle cx=\"17\" cy=\"18\" r=\"2\"/><circle cx=\"7\" cy=\"18\" r=\"2\"/></svg>ส่งแล้ว</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; height: 36px; padding: 0 14px; border: 1px solid transparent; border-radius: 3px; background: #2a3563; color: #fff; font: 500 14px 'Bai Jamjuree', system-ui, sans-serif; cursor: pointer; } .ds-btn-primary:hover { background: #1e2750; } .ds-btn-primary:focus-visible { outline: 2px solid #2a3563; outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(1px); }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "White with a strong line border; secondary actions and row actions.",
+      "html": "<button class=\"ds-btn-outline\">รับของเข้า</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid #c9d1e0; border-radius: 3px; background: #fff; color: #172036; font: 500 13px 'Bai Jamjuree', system-ui, sans-serif; cursor: pointer; } .ds-btn-outline:hover { background: #f6f8fc; } .ds-btn-outline:focus-visible { outline: 2px solid #2a3563; outline-offset: 2px; }"
+    },
+    {
+      "name": "Today Board",
+      "kind": "custom",
+      "refersTo": "board",
+      "description": "A white sheet heading Today: title, date and quick actions over the 2px ink rule, then the clock and the waiting figures. Each figure has a 4px leading bar, yellow with a navy figure when work waits, line grey with an ink-3 figure at zero.",
+      "html": "<section class=\"ds-board\"><div class=\"ds-board-top\"><span class=\"ds-board-title\">งานวันนี้</span><span class=\"ds-board-date\">วันพุธที่ 21 ตุลาคม</span><button class=\"ds-board-btn\">ขายหน้าร้าน</button></div><div class=\"ds-board-figs\"><time class=\"ds-clock\">22:16</time><a class=\"ds-board-cell\" href=\"#\"><i class=\"ds-bar\"></i><span><b class=\"ds-fig\">3</b><span class=\"ds-board-lbl\">รอแพ็ก</span></span></a><a class=\"ds-board-cell\" href=\"#\"><i class=\"ds-bar\"></i><span><b class=\"ds-fig\">1</b><span class=\"ds-board-lbl\">รอส่ง</span></span></a><a class=\"ds-board-cell ds-zero\" href=\"#\"><i class=\"ds-bar\"></i><span><b class=\"ds-fig\">0</b><span class=\"ds-board-lbl\">ของใกล้หมด</span></span></a></div></section>",
+      "css": ".ds-board { background: #fff; color: #172036; border: 1px solid #dde3ee; border-radius: 4px; font-family: 'Bai Jamjuree', system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-board-top { display: flex; align-items: baseline; gap: 12px; padding: 16px 24px; border-bottom: 2px solid #172036; } .ds-board-title { font-size: 24px; line-height: 32px; font-weight: 700; } .ds-board-date { color: #4a5470; font-size: 14px; } .ds-board-btn { margin-left: auto; height: 36px; padding: 0 14px; border: 0; border-radius: 3px; background: #2a3563; color: #fff; font: 500 14px inherit; font-family: inherit; cursor: pointer; } .ds-board-btn:hover { background: #1e2750; } .ds-board-figs { display: grid; grid-template-columns: 1fr repeat(3, 148px); gap: 24px; padding: 20px 24px; align-items: end; } .ds-clock, .ds-fig { display: block; font-size: 40px; font-weight: 600; line-height: 1; } .ds-fig { color: #2a3563; } .ds-board-cell { display: flex; align-items: stretch; gap: 12px; color: inherit; text-decoration: none; } .ds-bar { width: 4px; border-radius: 1px; background: #f3d83a; } .ds-zero .ds-bar { background: #e6eaf2; } .ds-zero .ds-fig { color: #5f6983; } .ds-board-lbl { display: block; margin-top: 6px; font-size: 13px; color: #4a5470; } .ds-board-cell:hover .ds-board-lbl { color: #172036; text-decoration: underline; }"
+    },
+    {
+      "name": "Timetable Sheet",
+      "kind": "card",
+      "refersTo": "sheet",
+      "description": "White sheet with a 2px ink rule under its head and 1px hairlines between rows; the queue row shows time, order with channel line, status text and wait.",
+      "html": "<section class=\"ds-sheet\"><header class=\"ds-sheet-head\"><b>คิวออเดอร์</b><span>เรียงจากที่รอนานที่สุด</span></header><div class=\"ds-row\"><span class=\"ds-strong\">21:40</span><span class=\"ds-order\"><span class=\"ds-code\">ORD-2026-00001</span><span class=\"ds-chan\"><i class=\"ds-mark\"></i>Shopee</span></span><span>คุณมะลิ</span><span class=\"ds-strong\">รอแพ็ก</span><span class=\"ds-num ds-strong\">2 ชม.</span></div><div class=\"ds-row\"><span class=\"ds-strong\">20 ต.ค.</span><span class=\"ds-order\"><span class=\"ds-code\">ORD-2026-00002</span><span class=\"ds-chan\"><i class=\"ds-mark ds-line\"></i>LINE</span></span><span>คุณต้นกล้า</span><span class=\"ds-late\">ล่าช้า</span><span class=\"ds-num ds-late\">1 วัน</span></div></section>",
+      "css": ".ds-sheet { border: 1px solid #dde3ee; border-radius: 4px; background: #fff; color: #172036; font: 14px/1.6 'Bai Jamjuree', system-ui, sans-serif; font-variant-numeric: tabular-nums; } .ds-sheet-head { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 20px; border-bottom: 2px solid #172036; } .ds-sheet-head span { font-size: 13px; color: #4a5470; } .ds-row { display: grid; grid-template-columns: 56px 148px 1fr 64px 72px; gap: 16px; align-items: baseline; padding: 12px 20px; border-bottom: 1px solid #e6eaf2; } .ds-row:last-child { border-bottom: 0; } .ds-row:hover { background: #f6f8fc; } .ds-order { display: flex; flex-direction: column; } .ds-code { font-weight: 500; letter-spacing: 0.02em; } .ds-chan { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #4a5470; } .ds-mark { display: inline-block; width: 4px; height: 16px; border-radius: 1px; background: #ee4d2d; } .ds-mark.ds-line { background: #06c755; } .ds-strong { font-weight: 600; } .ds-num { text-align: right; white-space: nowrap; } .ds-late { color: #b42318; font-weight: 600; }"
+    },
+    {
+      "name": "Passbook",
+      "kind": "custom",
+      "description": "Stock history as passbook rows: blank cells where nothing moved, opening ยอดยกมา, ink-ruled bold closing balance.",
+      "html": "<ol class=\"ds-pass\"><li class=\"ds-pass-h\"><span>วันที่</span><span>รายการ</span><span>เข้า</span><span>ออก</span><span>คงเหลือ</span></li><li><span></span><span class=\"ds-mut\">ยอดยกมา</span><span></span><span></span><span class=\"ds-bal\">20</span></li><li><span class=\"ds-mut\">21 ต.ค.</span><span>รับเข้า<br><span class=\"ds-mut\">INV-118</span></span><span class=\"ds-r\">6</span><span></span><span class=\"ds-bal\">26</span></li><li><span class=\"ds-mut\">21 ต.ค.</span><span>ส่งออก<br><span class=\"ds-mut\">ORD-2026-00001</span></span><span></span><span class=\"ds-r ds-out\">2</span><span class=\"ds-bal\">24</span></li><li class=\"ds-close\"><b>คงเหลือวันนี้</b><span></span><span></span><span></span><span class=\"ds-fig\">24</span></li></ol>",
+      "css": ".ds-pass { list-style: none; margin: 0; padding: 0; background: #fff; color: #172036; font: 13px/1.5 'Bai Jamjuree', system-ui, sans-serif; font-variant-numeric: tabular-nums; width: 380px; } .ds-pass li { display: grid; grid-template-columns: 48px 1fr 36px 36px 52px; gap: 8px; align-items: center; min-height: 40px; padding: 6px 20px; border-bottom: 1px solid #e6eaf2; } .ds-pass li > span:nth-child(n+3) { text-align: right; } .ds-pass-h { font-size: 12px; color: #4a5470; min-height: 0; } .ds-mut { color: #4a5470; } .ds-out { color: #b42318; } .ds-bal { font-weight: 600; } .ds-pass .ds-close { border-bottom: 0; border-top: 2px solid #172036; } .ds-close b { grid-column: span 2; } .ds-fig { font-size: 18px; font-weight: 600; line-height: 1; }"
+    },
+    {
+      "name": "Filter Tabs",
+      "kind": "nav",
+      "description": "Underline tabs for every filter, with a muted count after the label.",
+      "html": "<div class=\"ds-tabs\"><button class=\"ds-tab\" aria-pressed=\"true\">ทั้งหมด <span>5</span></button><button class=\"ds-tab\" aria-pressed=\"false\">ควรเติมของ <span>3</span></button><button class=\"ds-tab\" aria-pressed=\"false\">หมดแล้ว <span>1</span></button></div>",
+      "css": ".ds-tabs { display: flex; gap: 20px; border-bottom: 1px solid #e6eaf2; font: 14px 'Bai Jamjuree', system-ui, sans-serif; } .ds-tab { height: 44px; margin-bottom: -1px; padding: 0; border: 0; border-bottom: 2px solid transparent; background: none; color: #4a5470; font: inherit; cursor: pointer; } .ds-tab span { color: #5f6983; } .ds-tab:hover { color: #172036; } .ds-tab[aria-pressed=true] { border-bottom-color: #2a3563; color: #172036; font-weight: 500; } .ds-tab[aria-pressed=true] span { color: #4a5470; } .ds-tab:focus-visible { outline: 2px solid #2a3563; outline-offset: 2px; }"
+    },
+    {
+      "name": "Sidebar Navigation",
+      "kind": "nav",
+      "refersTo": "nav-item-current",
+      "description": "Pinned minimal white sidebar: group headings, 18px icons, the current item on Navy 50 with a 3px yellow bar.",
+      "html": "<nav class=\"ds-nav\"><p class=\"ds-nav-g\">คลังสินค้า</p><a class=\"ds-nav-i ds-cur\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z\"/><path d=\"M12 22V12\"/><path d=\"m3.3 7 8.7 5 8.7-5\"/></svg>สต็อก</a><a class=\"ds-nav-i\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8\"/><path d=\"M3 3v5h5\"/><path d=\"M12 7v5l4 2\"/></svg>ประวัติสต็อก</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; width: 184px; padding: 12px; background: #fff; font: 14px 'Bai Jamjuree', system-ui, sans-serif; } .ds-nav-g { margin: 0 0 4px; padding: 4px 12px 0; font-size: 13px; font-weight: 600; color: #172036; } .ds-nav-i { position: relative; display: flex; align-items: center; gap: 10px; height: 36px; padding: 0 12px; border-radius: 6px; color: #4a5470; text-decoration: none; } .ds-nav-i svg { color: #5f6983; } .ds-nav-i:hover { background: #f6f8fc; color: #172036; } .ds-nav-i:focus-visible { outline: 2px solid #2a3563; outline-offset: 2px; } .ds-cur { background: #eff1f8; color: #172036; font-weight: 600; } .ds-cur svg { color: #2a3563; } .ds-cur::before { content: ''; position: absolute; top: 8px; bottom: 8px; left: 0; width: 3px; border-radius: 9999px; background: #f3d83a; }"
+    },
+    {
+      "name": "Exception Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "22px, 4px corners, light tint; only for exceptions such as ใกล้หมด or หมดแล้ว.",
+      "html": "<span class=\"ds-chip ds-warn\">ใกล้หมด</span> <span class=\"ds-chip ds-bad\">หมดแล้ว</span> <span class=\"ds-chip ds-neutral\">ปิดขาย</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; font: 500 12px/1 'Bai Jamjuree', system-ui, sans-serif; white-space: nowrap; } .ds-warn { background: #fbefd6; color: #7f4d00; } .ds-bad { background: #fbe8e4; color: #a8261d; } .ds-neutral { background: #eaeef5; color: #4a5470; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "36px, 6px corners, strong line border; navy border with a pale navy halo on focus.",
+      "html": "<label class=\"ds-field\"><span>ชื่อลูกค้า</span><input class=\"ds-input\" placeholder=\"เช่น คุณมะลิ\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: 'Bai Jamjuree', system-ui, sans-serif; } .ds-field > span { font-size: 13px; font-weight: 500; color: #4a5470; } .ds-input { height: 36px; padding: 0 12px; border: 1px solid #c9d1e0; border-radius: 6px; background: #fff; color: #172036; font: 14px inherit; font-family: inherit; transition: border-color 0.15s; } .ds-input::placeholder { color: #5f6983; } .ds-input:focus { outline: none; border-color: #2a3563; box-shadow: 0 0 0 2px #e2e6f2; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Platform Board",
+    "overview": "The day's orders run like a timetable; stock reads like a passbook. Today opens on a departure board: the clock and what waits, each waiting figure marked by a yellow bar. Below it the working surface is white paper ruled into columns: a 2px ink rule under each sheet's head, 1px hairlines between rows, every running figure flush right. Each order is a departure with its time, its channel line and how long it has waited; a late one prints ล่าช้า in red like a delay notice. Stock history prints as passbook rows that end in today's balance, so any number can be explained by reading down.\n\nOne text size (14px) does most of the work. Rank comes from column, weight and ink, not from bigger type or colour fills. Lists are ranked by meaning: the queue by how long an order has waited, stock by how soon it runs out.\n\nHistory: Platform Board replaced \"Stockroom\" on 2026-10-21. The owner found Stockroom's thick navy page band, pill buttons, highlighter-underlined condensed counts and equal white cards read as AI-generated.\n\nPinned by the user, keep these in any future change: the palette (navy, marker yellow, cool canvas) and the minimal white sidebar with small icons, group headings and the yellow current bar.",
+    "keyCharacteristics": [
+      "One navy board per screen at most (Today); every other page title sits on the canvas over a 2px ink rule.",
+      "White sheets ruled like a timetable: 2px ink rule under the head, 1px hairlines between rows.",
+      "Square 3px buttons; 4px sheets and chips; 6px dialogs and inputs.",
+      "Bai Jamjuree everywhere, tabular figures everywhere, counts in the `figure` weight.",
+      "Channels as 4px coloured line bars, status as weighted text, chips only for exceptions.",
+      "Passbook rows for stock history: วันที่ / รายการ / เข้า / ออก / คงเหลือ."
+    ],
+    "rules": [
+      {
+        "name": "The Numbers In Ink Rule",
+        "body": "Counts, money and balances are full ink. A figure only changes colour for a reason: navy with a yellow bar on the board when work waits, Ink 3 when it is zero, red when it is late or sold out.",
+        "section": "colors"
+      },
+      {
+        "name": "The Yellow Waits Rule",
+        "body": "Yellow means \"waiting for you\" or \"you are here\". It never carries body text on white and never marks an ordinary action; its only button is ขายหน้าร้าน on the navy board.",
+        "section": "colors"
+      },
+      {
+        "name": "The On-Brand Remap Rule",
+        "body": "Inside navy (the top bar) the `on-brand` utility turns ink white and ink 2/3 pale and makes outline buttons translucent. Components placed on navy need no navy-specific classes.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Size Does The Work Rule",
+        "body": "14px carries most text. Rank a row's facts by column, weight (400 / 500 / 600 / 700) and ink (ink / ink 2 / ink 3), not by new sizes. The steps above are the whole scale.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Face Rule",
+        "body": "Counts use Bai Jamjuree with the `figure` utility (600, line 1). No condensed, stencil or display face for numbers.",
+        "section": "typography"
+      },
+      {
+        "name": "The Rules Not Lift Rule",
+        "body": "Separate with a 2px ink rule, a 1px hairline or space. A shadow under a sheet on the page is wrong.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do put a 2px ink rule (`sheet-head`) under each sheet's head or column labels, and 1px hairlines between rows.",
+      "Do set every count in Bai Jamjuree with `figure`, flush right in its column, in full ink unless it is waiting (yellow on navy), zero (Ink 3) or late or sold out (red).",
+      "Do rank lists by meaning: the queue by wait, stock by how soon it runs out.",
+      "Do print stock history as passbook rows with blank cells where nothing moved, an opening ยอดยกมา and a ruled คงเหลือวันนี้.",
+      "Do keep destructive actions away from the primary, behind space and a rule, and confirm them in a dialog.",
+      "Do keep the pinned palette and the pinned sidebar."
+    ],
+    "donts": [
+      "Don't put a navy band behind a page title. Navy is the top bar and the Today board only.",
+      "Don't use pill buttons; buttons are 3px.",
+      "Don't put a highlighter stroke under a number.",
+      "Don't box figures into equal stat cards; they sit on the board behind their bars, or in their column.",
+      "Don't put a coloured stripe on the leading edge of a row; a selected row is a fill and a bold name.",
+      "Don't colour-code types with a rainbow of chips; status is weighted text, a chip marks an exception.",
+      "Don't use segmented pills for filters; filters are underline tabs.",
+      "Don't set a count in any face or weight but Bai Jamjuree `figure`.",
+      "Don't print holds as figures in a passbook; holds live in จองไว้ and in the holds list.",
+      "Don't add shadows to sheets on the page, or new font sizes outside the hierarchy."
+    ]
+  }
+}

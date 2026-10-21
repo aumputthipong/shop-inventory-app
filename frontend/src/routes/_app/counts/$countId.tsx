@@ -4,7 +4,7 @@ import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Chip } from '@/components/chip'
 import { CountDecision, CountLines } from '@/components/counts/count-review'
 import { EmptyState } from '@/components/empty-state'
-import { BackLink, PageBand } from '@/components/page-header'
+import { BackLink, TitleRow } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { isApiError } from '@/lib/api'
 import { varianceTotals } from '@/lib/counts'
@@ -56,13 +56,13 @@ function CountPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBand>
+      <TitleRow>
         <BackLink to="/counts">กลับไปหน้าตรวจนับ</BackLink>
         <div className="flex flex-wrap items-center gap-3">
           <h1 className="page-title">ตรวจนับ #{count.id}</h1>
           <Chip tone={chip.tone}>{chip.label}</Chip>
         </div>
-      </PageBand>
+      </TitleRow>
       <div className="-mt-2">
         <p className="flex flex-wrap gap-x-4 text-sm text-ink-2">
           <span>
@@ -78,7 +78,7 @@ function CountPage() {
         {count.note && <p className="mt-1 text-sm text-ink-2">โน้ต: {count.note}</p>}
       </div>
 
-      <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <dl className="flex flex-wrap gap-x-10 gap-y-3 border-b border-line-strong pb-4">
         <Stat label="นับทั้งหมด" value={`${count.lines.length} รายการ`} />
         <Stat label="ไม่ตรงกับระบบ" value={`${totals.changed} รายการ`} />
         <Stat label="นับได้เกิน" value={`${formatSigned(totals.added)} ชิ้น`} />
@@ -101,9 +101,9 @@ function CountPage() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="panel px-4 py-3">
-      <dt className="text-[13px] text-ink-2">{label}</dt>
-      <dd className="text-lg font-semibold">{value}</dd>
+    <div className="flex items-baseline gap-2">
+      <dt className="text-ink-2">{label}</dt>
+      <dd className="font-semibold">{value}</dd>
     </div>
   )
 }

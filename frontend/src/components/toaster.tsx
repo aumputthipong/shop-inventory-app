@@ -35,7 +35,7 @@ export function Toaster({ children }: { children: ReactNode }) {
         {message !== null && (
           <div
             key={version}
-            className="animate-rise flex items-center gap-3 rounded-lg bg-ink py-3 pr-4 pl-3 text-sm text-white shadow-float"
+            className="animate-rise flex items-center gap-3 rounded-sm bg-ink py-3 pr-4 pl-3 text-sm text-white shadow-float"
           >
             <span className="flex size-5 items-center justify-center rounded-full bg-[#2f7d4f]">
               <CheckIcon className="size-3" strokeWidth={3} aria-hidden="true" />

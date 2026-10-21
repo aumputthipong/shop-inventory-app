@@ -151,9 +151,9 @@ export function NewOrderForm({ products, mode }: { products: Product[]; mode: En
         aria-label="ตะกร้า"
         className="flex w-full shrink-0 flex-col panel @5xl:sticky @5xl:top-[80px] @5xl:max-h-[calc(100svh-104px)] @5xl:w-[440px]"
       >
-        <h2 className="px-5 pt-5 pb-4 text-base font-semibold">ตะกร้า</h2>
+        <h2 className="sheet-head px-5 pt-4 pb-2 font-bold">ตะกร้า</h2>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pb-5">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-5 pt-4 pb-5">
           {saved && (
             <p
               role="status"

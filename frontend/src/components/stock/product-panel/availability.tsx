@@ -2,7 +2,6 @@ import { cn } from 'cn'
 import { BellIcon } from 'lucide-react'
 
 import { Chip } from '@/components/chip'
-import { UnitLegend, UnitStrip } from '@/components/unit-strip'
 import type { ProductDetail } from '@/lib/api'
 import { stockStatusChip } from '@/lib/labels'
 
@@ -17,10 +16,7 @@ export function Availability({
 }) {
   const chip = stockStatusChip[product.stock_status]
   const orders = product.holds.length
-  const summary =
-    product.reserved > 0
-      ? `มีในคลัง ${product.on_hand} ชิ้น จองไว้ให้ ${orders} ออเดอร์ รวม ${product.reserved} ชิ้น`
-      : `มีในคลัง ${product.on_hand} ชิ้น ยังไม่มีออเดอร์จอง`
+  const available = Math.max(product.available, 0)
   const status =
     product.stock_status === 'out_of_stock'
       ? 'ของหมดแล้ว ออเดอร์ใหม่จะถูกปฏิเสธจนกว่าจะเติมของ'
@@ -29,27 +25,36 @@ export function Availability({
         : `แจ้งเตือนเมื่อเหลือ ${product.low_stock_threshold} ชิ้นหรือน้อยกว่า`
 
   return (
-    <div className="flex flex-col gap-3 border-b border-line px-5 py-5">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex flex-col">
-          <span className="text-[13px] text-ink-2">ขายได้อีก</span>
-          <span className="mt-1 flex items-baseline gap-2">
-            <span className={cn('count text-5xl', product.available <= 0 && 'text-destructive')}>
-              {Math.max(product.available, 0)}
-            </span>
-            <span className="text-base text-ink-2">ชิ้น</span>
-          </span>
+    <div className="flex flex-col gap-4 border-b border-line px-5 py-5">
+      <dl className="grid grid-cols-[1fr_1fr_auto] items-end gap-4">
+        <div className="flex flex-col gap-1">
+          <dt className="text-[13px] text-ink-2">มีในคลัง</dt>
+          <dd className="figure text-2xl">{product.on_hand}</dd>
         </div>
-        {product.stock_status !== 'in_stock' && <Chip tone={chip.tone}>{chip.label}</Chip>}
-      </div>
-      <span className="text-[13px] text-ink-2">{summary}</span>
-      <UnitStrip size="lg" available={product.available} held={product.reserved} />
-      <UnitLegend />
+        <div className="flex flex-col gap-1">
+          <dt className="text-[13px] text-ink-2">จองไว้{orders > 0 && ` ${orders} ออเดอร์`}</dt>
+          <dd className={cn('figure text-2xl', product.reserved === 0 && 'text-ink-3')}>
+            {product.reserved}
+          </dd>
+        </div>
+        <div className="flex flex-col items-end gap-1 border-l border-line pl-6">
+          <dt className="flex items-center gap-2 text-[13px] text-ink-2">
+            {product.stock_status !== 'in_stock' && <Chip tone={chip.tone}>{chip.label}</Chip>}
+            ขายได้อีก
+          </dt>
+          <dd
+            aria-label={`ขายได้อีก ${available} ชิ้น`}
+            className={cn('figure text-[40px]', available === 0 && 'text-late')}
+          >
+            {available}
+          </dd>
+        </div>
+      </dl>
       <div className="flex items-center gap-2 text-[13px] text-ink-2">
         <BellIcon
           className={cn(
             'size-4 shrink-0',
-            product.stock_status === 'out_of_stock' && 'text-destructive',
+            product.stock_status === 'out_of_stock' && 'text-late',
             product.stock_status === 'low' && 'text-chip-warn-fg',
           )}
           aria-hidden="true"
@@ -59,7 +64,7 @@ export function Availability({
           <button
             type="button"
             onClick={onEditAlert}
-            className="ml-auto font-medium whitespace-nowrap text-brand-600 hover:underline"
+            className="ml-auto font-medium whitespace-nowrap text-brand-600 underline decoration-line-strong underline-offset-4 hover:decoration-brand-600"
           >
             ตั้งค่าแจ้งเตือน
           </button>

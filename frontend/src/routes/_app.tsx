@@ -64,7 +64,7 @@ function NavDrawer({ isOwner }: { isOwner: boolean }) {
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger
         aria-label="เปิดเมนู"
-        className="flex size-10 items-center justify-center rounded-full hover:bg-surface-2 lg:hidden"
+        className="flex size-10 items-center justify-center rounded-[3px] hover:bg-surface-2 lg:hidden"
       >
         <MenuIcon className="size-5" aria-hidden="true" />
       </Dialog.Trigger>
@@ -109,7 +109,7 @@ function AccountMenu({ name, roleText }: { name: string; roleText: string }) {
 
   return (
     <DropdownMenu.Root>
-      <DropdownMenu.Trigger className="flex h-10 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-left hover:bg-surface-2">
+      <DropdownMenu.Trigger className="flex h-10 items-center gap-2 rounded-[3px] py-1 pr-3 pl-1 text-left hover:bg-surface-2">
         <span
           aria-hidden="true"
           className="flex size-8 items-center justify-center rounded-full bg-marker-500 text-[13px] font-semibold text-[#172036]"
@@ -125,7 +125,7 @@ function AccountMenu({ name, roleText }: { name: string; roleText: string }) {
         <DropdownMenu.Content
           align="end"
           sideOffset={8}
-          className="z-50 min-w-48 rounded-lg border border-line bg-surface p-1 shadow-float"
+          className="z-50 min-w-48 rounded-sm border border-line bg-surface p-1 shadow-float"
         >
           <DropdownMenu.Item
             asChild

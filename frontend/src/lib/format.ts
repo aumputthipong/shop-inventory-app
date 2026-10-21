@@ -29,6 +29,17 @@ export function formatDateTime(iso: string): string {
   return dateTime.format(new Date(iso))
 }
 
+const clock = new Intl.DateTimeFormat('th-TH', { hour: '2-digit', minute: '2-digit' })
+
+export function formatClock(date: Date): string {
+  return clock.format(date)
+}
+
+export function formatQueueTime(iso: string, now: Date = new Date()): string {
+  const at = new Date(iso)
+  return at.toDateString() === now.toDateString() ? clock.format(at) : dateTime.format(at)
+}
+
 export function formatFullDateTime(iso: string): string {
   return fullDateTime.format(new Date(iso))
 }
@@ -38,9 +49,9 @@ export function hoursSince(iso: string, now: Date = new Date()): number {
 }
 
 export function formatWaiting(hours: number): string {
-  if (hours < 1) return 'รอไม่ถึง 1 ชม.'
-  if (hours < 24) return `รอ ${hours} ชม.`
-  return `รอ ${Math.floor(hours / 24)} วัน`
+  if (hours < 1) return 'ไม่ถึง 1 ชม.'
+  if (hours < 24) return `${hours} ชม.`
+  return `${Math.floor(hours / 24)} วัน`
 }
 
 export function formatSigned(n: number): string {

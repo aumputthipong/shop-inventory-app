@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { cn } from 'cn'
-import { CheckIcon, PackageCheckIcon, TruckIcon, XCircleIcon } from 'lucide-react'
+import { PackageCheckIcon, TruckIcon, XCircleIcon } from 'lucide-react'
 import { useState } from 'react'
 
-import { ChannelChip, Chip } from '@/components/chip'
+import { ChannelChip, Chip, OrderStatusText } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorAlert } from '@/components/error-alert'
-import { BackLink, PageBand } from '@/components/page-header'
+import { BackLink, TitleRow } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/dialog'
 import { api, isApiError, type Order, type OrderAction } from '@/lib/api'
 import { formatFullDateTime, formatMoney } from '@/lib/format'
-import { orderStatusChip } from '@/lib/labels'
 import { invalidateStock, orderQueryOptions } from '@/lib/queries'
 import { useToast } from '@/lib/toast'
 
@@ -79,7 +78,6 @@ function OrderPage() {
     },
   })
 
-  const chip = orderStatusChip[order.status]
   const primary: OrderAction | null =
     order.status === 'reserved' ? 'pack' : order.status === 'packed' ? 'ship' : null
   const cancellable = order.status === 'reserved' || order.status === 'packed'
@@ -91,27 +89,15 @@ function OrderPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageBand>
+      <TitleRow>
         <BackLink to="/orders">กลับไปหน้าออเดอร์</BackLink>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <h1 className="code page-title">{order.order_no}</h1>
             <ChannelChip channel={order.channel} />
-            <Chip tone={chip.tone}>{chip.label}</Chip>
+            <OrderStatusText status={order.status} />
           </div>
-          <div className="flex gap-2.5">
-            {cancellable && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  setConfirmCancel(true)
-                }}
-              >
-                <XCircleIcon aria-hidden="true" />
-                ยกเลิกออเดอร์
-              </Button>
-            )}
+          <div className="flex gap-10">
             {primary && (
               <Button
                 size="lg"
@@ -130,7 +116,7 @@ function OrderPage() {
             )}
           </div>
         </div>
-      </PageBand>
+      </TitleRow>
       {order.external_ref && (
         <p className="-mt-2 text-ink-2">เลขออเดอร์จากช่องทาง: {order.external_ref}</p>
       )}
@@ -139,7 +125,7 @@ function OrderPage() {
 
       <div className="flex flex-col items-stretch gap-6 @4xl:flex-row @4xl:items-start">
         <section aria-label="รายการสินค้า" className="min-w-0 flex-1 panel p-5">
-          <h2 className="mb-3 text-base font-semibold">สินค้า {order.items.length} รายการ</h2>
+          <h2 className="mb-1 sheet-head pb-2 font-bold">สินค้า {order.items.length} รายการ</h2>
           <ul className="flex flex-col">
             {order.items.map((item) => (
               <li
@@ -154,11 +140,11 @@ function OrderPage() {
                   >
                     {item.name}
                   </Link>
-                  <span className="code text-xs text-ink-3">{item.sku}</span>
+                  <span className="code text-[13px] text-ink-2">{item.sku}</span>
                 </span>
                 <span className="text-right">{item.qty} ชิ้น</span>
                 <span className="text-right text-ink-2">{formatMoney(item.unit_price)}</span>
-                <span className="text-right font-medium">
+                <span className="text-right font-semibold">
                   {formatMoney(Number(item.unit_price) * item.qty)}
                 </span>
               </li>
@@ -169,15 +155,18 @@ function OrderPage() {
             <span className="text-xl font-semibold">{formatMoney(order.total)}</span>
           </div>
           {order.note && (
-            <p className="mt-4 rounded-lg bg-surface-2 px-4 py-3 text-ink-2">โน้ต: {order.note}</p>
+            <p className="mt-4 rounded-sm bg-surface-2 px-4 py-3 text-ink-2">โน้ต: {order.note}</p>
           )}
         </section>
 
-        <div className="flex w-full shrink-0 flex-col gap-6 @4xl:w-[400px]">
+        <aside
+          aria-label="สถานะ"
+          className="flex w-full shrink-0 flex-col panel p-5 @4xl:w-[400px]"
+        >
           {order.customer && (
-            <section aria-label="ลูกค้า" className="panel p-5">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 className="text-base font-semibold">ส่งถึง</h2>
+            <section aria-label="ลูกค้า" className="mb-6">
+              <div className="mb-3 flex items-center justify-between gap-3 sheet-head pb-2">
+                <h2 className="font-bold">ส่งถึง</h2>
                 {order.customer.from_line && <Chip tone="ok">สั่งเองผ่าน LINE</Chip>}
               </div>
               <p className="font-medium">{order.customer.name}</p>
@@ -196,16 +185,27 @@ function OrderPage() {
               )}
             </section>
           )}
-          <aside aria-label="สถานะ" className="panel p-5">
-            <h2 className="mb-4 text-base font-semibold">ความคืบหน้า</h2>
-            <Timeline order={order} />
-            <p className="mt-5 border-t border-line pt-4 text-sm text-ink-2">
-              {order.customer?.from_line
-                ? 'ลูกค้าสั่งเองผ่าน LINE ระบบส่งข้อความแจ้งทุกครั้งที่สถานะเปลี่ยน'
-                : `สร้างโดย ${order.created_by_name ?? '-'}`}
-            </p>
-          </aside>
-        </div>
+          <h2 className="mb-4 sheet-head pb-2 font-bold">ความคืบหน้า</h2>
+          <Timeline order={order} />
+          <p className="mt-5 border-t border-line pt-4 text-sm text-ink-2">
+            {order.customer?.from_line
+              ? 'ลูกค้าสั่งเองผ่าน LINE ระบบส่งข้อความแจ้งทุกครั้งที่สถานะเปลี่ยน'
+              : `สร้างโดย ${order.created_by_name ?? '-'}`}
+          </p>
+          {cancellable && (
+            <div className="mt-10 border-t border-line pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setConfirmCancel(true)
+                }}
+              >
+                <XCircleIcon aria-hidden="true" />
+                ยกเลิกออเดอร์
+              </Button>
+            </div>
+          )}
+        </aside>
       </div>
 
       <Dialog open={confirmCancel} onOpenChange={setConfirmCancel}>
@@ -263,30 +263,32 @@ function Timeline({ order }: { order: Order }) {
         const done = step.at !== null
         const last = i === steps.length - 1
         return (
-          <li key={step.label} className="relative flex gap-3.5 pb-5 last:pb-0">
+          <li
+            key={step.label}
+            className="relative grid grid-cols-[104px_12px_minmax(0,1fr)] gap-x-3 pb-5 last:pb-0"
+          >
+            <span className={cn('text-[13px]', done ? 'font-semibold' : 'text-ink-3')}>
+              {step.at ? formatFullDateTime(step.at) : 'ยังไม่ถึง'}
+            </span>
             {!last && (
               <span
                 aria-hidden="true"
                 className={cn(
-                  'absolute top-8 left-[15px] h-[calc(100%-32px)] w-0.5',
-                  done ? 'bg-brand-300' : 'bg-line',
+                  'absolute top-3 left-[121px] h-full w-0.5',
+                  steps[i + 1].at !== null ? 'bg-ink' : 'bg-line-strong',
                 )}
               />
             )}
             <span
+              aria-hidden="true"
               className={cn(
-                'flex size-8 shrink-0 items-center justify-center rounded-full',
-                done ? 'bg-brand-600 text-white' : 'border-2 border-line-strong bg-white',
-                order.status === 'canceled' && last && 'bg-chip-neutral-fg',
+                'relative mt-1 size-3 rounded-[2px]',
+                done ? 'bg-ink' : 'border-2 border-line-strong bg-surface',
+                order.status === 'canceled' && last && 'bg-late',
               )}
-            >
-              {done && <CheckIcon className="size-4" strokeWidth={2.6} aria-hidden="true" />}
-            </span>
-            <span className="flex flex-col pt-1">
-              <span className={cn('font-semibold', !done && 'text-ink-3')}>{step.label}</span>
-              <span className="text-[13px] text-ink-2">
-                {step.at ? formatFullDateTime(step.at) : 'ยังไม่ถึงขั้นนี้'}
-              </span>
+            />
+            <span className={cn('font-semibold', !done && 'font-normal text-ink-3')}>
+              {step.label}
             </span>
           </li>
         )
