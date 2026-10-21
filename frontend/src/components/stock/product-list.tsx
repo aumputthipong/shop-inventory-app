@@ -6,7 +6,6 @@ import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
 import { SearchInput } from '@/components/search-input'
 import { Button } from '@/components/ui/button'
-import { StockBar } from '@/components/unit-strip'
 import type { Product } from '@/lib/api'
 import { stockStatusChip } from '@/lib/labels'
 import { useProductSearch } from '@/lib/use-product-search'
@@ -50,7 +49,8 @@ export function ProductList({
     out_of_stock: products.filter(shows.out_of_stock).length,
   }
 
-  const { query, setQuery, results: visible } = useProductSearch(products.filter(shows[filter]))
+  const { query, setQuery, results } = useProductSearch(products.filter(shows[filter]))
+  const visible = [...results].sort(byUrgency)
 
   return (
     <section aria-label="รายการสินค้า" className="panel min-w-0 flex-1 overflow-hidden">
@@ -73,9 +73,15 @@ export function ProductList({
         />
       </div>
 
-      <div className="grid h-9 grid-cols-[minmax(0,1fr)_56px] items-center gap-x-4 border-b border-line px-4 text-[13px] text-ink-2 sm:grid-cols-[minmax(0,1fr)_200px_80px]">
+      <div
+        className={cn(
+          'grid h-9 items-center gap-x-4 sheet-head px-4 text-xs font-medium text-ink-2',
+          rowCols,
+        )}
+      >
         <span>สินค้า</span>
-        <span className="hidden sm:block">ของในคลัง</span>
+        <span className="hidden text-right sm:block">มีในคลัง</span>
+        <span className="hidden text-right sm:block">จองไว้</span>
         <span className="text-right">ขายได้</span>
       </div>
 
@@ -113,6 +119,14 @@ export function ProductList({
   )
 }
 
+const rowCols = 'grid-cols-[minmax(0,1fr)_64px] sm:grid-cols-[minmax(0,1fr)_80px_80px_80px]'
+
+function byUrgency(a: Product, b: Product): number {
+  if (a.is_active !== b.is_active) return a.is_active ? -1 : 1
+  const room = (p: Product) => p.available / Math.max(p.low_stock_threshold, 1)
+  return room(a) - room(b) || a.name.localeCompare(b.name, 'th')
+}
+
 function ProductRow({
   product: p,
   selected,
@@ -129,32 +143,27 @@ function ProductRow({
       aria-pressed={selected}
       onClick={onSelect}
       className={cn(
-        'grid min-h-16 w-full cursor-pointer grid-cols-[minmax(0,1fr)_56px] items-center gap-x-4 gap-y-2 px-4 py-3 text-left sm:grid-cols-[minmax(0,1fr)_200px_80px]',
-        selected
-          ? 'bg-brand-50 shadow-[inset_2px_0_0_var(--color-brand-600)]'
-          : 'hover:bg-surface-2',
+        'grid min-h-14 w-full cursor-pointer items-center gap-x-4 px-4 py-2.5 text-left',
+        rowCols,
+        selected ? 'bg-brand-50' : 'hover:bg-surface-2',
       )}
     >
-      <span className="flex min-w-0 flex-col gap-0.5">
-        <span className="truncate text-sm font-medium">{p.name}</span>
+      <span className="flex min-w-0 flex-col">
+        <span className={cn('truncate', selected ? 'font-bold' : 'font-medium')}>{p.name}</span>
         <span className="flex items-center gap-2">
-          <span className="code text-xs text-ink-3">{p.sku}</span>
+          <span className="code text-[13px] text-ink-2">{p.sku}</span>
           {p.stock_status !== 'in_stock' && <Chip tone={chip.tone}>{chip.label}</Chip>}
           {!p.is_active && <Chip tone="neutral">ปิดขาย</Chip>}
         </span>
+        <span className="text-[13px] text-ink-2 sm:hidden">
+          มีในคลัง {p.on_hand} จองไว้ {p.reserved}
+        </span>
       </span>
-      <StockBar
-        onHand={p.on_hand}
-        held={p.reserved}
-        alertAt={p.low_stock_threshold}
-        className="col-start-1 row-start-2 sm:col-start-auto sm:row-start-auto sm:pr-6"
-      />
-      <span
-        className={cn(
-          'count col-start-2 row-span-2 row-start-1 text-right text-[30px] sm:col-start-auto sm:row-span-1 sm:row-start-auto',
-          p.available <= 0 && 'text-destructive',
-        )}
-      >
+      <span className="hidden text-right sm:block">{p.on_hand}</span>
+      <span className={cn('hidden text-right sm:block', p.reserved === 0 && 'text-ink-3')}>
+        {p.reserved}
+      </span>
+      <span className={cn('figure text-right text-xl', p.available <= 0 && 'text-late')}>
         {Math.max(p.available, 0)}
       </span>
     </button>

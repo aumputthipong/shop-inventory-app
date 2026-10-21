@@ -1,5 +1,3 @@
-import { type LucideIcon, MessageCircleIcon, ShoppingBagIcon, StoreIcon } from 'lucide-react'
-
 import type {
   AdjustReason,
   Channel,
@@ -44,12 +42,6 @@ export const channelLabel: Record<Channel, string> = {
   store: 'หน้าร้าน',
   shopee: 'Shopee',
   line: 'LINE',
-}
-
-export const channelIcon: Record<Channel, { icon: LucideIcon; color: string }> = {
-  store: { icon: StoreIcon, color: 'text-brand-600' },
-  shopee: { icon: ShoppingBagIcon, color: 'text-[#e8622c]' },
-  line: { icon: MessageCircleIcon, color: 'text-[#22a95b]' },
 }
 
 export const adjustReasonLabel: Record<AdjustReason, string> = {

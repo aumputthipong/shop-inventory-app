@@ -16,12 +16,12 @@ const buttonVariants = cva(
         link: 'text-brand-600 underline-offset-4 hover:underline',
       },
       size: {
-        default: 'h-9 rounded-full px-4 text-sm',
-        sm: 'h-8 rounded-full px-3 text-[13px]',
-        lg: 'h-10 rounded-full px-5 text-sm',
-        icon: 'size-9 rounded-full',
-        'icon-sm': 'size-8 rounded-full',
-        'icon-lg': 'size-10 rounded-full',
+        default: 'h-9 rounded-[3px] px-3.5 text-sm',
+        sm: 'h-8 rounded-[3px] px-3 text-[13px]',
+        lg: 'h-10 rounded-[3px] px-4 text-sm',
+        icon: 'size-9 rounded-[3px]',
+        'icon-sm': 'size-8 rounded-[3px]',
+        'icon-lg': 'size-10 rounded-[3px]',
       },
     },
     defaultVariants: {

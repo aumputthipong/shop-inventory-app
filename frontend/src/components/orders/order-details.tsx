@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 
-import { ChannelIcon } from '@/components/chip'
+import { ChannelMark } from '@/components/chip'
 import { ErrorAlert } from '@/components/error-alert'
 import { Segmented } from '@/components/segmented'
 import { Field } from '@/components/ui/field'
@@ -92,7 +92,7 @@ export function OnlineDetails({
             value: c,
             label: (
               <>
-                <ChannelIcon channel={c} />
+                <ChannelMark channel={c} />
                 {channelLabel[c]}
               </>
             ),

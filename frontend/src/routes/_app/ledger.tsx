@@ -10,7 +10,7 @@ import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import { ReverseMovementButton } from '@/components/stock/reverse-movement'
 import type { MovementType } from '@/lib/api'
-import { formatDateTime, formatSigned } from '@/lib/format'
+import { formatDateTime } from '@/lib/format'
 import { channelLabel, movementChip, movementReason } from '@/lib/labels'
 import { canReverse } from '@/lib/movements'
 import { movementsQueryOptions, productsQueryOptions } from '@/lib/queries'
@@ -84,16 +84,16 @@ function LedgerPage() {
           )}
         </div>
 
-        <div className="grid h-9 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_72px_72px_120px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line px-4 text-[13px] text-ink-2">
+        <div className="grid h-9 min-w-[1160px] grid-cols-[104px_minmax(0,1.2fr)_120px_minmax(0,1fr)_88px_72px_56px_56px_72px] items-center gap-3 sheet-head px-4 text-xs font-medium text-ink-2">
           <span>เวลา</span>
           <span>สินค้า</span>
-          <span>ประเภท</span>
-          <span className="text-right">ในคลัง</span>
-          <span className="text-right">จอง</span>
-          <span className="text-right">คงเหลือ</span>
-          <span className="pl-5">อ้างอิง</span>
+          <span>รายการ</span>
+          <span>อ้างอิง</span>
           <span>โดย</span>
           <span />
+          <span className="text-right">เข้า</span>
+          <span className="text-right">ออก</span>
+          <span className="text-right">คงเหลือ</span>
         </div>
 
         {isPending && <p className="px-4 py-8 text-ink-2">กำลังโหลด...</p>}
@@ -106,12 +106,11 @@ function LedgerPage() {
 
         <ul className="flex flex-col">
           {data?.items.map((m) => {
-            const chip = movementChip[m.type]
             const reason = movementReason(m.reason)
             return (
               <li
                 key={m.id}
-                className="grid min-h-12 min-w-[1160px] grid-cols-[110px_minmax(0,1.2fr)_110px_72px_72px_120px_minmax(0,1fr)_90px_80px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
+                className="grid min-h-12 min-w-[1160px] grid-cols-[104px_minmax(0,1.2fr)_120px_minmax(0,1fr)_88px_72px_56px_56px_72px] items-center gap-3 border-b border-line px-4 py-2.5 last:border-b-0"
               >
                 <span className="text-[13px] text-ink-2">{formatDateTime(m.created_at)}</span>
                 <span className="flex min-w-0 flex-col">
@@ -122,25 +121,18 @@ function LedgerPage() {
                   >
                     {m.product_name}
                   </Link>
-                  <span className="code text-xs text-ink-3">{m.sku}</span>
+                  <span className="code text-[13px] text-ink-2">{m.sku}</span>
                 </span>
-                <span className="flex flex-wrap gap-1">
-                  <Chip tone={chip.tone}>{chip.label}</Chip>
+                <span className="flex flex-col items-start gap-1">
+                  <span className={cn('font-medium', m.reversed && 'text-ink-3 line-through')}>
+                    {movementChip[m.type].label}
+                    {m.qty_change === 0 &&
+                      m.reserved_change !== 0 &&
+                      ` ${Math.abs(m.reserved_change)} ชิ้น`}
+                  </span>
                   {m.reversed && <Chip tone="neutral">ยกเลิกแล้ว</Chip>}
                 </span>
-                <span className={cn('text-right font-medium', m.qty_change === 0 && 'text-ink-3')}>
-                  {formatSigned(m.qty_change)}
-                </span>
-                <span
-                  className={cn('text-right font-medium', m.reserved_change === 0 && 'text-ink-3')}
-                >
-                  {formatSigned(m.reserved_change)}
-                </span>
-                <span className="flex flex-col items-end">
-                  <span className="text-sm font-medium">ขายได้ {m.available_after}</span>
-                  <span className="text-xs text-ink-2">มีในคลัง {m.on_hand_after}</span>
-                </span>
-                <span className="flex min-w-0 flex-col pl-5 text-sm">
+                <span className="flex min-w-0 flex-col">
                   {m.order_id !== null && m.order_no ? (
                     <>
                       <Link
@@ -191,6 +183,11 @@ function LedgerPage() {
                 <span className="flex justify-end">
                   {me.isOwner && canReverse(m) && <ReverseMovementButton movement={m} />}
                 </span>
+                <span className="text-right">{m.qty_change > 0 ? m.qty_change : ''}</span>
+                <span className="text-right text-late">
+                  {m.qty_change < 0 ? Math.abs(m.qty_change) : ''}
+                </span>
+                <span className="text-right font-semibold">{m.on_hand_after}</span>
               </li>
             )
           })}

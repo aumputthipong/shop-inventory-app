@@ -1,17 +1,15 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
-@import '@fontsource/ibm-plex-sans-thai/400.css';
-@import '@fontsource/ibm-plex-sans-thai/500.css';
-@import '@fontsource/ibm-plex-sans-thai/600.css';
-@import '@fontsource/ibm-plex-sans-thai/700.css';
-@import '@fontsource/barlow-condensed/700.css';
+@import '@fontsource/bai-jamjuree/400.css';
+@import '@fontsource/bai-jamjuree/500.css';
+@import '@fontsource/bai-jamjuree/600.css';
+@import '@fontsource/bai-jamjuree/700.css';
 
 /* Tokens are documented in docs/DESIGN.md. */
 @theme inline {
-  --font-sans: 'IBM Plex Sans Thai', system-ui, sans-serif;
+  --font-sans: 'Bai Jamjuree', system-ui, sans-serif;
   --font-heading: var(--font-sans);
-  --font-count: 'Barlow Condensed', 'IBM Plex Sans Thai', sans-serif;
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -80,6 +78,11 @@
   --color-chip-neutral: #eaeef5;
   --color-chip-neutral-fg: #4a5470;
 
+  --color-late: #b42318;
+  --color-channel-store: #2a3563;
+  --color-channel-shopee: #ee4d2d;
+  --color-channel-line: #06c755;
+
   --shadow-float: 0 12px 32px rgb(23 32 54 / 0.14), 0 2px 6px rgb(23 32 54 / 0.06);
 }
 
@@ -102,7 +105,7 @@
   --border: #e6eaf2;
   --input: #c9d1e0;
   --ring: #2a3563;
-  --radius: 0.5rem;
+  --radius: 0.25rem;
 }
 
 @layer base {
@@ -122,19 +125,26 @@
     outline: 2px solid var(--color-brand-600);
     outline-offset: 2px;
   }
+  ::selection {
+    background: var(--color-marker-300);
+    color: var(--color-ink);
+  }
 }
 
 @utility panel {
   border: 1px solid var(--color-edge);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-sm);
   background: var(--color-surface);
 }
 
+@utility sheet-head {
+  border-bottom: 2px solid var(--color-ink);
+}
+
 @utility page-title {
-  font-size: 28px;
-  line-height: 36px;
+  font-size: 24px;
+  line-height: 32px;
   font-weight: 700;
-  letter-spacing: -0.01em;
 }
 
 @utility code {
@@ -142,9 +152,8 @@
   letter-spacing: 0.02em;
 }
 
-@utility count {
-  font-family: var(--font-count);
-  font-weight: 700;
+@utility figure {
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -169,10 +178,6 @@
   --color-brand-700: #e8ebf5;
   --primary: #ffffff;
   --primary-foreground: #1e2750;
-}
-
-@utility highlight {
-  background: linear-gradient(transparent 58%, var(--color-marker-500) 58% 92%, transparent 92%);
 }
 
 @media (prefers-reduced-motion: no-preference) {

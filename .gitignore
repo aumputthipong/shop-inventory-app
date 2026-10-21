@@ -30,3 +30,8 @@ npm-debug.log*
 
 # TanStack router plugin scratch files
 .tanstack/
+
+# Impeccable scratch (decision sketches and review captures)
+/.impeccable/mocks/
+/.impeccable/review/
+/.impeccable/live/

@@ -17,11 +17,11 @@ describe('hoursSince', () => {
 
 describe('formatWaiting', () => {
   it.each([
-    [0, 'รอไม่ถึง 1 ชม.'],
-    [5, 'รอ 5 ชม.'],
-    [23, 'รอ 23 ชม.'],
-    [24, 'รอ 1 วัน'],
-    [71, 'รอ 2 วัน'],
+    [0, 'ไม่ถึง 1 ชม.'],
+    [5, '5 ชม.'],
+    [23, '23 ชม.'],
+    [24, '1 วัน'],
+    [71, '2 วัน'],
   ])('%i hours reads %s', (hours, want) => {
     expect(formatWaiting(hours)).toBe(want)
   })

@@ -103,9 +103,7 @@ function TeamPage() {
                   <span>เข้าร่วม {formatFullDateTime(u.created_at)}</span>
                 </span>
               </span>
-              <span>
-                <Chip tone={u.role === 'owner' ? 'info' : 'neutral'}>{roleLabel[u.role]}</Chip>
-              </span>
+              <span className="text-ink-2">{roleLabel[u.role]}</span>
               <span className="flex justify-end gap-2">
                 {u.id === me.id ? (
                   <span className="text-sm text-ink-2">บัญชีของคุณ</span>

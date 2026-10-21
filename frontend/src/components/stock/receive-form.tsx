@@ -69,7 +69,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
       <section aria-label="รับของเข้าแล้ว" className="panel flex max-w-2xl flex-col gap-4 p-5">
         <div className="flex items-center gap-3">
           <CheckCircle2Icon className="size-6 text-chip-ok-fg" aria-hidden="true" />
-          <h2 className="flex flex-wrap items-baseline gap-x-3 text-base font-semibold">
+          <h2 className="flex flex-wrap items-baseline gap-x-3 font-bold">
             รับของเข้าแล้ว {done.lines.length} รายการ
             {done.reference && (
               <span className="text-sm font-normal text-ink-2">ใบส่งของ {done.reference}</span>
@@ -170,7 +170,7 @@ export function ReceiveForm({ products }: { products: Product[] }) {
         noValidate
         className="flex w-full shrink-0 flex-col gap-5 panel p-5 @5xl:sticky @5xl:top-[80px] @5xl:w-[440px]"
       >
-        <h2 className="text-base font-semibold">ของในใบส่งของนี้</h2>
+        <h2 className="sheet-head pb-2 font-bold">ของในใบส่งของนี้</h2>
 
         <Field label="เลขที่ใบส่งของ (ไม่ใส่ก็ได้)">
           <Input

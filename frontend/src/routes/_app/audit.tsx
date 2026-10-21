@@ -1,14 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { cn } from 'cn'
 
-import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import type { AuditLog } from '@/lib/api'
 import { formatDateTime } from '@/lib/format'
 import { requireOwner } from '@/lib/guards'
-import { auditActionLabel, type ChipTone } from '@/lib/labels'
+import { auditActionLabel } from '@/lib/labels'
 import { auditQueryOptions } from '@/lib/queries'
 import { parseOffset } from '@/lib/search-params'
 
@@ -23,14 +23,6 @@ export const Route = createFileRoute('/_app/audit')({
   },
   component: AuditPage,
 })
-
-function tone(action: string): ChipTone {
-  if (action === 'order.rejected') return 'bad'
-  if (action.startsWith('stock.')) return 'ok'
-  if (action.startsWith('order.')) return 'info'
-  if (action.startsWith('user.')) return 'violet'
-  return 'neutral'
-}
 
 function describe(log: AuditLog): string {
   const d = log.detail
@@ -87,7 +79,14 @@ function AuditPage() {
               <span className="text-[13px] text-ink-2">{formatDateTime(log.created_at)}</span>
               <span className="truncate">{log.actor_name ?? 'ระบบ'}</span>
               <span>
-                <Chip tone={tone(log.action)}>{auditActionLabel[log.action] ?? log.action}</Chip>
+                <span
+                  className={cn(
+                    'font-medium',
+                    log.action === 'order.rejected' && 'font-semibold text-late',
+                  )}
+                >
+                  {auditActionLabel[log.action] ?? log.action}
+                </span>
               </span>
               <span className="truncate text-ink-2">{describe(log)}</span>
             </li>

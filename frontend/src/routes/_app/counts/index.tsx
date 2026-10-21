@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ClipboardCheckIcon } from 'lucide-react'
 
-import { Chip } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
 import { PageHeader } from '@/components/page-header'
@@ -106,8 +105,8 @@ function CountsPage() {
                   <span className="flex flex-col">
                     <span className="code font-medium">#{c.id}</span>
                   </span>
-                  <span>
-                    <Chip tone={chip.tone}>{chip.label}</Chip>
+                  <span className={c.status === 'submitted' ? 'font-semibold' : 'text-ink-2'}>
+                    {chip.label}
                   </span>
                   <span className="text-right">{c.line_count} รายการ</span>
                   <span

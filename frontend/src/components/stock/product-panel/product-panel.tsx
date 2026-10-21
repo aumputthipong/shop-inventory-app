@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { PlusIcon, SlidersHorizontalIcon } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
-import { FilterTabs } from '@/components/filter-tabs'
 import { AdjustDialog } from '@/components/stock/adjust-dialog'
 import { ProductFormDialog } from '@/components/stock/product-form-dialog'
 import { Availability } from '@/components/stock/product-panel/availability'
@@ -13,12 +12,9 @@ import { StockInDialog } from '@/components/stock/stock-in-dialog'
 import { Button } from '@/components/ui/button'
 import { productQueryOptions } from '@/lib/queries'
 
-type Section = 'holds' | 'moves'
-
 export function ProductPanel({ productId, isOwner }: { productId: number; isOwner: boolean }) {
   const { data: product, isPending, isError } = useQuery(productQueryOptions(productId))
   const [dialog, setDialog] = useState<'in' | 'adjust' | 'edit' | null>(null)
-  const [section, setSection] = useState<Section>('holds')
 
   if (isPending) {
     return <PanelShell>กำลังโหลด...</PanelShell>
@@ -48,10 +44,8 @@ export function ProductPanel({ productId, isOwner }: { productId: number; isOwne
         }}
       />
 
-      <div className="flex gap-2 border-b border-line px-5 py-4">
+      <div className="flex items-center justify-between gap-6 border-b border-line px-5 py-4">
         <Button
-          size="lg"
-          className="flex-1"
           onClick={() => {
             setDialog('in')
           }}
@@ -61,9 +55,7 @@ export function ProductPanel({ productId, isOwner }: { productId: number; isOwne
         </Button>
         {isOwner && (
           <Button
-            size="lg"
             variant="outline"
-            className="flex-1"
             onClick={() => {
               setDialog('adjust')
             }}
@@ -74,22 +66,8 @@ export function ProductPanel({ productId, isOwner }: { productId: number; isOwne
         )}
       </div>
 
-      <div className="border-b border-line px-5">
-        <FilterTabs
-          label="รายละเอียดสินค้า"
-          value={section}
-          onChange={setSection}
-          options={[
-            { value: 'holds', label: 'ออเดอร์ที่จองไว้', count: product.holds.length },
-            { value: 'moves', label: 'ความเคลื่อนไหวล่าสุด' },
-          ]}
-        />
-      </div>
-      {section === 'holds' ? (
-        <Holds product={product} />
-      ) : (
-        <RecentMoves productId={product.id} isOwner={isOwner} />
-      )}
+      <RecentMoves product={product} isOwner={isOwner} />
+      <Holds product={product} />
 
       <StockInDialog
         product={product}

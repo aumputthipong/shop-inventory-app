@@ -182,13 +182,21 @@ in the same PR as the behaviour it describes.
   container queries (`@4xl`, `@5xl`), not on the window. With a 208px sidebar
   the window breakpoints put the stock list beside its 480px panel at a
   content width where product names no longer fit.
-- The stock list moves the unit strip under the product name below the `sm`
-  breakpoint. A fixed 200px strip column left no room for the name on a phone.
-- Today shows how long each queued order has waited instead of its timestamp
-  (kept in the hover title). It turns amber after 24 hours and red after 72,
-  either side of the marketplaces' ship-within-two-days rule. The queues ask the
-  orders list for `sort=oldest`, so the five shown are the ones waiting longest;
-  newest first would hide exactly the orders most at risk.
+- The stock list shows มีในคลัง, จองไว้ and ขายได้ as columns and folds the first
+  two under the name below `sm`. It sorts by sellable units against the alert
+  point, lowest first, so what runs out next leads; switched-off products go
+  last.
+- Today merges the รอแพ็ก and รอส่ง previews (five each, asked with
+  `sort=oldest`) into one queue ordered by order time, so the orders most at
+  risk lead; newest first would hide them. Each row shows how long the order has
+  waited, and after 24 hours, either side of the marketplaces' ship-within-two-
+  days rule, its status reads ล่าช้า in red. The queue sizes its columns on its
+  own width (`@container`), and the channel shares the order cell because a
+  separate column left the customer about 130px beside ของใกล้หมด.
+- The product panel's history prints only rows that move stock on the shelf.
+  Holds change จองไว้, not the shelf, so printing them as passbook figures made
+  the balance look wrong; the ออเดอร์ที่จองไว้ list below explains them. The
+  first row's balance before it moved is shown as ยอดยกมา.
 - The orders list carries each order's customer name and lines (product name
   and quantity) so Today can show what to pick without opening the order. The
   lines for a page come from one `ListItemsForOrders` query keyed by the page's
@@ -206,9 +214,9 @@ in the same PR as the behaviour it describes.
 - The sales integration test writes its orders inside one transaction that it
   rolls back. Every row shares that transaction's `now()`, so a one-microsecond
   day holds only its own orders while other packages write to the same database.
-- The unit strip draws one cell per unit up to 24 (list) or 40 (panel) and
-  becomes a proportional bar beyond that, where individual cells stop being
-  readable.
+- The unit strip (stock change previews in dialogs) draws one cell per unit up
+  to 24 or 40 and becomes a proportional bar beyond that, where individual cells
+  stop being readable.
 - A 401 from any query clears the cache and sends the user to `/login` with a
   redirect back, so an expired session never leaves stale data on screen.
 - The new-order page keeps the server's shortage list after a 409 and marks

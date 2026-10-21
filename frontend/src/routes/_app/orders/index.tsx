@@ -3,13 +3,12 @@ import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { cn } from 'cn'
 import { InboxIcon, StoreIcon } from 'lucide-react'
 
-import { ChannelChip, Chip } from '@/components/chip'
+import { ChannelChip, OrderStatusText } from '@/components/chip'
 import { EmptyState } from '@/components/empty-state'
 import { FilterTabs } from '@/components/filter-tabs'
 import { PageHeader } from '@/components/page-header'
 import { Pager } from '@/components/pager'
 import { SearchInput } from '@/components/search-input'
-import { Segmented } from '@/components/segmented'
 import { Button } from '@/components/ui/button'
 import type { Channel, OrderStatus, OrderSummary } from '@/lib/api'
 import { formatDateTime, formatMoney } from '@/lib/format'
@@ -21,7 +20,7 @@ const PAGE = 20
 const STATUSES: OrderStatus[] = ['reserved', 'packed', 'shipped', 'canceled']
 const CHANNELS: Channel[] = ['store', 'shopee', 'line']
 const COLUMNS =
-  'grid-cols-[170px_minmax(0,1fr)_110px_80px_110px_100px_110px] items-center gap-4 px-4'
+  'grid-cols-[112px_164px_104px_minmax(0,1fr)_88px_72px_104px] items-center gap-4 px-4'
 
 interface OrdersSearch {
   status?: OrderStatus
@@ -105,23 +104,20 @@ function OrdersPage() {
               })),
             ]}
           />
-          <div className="mb-2 flex items-center gap-3">
-            <Segmented
+          <div className="flex items-end gap-6">
+            <FilterTabs
               label="ช่องทาง"
-              value={search.channel ?? 'all'}
+              value={search.channel}
               onChange={(channel) => {
-                setSearch({
-                  ...search,
-                  channel: channel === 'all' ? undefined : channel,
-                  offset: undefined,
-                })
+                setSearch({ ...search, channel, offset: undefined })
               }}
               options={[
-                { value: 'all', label: 'ทุกช่องทาง' },
+                { value: undefined, label: 'ทุกช่องทาง' },
                 ...CHANNELS.map((c) => ({ value: c, label: channelLabel[c] })),
               ]}
             />
             <SearchInput
+              className="mb-2"
               aria-label="ค้นหาออเดอร์"
               placeholder="เลขออเดอร์ ชื่อ หรือเบอร์ลูกค้า"
               defaultValue={search.q ?? ''}
@@ -135,17 +131,17 @@ function OrdersPage() {
 
         <div
           className={cn(
-            'grid h-9 min-w-[920px] border-b border-line text-[13px] text-ink-2',
+            'grid h-9 min-w-[920px] sheet-head text-xs font-medium text-ink-2',
             COLUMNS,
           )}
         >
+          <span>เวลาสั่ง</span>
           <span>เลขออเดอร์</span>
-          <span>ลูกค้า</span>
           <span>ช่องทาง</span>
+          <span>ลูกค้าและของที่สั่ง</span>
+          <span>สถานะ</span>
           <span className="text-right">จำนวน</span>
           <span className="text-right">ยอดรวม</span>
-          <span>สถานะ</span>
-          <span className="text-right">เวลา</span>
         </div>
 
         {isPending && <p className="px-4 py-8 text-[13px] text-ink-2">กำลังโหลด...</p>}
@@ -160,37 +156,28 @@ function OrdersPage() {
           />
         )}
         <ul>
-          {data?.items.map((o) => {
-            const chip = orderStatusChip[o.status]
-            return (
-              <li key={o.id} className="border-b border-line last:border-b-0">
-                <Link
-                  to="/orders/$orderId"
-                  params={{ orderId: o.id }}
-                  className={cn('grid min-h-14 min-w-[920px] py-2.5 hover:bg-surface-2', COLUMNS)}
-                >
-                  <span className="flex flex-col">
-                    <span className="code font-medium">{o.order_no}</span>
-                    {o.external_ref && (
-                      <span className="code text-xs text-ink-3">{o.external_ref}</span>
-                    )}
-                  </span>
-                  <CustomerCell order={o} />
-                  <span>
-                    <ChannelChip channel={o.channel} />
-                  </span>
-                  <span className="text-right">{o.item_count} ชิ้น</span>
-                  <span className="text-right font-medium">{formatMoney(o.total)}</span>
-                  <span>
-                    <Chip tone={chip.tone}>{chip.label}</Chip>
-                  </span>
-                  <span className="text-right text-[13px] text-ink-3">
-                    {formatDateTime(o.created_at)}
-                  </span>
-                </Link>
-              </li>
-            )
-          })}
+          {data?.items.map((o) => (
+            <li key={o.id} className="border-b border-line last:border-b-0">
+              <Link
+                to="/orders/$orderId"
+                params={{ orderId: o.id }}
+                className={cn('grid min-h-14 min-w-[920px] py-2.5 hover:bg-surface-2', COLUMNS)}
+              >
+                <span className="text-ink-2">{formatDateTime(o.created_at)}</span>
+                <span className="flex flex-col">
+                  <span className="code">{o.order_no}</span>
+                  {o.external_ref && (
+                    <span className="code text-[13px] text-ink-2">{o.external_ref}</span>
+                  )}
+                </span>
+                <ChannelChip channel={o.channel} />
+                <CustomerCell order={o} />
+                <OrderStatusText status={o.status} />
+                <span className="text-right">{o.item_count} ชิ้น</span>
+                <span className="text-right font-semibold">{formatMoney(o.total)}</span>
+              </Link>
+            </li>
+          ))}
         </ul>
         {data && data.total > 0 && (
           <Pager
@@ -214,11 +201,11 @@ function CustomerCell({ order: o }: { order: OrderSummary }) {
       {o.customer_name ? (
         <span className="truncate">{o.customer_name}</span>
       ) : (
-        <span className="truncate text-ink-3">
+        <span className="truncate text-ink-2">
           {o.channel === 'store' ? 'ลูกค้าหน้าร้าน' : 'ไม่ได้ใส่ชื่อ'}
         </span>
       )}
-      <span className="truncate text-xs text-ink-3">{picks}</span>
+      <span className="truncate text-[13px] text-ink-2">{picks}</span>
     </span>
   )
 }

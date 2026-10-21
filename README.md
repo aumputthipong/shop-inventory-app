@@ -89,7 +89,7 @@ sequenceDiagram
 +--------------------------------------------------------------+
 | [box] Shop Inventory                         (avatar) name   |  top bar
 +----------------+---------------------------------------------+
-| Today          |  Page title                [action][action] |  page band
+| Today          |  Page title                [action][action] |  title row
 | SALES          |---------------------------------------------|
 |   Orders       |   list / table           |  detail panel    |
 |   Counter sale |                          |                  |
